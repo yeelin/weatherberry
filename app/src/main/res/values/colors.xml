@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary color palette -->
+    <color name="light_blue_100">#B3E5FC</color>
+    <color name="light_blue_500">#03A9F4</color>
+    <color name="light_blue_700">#0288D1</color>
+
+    <!-- Secondary color palette -->
+    <color name="amber_A200">#FFD740</color>
+    <color name="amber_A100">#FFE57F</color>
+    <color name="amber_A400">#FFC400</color>
+
+    <color name="colorPrimaryLight">@color/light_blue_100</color>
+    <color name="colorPrimary">@color/light_blue_500</color>
+    <color name="colorPrimaryDark">@color/light_blue_700</color>
+    <color name="colorAccent">@color/amber_A200</color>
+
+    <!-- Text palette -->
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_700">#616161</color>
+
+    <color name="textColorPrimary">@color/gray_700</color>
+    <color name="textColorSecondary">@color/gray_500</color>
+</resources>

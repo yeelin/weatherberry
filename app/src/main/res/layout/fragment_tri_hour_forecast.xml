@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="@dimen/tri_hour_forecast_fragment_margin"
+    tools:context="com.example.yeelin.homework2.h312yeelin.fragment.TriHourForecastFragment">
+
+    <FrameLayout
+        android:id="@+id/tri_hour_forecast_listContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/tri_hour_forecast_listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/adapter_item_tri_hour_forecast"/>
+
+        <TextView
+            android:id="@+id/tri_hour_forecast_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/no_tri_hour_forecast"
+            android:visibility="gone"/>
+    </FrameLayout>
+
+    <ProgressBar
+        android:id="@+id/tri_hour_forecast_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        style="?android:attr/progressBarStyle"
+        android:visibility="gone"/>
+</FrameLayout>

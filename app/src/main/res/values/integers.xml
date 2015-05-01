@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="current_weather_columnCount">2</integer>
+    <integer name="daily_forecast_columnCount">4</integer>
+    <integer name="tri_hour_forecast_columnCount">4</integer>
+</resources>

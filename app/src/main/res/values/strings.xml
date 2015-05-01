@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">H312 yeelin</string>
+    <string name="title_current_weather_activity">Current Weather and Daily Forecast</string>
+    <string name="title_tri_hour_forecast_activity">Three Hour Forecast</string>
+
+    <!-- menu options -->
+    <string name="action_settings">Settings</string>
+
+    <!-- toolbar strings -->
+    <string name="current_weather_toolbar_subtitle">Today, %1$s %2$s</string>
+    <string name="tri_hour_forecast_toolbar_subtitle">%1$s, %2$s</string>
+
+    <!-- default strings for current weather section -->
+    <string name="current_description_default_value">Weather description</string>
+    <string name="current_temp_default_value">0</string>
+    <string name="current_humidity_default_value">0 %</string>
+    <string name="current_windspeed_default_value">0 mps</string>
+    <string name="current_last_update_default_value">Last updated: Never</string>
+
+    <!-- default strings for daily forecast row -->
+    <string name="daily_forecast_dayOfWeek_default_value">Day of week</string>
+    <string name="daily_forecast_tempHigh_default_value">100</string>
+    <string name="daily_forecast_tempLow_default_value">0</string>
+
+    <!-- default strings for trihour forecast row -->
+    <string name="tri_hour_forecast_time_default_value">12:00 AM</string>
+    <string name="tri_hour_forecast_description_default_value">Description</string>
+    <string name="tri_hour_forecast_temp_default_value">50</string>
+
+    <!-- strings for when data is unavailable -->
+    <string name="no_city_name">City name unavailable</string>
+    <string name="no_daily_forecast">Daily forecast unavailable</string>
+    <string name="no_tri_hour_forecast">Three hour forecast unavailable</string>
+
+    <!-- labels used on current weather -->
+    <string name="current_humidity_label">Humidity</string>
+    <string name="current_windspeed_label">Wind speed</string>
+    <string name="humidity_unit">%</string>
+    <string name="current_windspeed_value">%1$s mps</string>
+    <string name="last_update_value">Last updated: %1$s</string>
+
+    <!-- common strings -->
+    <string name="weather_image_contentDescription">Weather image</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+
+</resources>

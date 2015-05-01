@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.yeelin.homework2.h312yeelin" >
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity"
+            android:label="@string/title_current_weather_activity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.example.yeelin.homework2.h312yeelin.activity.TriHourForecastActivity"
+            android:label="@string/title_tri_hour_forecast_activity"
+            android:parentActivityName="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity" />
+        </activity>
+
+        <provider
+            android:name="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
+            android:authorities="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name="com.example.yeelin.homework2.h312yeelin.service.WeatherService"
+            android:exported="false" />
+        <service
+            android:name="com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService"
+            android:exported="false" />
+
+        <!-- Adding Google Play Services -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+    </application>
+
+</manifest>
