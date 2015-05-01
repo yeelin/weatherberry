@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:allowBackup="true"
@@ -11,7 +13,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity"
+            android:name=".activity.CurrentWeatherAndDailyForecastPagerActivity"
             android:label="@string/title_current_weather_activity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,26 +22,31 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.yeelin.homework2.h312yeelin.activity.TriHourForecastActivity"
+            android:name=".activity.TriHourForecastActivity"
             android:label="@string/title_tri_hour_forecast_activity"
-            android:parentActivityName="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity" >
+            android:parentActivityName=".activity.CurrentWeatherAndDailyForecastPagerActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.yeelin.homework2.h312yeelin.activity.CurrentWeatherAndDailyForecastPagerActivity" />
+                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
         </activity>
 
         <provider
-            android:name="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
+            android:name=".provider.WeatherContentProvider"
             android:authorities="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
             android:enabled="true"
             android:exported="false" />
 
         <service
-            android:name="com.example.yeelin.homework2.h312yeelin.service.WeatherService"
+            android:name=".service.WeatherService"
             android:exported="false" />
         <service
-            android:name="com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService"
+            android:name=".service.NetworkIntentService"
             android:exported="false" />
+        <service
+            android:name=".service.NetworkJobService"
+            android:enabled="@bool/use_job_service"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
 
         <!-- Adding Google Play Services -->
         <meta-data

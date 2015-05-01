@@ -2,6 +2,7 @@ package com.example.yeelin.homework2.h312yeelin.activity;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
@@ -15,6 +16,7 @@ import com.example.yeelin.homework2.h312yeelin.adapter.CurrentWeatherStatePagerA
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
 import com.example.yeelin.homework2.h312yeelin.loader.CurrentWeatherLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.JobUtils;
 import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
 import java.util.Date;
@@ -68,6 +70,9 @@ public class CurrentWeatherAndDailyForecastPagerActivity
                 getSupportLoaderManager(),
                 this,
                 CurrentWeatherStatePagerAdapter.PROJECTION_CURRENT_WEATHER);
+
+        //schedule periodic background loading
+        schedulePeriodicBackgroundFetch();
     }
 
     /**
@@ -95,7 +100,6 @@ public class CurrentWeatherAndDailyForecastPagerActivity
             viewPager.setCurrentItem(viewPagerPosition);
             Log.d(TAG, "onRestoreInstanceState: Saved instance state is not null. Pager position: " + viewPagerPosition);
         }
-
     }
 
     /**
@@ -104,6 +108,22 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     private void setupToolbar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
+    }
+
+    /**
+     * Helper method to schedule periodic background fetching and loading of data
+     */
+    private void schedulePeriodicBackgroundFetch() {
+        Log.d(TAG, "schedulePeriodicBackgroundFetch");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using job scheduler");
+            JobUtils.scheduleJob(this);
+        }
+        else {
+            //TODO: use alarm service
+            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using Alarm service");
+        }
     }
 
     /**

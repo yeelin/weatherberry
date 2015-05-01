@@ -1,9 +1,7 @@
 package com.example.yeelin.homework2.h312yeelin.service;
 
-import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.Nullable;
@@ -37,14 +35,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * Created by ninjakiki on 4/15/15.
+ * Created by ninjakiki on 4/30/15.
  */
-public class NetworkIntentService extends IntentService {
+public class FetchDataHelper {
     //logcat
-    private static final String TAG = NetworkIntentService.class.getCanonicalName();
-
-    //action in intent
-    private static final String ACTION_LOAD = NetworkIntentService.class.getSimpleName() + ".load";
+    private static final String TAG = FetchDataHelper.class.getCanonicalName();
 
     //minimum interval between fetches
     private static final int TEN_MINUTES_MILLIS = 10 * 60 * 1000;
@@ -82,108 +77,29 @@ public class NetworkIntentService extends IntentService {
     }
 
     /**
-     * Required by the manifest.
-     */
-    public NetworkIntentService() {
-        super(NetworkIntentService.class.getSimpleName());
-    }
-
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
-     */
-    public NetworkIntentService(String name) {
-        super(name);
-    }
-
-    /**
-     * Start this service.
-     * @param context
-     */
-    public static void startService(Context context) {
-        Intent intent = new Intent(context, NetworkIntentService.class);
-
-        //set action and extras
-        intent.setAction(ACTION_LOAD);
-
-        context.startService(intent);
-    }
-
-    /**
-     * Required override.  Handles the requested action in the intent by calling the
-     * appropriate helper method.  This method runs on a background thread.
-     * @param intent
-     */
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "onHandleIntent:Starting");
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_LOAD.equals(action)) {
-                FetchDataHelper.handleActionLoad(this.getApplicationContext());
-            }
-        }
-        Log.d(TAG, "onHandleIntent:Done");
-    }
-
-//        if (ensureLatestSSL()) {
-//            Log.d(TAG, "onHandleIntent:Starting");
-//
-//            if (intent != null) {
-//                final String action = intent.getAction();
-//
-//                if (ACTION_LOAD.equals(action)) {
-//                    handleActionLoad();
-//                }
-//            }
-//            Log.d(TAG, "onHandleIntent:Done");
-//        }
-//    }
-
-    /**
-     * Helper method that checks the device has the latest security updates.
-     * @return
-     */
-    private boolean ensureLatestSSL() {
-        try {
-            //ensure the latest SSL per
-            //http://developer.android.com/training/articles/security-gms-provider.html
-            ProviderInstaller.installIfNeeded(this);
-            return true;
-        }
-        catch (GooglePlayServicesRepairableException e) {
-            //since this is a background service, show a notification
-            GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode(), this);
-            Log.d(TAG, "ensureLatestSSL: Repairable error updating SSL");
-            return false;
-        }
-        catch (GooglePlayServicesNotAvailableException e) {
-            //since this is a background service, show a notification
-            GooglePlayServicesUtil.showErrorNotification(e.errorCode, this);
-            Log.d(TAG, "ensureLatestSSL: Missing play servers updating SSL");
-            return false;
-        }
-    }
-
-    /**
      * Helper method that handles action load on the background thread.
      * Called from onHandleIntent.
      */
-    private void handleActionLoad() {
+    public static void handleActionLoad(Context context) {
         Log.d(TAG, "handleActionLoad");
-        //initialize the cache
-        //if already exists, then the existing one is used
-        CacheUtils.initializeCache(this);
+
+        //check if we have the latest SSL, and if this fails, exit
+        if (!ensureLatestSSL(context)) {
+            return;
+        }
 
         //no network, so do nothing and return
-        if (ConnectivityUtils.isNotConnected(this)) {
+        if (ConnectivityUtils.isNotConnected(context)) {
             Log.d(TAG, "handleActionLoad: Not connected to network");
             return;
         }
 
+        //initialize the cache
+        //if already exists, then the existing one is used
+        CacheUtils.initializeCache(context);
+
         //check last fetch time before fetching again
-        long lastFetchMillis = determineLastFetch();
+        long lastFetchMillis = determineLastFetch(context);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm Z", Locale.US);
         if (System.currentTimeMillis() - lastFetchMillis < TEN_MINUTES_MILLIS) {
             //last fetch < 10 minutes ago so skip
@@ -195,8 +111,8 @@ public class NetworkIntentService extends IntentService {
 
         //last fetch > 10 minutes ago so continue
         Log.d(TAG, String.format("handleActionLoad: Last fetch was more than 10 minutes ago. Current time:%s, Last fetch:%s",
-                    formatter.format(new Date(System.currentTimeMillis())),
-                    formatter.format(new Date(lastFetchMillis))));
+                formatter.format(new Date(System.currentTimeMillis())),
+                formatter.format(new Date(lastFetchMillis))));
 
         try {
             //retrieve weather data and return in format ready for persistent storage
@@ -205,13 +121,13 @@ public class NetworkIntentService extends IntentService {
             ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST);
 
             //persist the weather data
-            persistData(currentWeatherValues, WeatherDataType.CURRENT_WEATHER);
-            persistData(dailyForecastValues, WeatherDataType.DAILY_FORECAST);
-            persistData(triHourForecastValues, WeatherDataType.TRIHOUR_FORECAST);
+            persistData(context, currentWeatherValues, WeatherDataType.CURRENT_WEATHER);
+            persistData(context, dailyForecastValues, WeatherDataType.DAILY_FORECAST);
+            persistData(context, triHourForecastValues, WeatherDataType.TRIHOUR_FORECAST);
 
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
-            purgeOldData(WeatherDataType.DAILY_FORECAST);
-            purgeOldData(WeatherDataType.TRIHOUR_FORECAST);
+            purgeOldData(context, WeatherDataType.DAILY_FORECAST);
+            purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);
@@ -221,16 +137,41 @@ public class NetworkIntentService extends IntentService {
     }
 
     /**
+     * Helper method that checks the device has the latest security updates.
+     * @return
+     */
+    private static boolean ensureLatestSSL(Context context) {
+        try {
+            //ensure the latest SSL per
+            //http://developer.android.com/training/articles/security-gms-provider.html
+            ProviderInstaller.installIfNeeded(context);
+            return true;
+        }
+        catch (GooglePlayServicesRepairableException e) {
+            //since this is a background service, show a notification
+            GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode(), context);
+            Log.d(TAG, "ensureLatestSSL: Repairable error updating SSL");
+            return false;
+        }
+        catch (GooglePlayServicesNotAvailableException e) {
+            //since this is a background service, show a notification
+            GooglePlayServicesUtil.showErrorNotification(e.errorCode, context);
+            Log.d(TAG, "ensureLatestSSL: Missing play servers updating SSL");
+            return false;
+        }
+    }
+
+    /**
      * Helper method that checks the current_weather table for the timestamp of
      * the last call to the API.
      * @return
      */
-    private long determineLastFetch() {
+    private static long determineLastFetch(Context context) {
         //retrieve the timestamp from the current_weather table
         String[] projection = new String[] {
-            "max(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"
+                "max(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"
         };
-        Cursor cursor = getContentResolver().query(
+        Cursor cursor = context.getContentResolver().query(
                 CurrentWeatherContract.URI,
                 projection,
                 null,
@@ -259,7 +200,7 @@ public class NetworkIntentService extends IntentService {
      * @return
      */
     @Nullable
-    private ContentValues[] getData(WeatherDataType weatherDataType) {
+    private static ContentValues[] getData(WeatherDataType weatherDataType) {
         Log.d(TAG, "getData: weatherDataType: " + weatherDataType);
         ContentValues[] valuesArray = null;
 
@@ -285,19 +226,19 @@ public class NetworkIntentService extends IntentService {
                         Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
                         valuesArray[0].put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
                     }
-                    logContentValuesArray(valuesArray, WeatherDataType.CURRENT_WEATHER);
+                    //logContentValuesArray(valuesArray, WeatherDataType.CURRENT_WEATHER);
                     break;
 
                 case DAILY_FORECAST:
                     url = buildUrl(WeatherDataType.DAILY_FORECAST);
                     valuesArray = performGet(url, WeatherDataType.DAILY_FORECAST);
-                    logContentValuesArray(valuesArray, WeatherDataType.DAILY_FORECAST);
+                    //logContentValuesArray(valuesArray, WeatherDataType.DAILY_FORECAST);
                     break;
 
                 case TRIHOUR_FORECAST:
                     url = buildUrl(WeatherDataType.TRIHOUR_FORECAST);
                     valuesArray = performGet(url, WeatherDataType.TRIHOUR_FORECAST);
-                    logContentValuesArray(valuesArray, WeatherDataType.TRIHOUR_FORECAST);
+                    //logContentValuesArray(valuesArray, WeatherDataType.TRIHOUR_FORECAST);
                     break;
 
             }
@@ -318,22 +259,22 @@ public class NetworkIntentService extends IntentService {
      * @param valuesArray
      * @param weatherDataType
      */
-    private void persistData(@Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
+    private static void persistData(Context context, @Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
         Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
         if (valuesArray != null) {
             //insert
             switch (weatherDataType) {
                 case CURRENT_WEATHER:
                     //TODO: using values[0] right now. need to fix hack
-                    getContentResolver().insert(CurrentWeatherContract.URI, valuesArray[0]);
+                    context.getContentResolver().insert(CurrentWeatherContract.URI, valuesArray[0]);
                     break;
 
                 case DAILY_FORECAST:
-                    getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
+                    context.getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
                     break;
 
                 case TRIHOUR_FORECAST:
-                    getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
+                    context.getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
                     break;
             }
         }
@@ -355,7 +296,7 @@ public class NetworkIntentService extends IntentService {
      * @return
      * @throws MalformedURLException
      */
-    private URL buildUrl(WeatherDataType weatherDataType) throws MalformedURLException {
+    private static URL buildUrl(WeatherDataType weatherDataType) throws MalformedURLException {
         Log.d(TAG, "buildUrl: weatherDataType: " + weatherDataType);
         Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme(SCHEME)
@@ -398,7 +339,7 @@ public class NetworkIntentService extends IntentService {
      * @throws IOException
      */
     @Nullable
-    private ContentValues[] performGet(URL url, WeatherDataType weatherDataType) throws IOException {
+    private static ContentValues[] performGet(URL url, WeatherDataType weatherDataType) throws IOException {
         Log.d(TAG, "performGet: weatherDataType: " + weatherDataType);
 
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -438,7 +379,7 @@ public class NetworkIntentService extends IntentService {
      * @return
      */
     @Nullable
-    private String getEncodingFromHeader(HttpURLConnection urlConnection) {
+    private static String getEncodingFromHeader(HttpURLConnection urlConnection) {
         String encoding = null;
 
         //first try to get it from content encoding
@@ -476,7 +417,7 @@ public class NetworkIntentService extends IntentService {
      * @return
      * @throws IOException
      */
-    private ContentValues[] buildContentValues(InputStream stream,
+    private static ContentValues[] buildContentValues(InputStream stream,
                                                String encoding,
                                                WeatherDataType weatherDataType) throws IOException {
         Log.d(TAG, "buildContentValues: weatherDataType:" + weatherDataType);
@@ -511,7 +452,7 @@ public class NetworkIntentService extends IntentService {
      * Daily forecast table:  Purge all data that is earlier than 12:01 AM today.
      * Tri hour forecast table: Purge all data earlier than current time.
      */
-    private void purgeOldData(WeatherDataType weatherDataType) {
+    private static void purgeOldData(Context context, WeatherDataType weatherDataType) {
         Log.d(TAG, "purgeOldData: weatherDataType: " + weatherDataType);
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mm ZZZZ"); //EEEE is Day of week in long form, e.g. Monday, Tuesday, etc.
@@ -538,7 +479,7 @@ public class NetworkIntentService extends IntentService {
                 Log.d(TAG, String.format("purgeOldData: Purge Time String:%s:", purgeTimeString));
 
                 //purge old data from daily forecast table
-                getContentResolver().delete(
+                context.getContentResolver().delete(
                         DailyForecastContract.URI,
                         BaseWeatherContract.whereClauseLessThan(DailyForecastContract.Columns.FORECAST_DATETIME),
                         BaseWeatherContract.whereArgs(purgeMillis));
@@ -552,7 +493,7 @@ public class NetworkIntentService extends IntentService {
                 String currentTimeString = simpleDateFormat.format(new Date(currentMillis));
                 Log.d(TAG, String.format("purgeOldData: Current Time String:%s:", currentTimeString));
 
-                getContentResolver().delete(
+                context.getContentResolver().delete(
                         TriHourForecastContract.URI,
                         BaseWeatherContract.whereClauseLessThan(TriHourForecastContract.Columns.FORECAST_DATETIME),
                         BaseWeatherContract.whereArgs(currentMillis));
@@ -568,7 +509,7 @@ public class NetworkIntentService extends IntentService {
      * @param valuesArray
      * @param weatherDataType
      */
-    private void logContentValuesArray(@Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
+    private static void logContentValuesArray(@Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
         Log.d(TAG, "logContentValuesArray: weatherDataType:" + weatherDataType);
         if (valuesArray != null) {
             for (ContentValues values : valuesArray) {
@@ -583,7 +524,7 @@ public class NetworkIntentService extends IntentService {
      * @param errorStream
      * @throws IOException
      */
-    private void logErrorStream(@Nullable InputStream errorStream) throws IOException {
+    private static void logErrorStream(@Nullable InputStream errorStream) throws IOException {
         if (errorStream == null) {
             return;
         }
@@ -602,4 +543,5 @@ public class NetworkIntentService extends IntentService {
 
         Log.w(TAG, builder.toString());
     }
+
 }

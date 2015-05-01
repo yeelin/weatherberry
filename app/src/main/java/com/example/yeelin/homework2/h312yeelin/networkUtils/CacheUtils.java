@@ -1,4 +1,4 @@
-package com.example.yeelin.homework2.h312yeelin.network;
+package com.example.yeelin.homework2.h312yeelin.networkUtils;
 
 import android.content.ComponentCallbacks2;
 import android.content.Context;

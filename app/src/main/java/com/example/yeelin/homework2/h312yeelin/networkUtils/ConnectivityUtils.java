@@ -1,4 +1,4 @@
-package com.example.yeelin.homework2.h312yeelin.network;
+package com.example.yeelin.homework2.h312yeelin.networkUtils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -8,7 +8,7 @@ import android.support.annotation.Nullable;
 /**
  * Created by ninjakiki on 4/15/15.
  */
-public class NetworkUtils {
+public class ConnectivityUtils {
     /**
      * Retrieve the current connected network
      * @param context The context to use for retrieving the connected network
