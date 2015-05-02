@@ -37,6 +37,26 @@ public class ConnectivityUtils {
     }
 
     /**
+     * Tells you if the device is connected to Wifi
+     * @param context
+     * @return
+     */
+    public static boolean isConnectedWifi(Context context) {
+        NetworkInfo activeNetwork = getConnectedNetwork(context);
+        return activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
+    }
+
+    /**
+     * Tells you if the connection is free or paid.
+     * @param context
+     * @return
+     */
+    public static boolean isConnectionMetered(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return connectivityManager.isActiveNetworkMetered();
+    }
+
+    /**
      * Tells you if the device is not connected
      * @param context
      * @return

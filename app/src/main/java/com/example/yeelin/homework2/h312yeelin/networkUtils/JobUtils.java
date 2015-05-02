@@ -20,6 +20,8 @@ public class JobUtils {
 
     //job info
     private static final int JOB_ID = 100;
+
+    //alarm intervals
     private static final long THREE_MINUTES_MILLIS = 3 * 60 * 1000; //TODO: use this for testing
     private static final long THIRTY_MINUTES_MILLIS = 30 * 60 * 1000; //TODO: use this for shipping
     private static final long JOB_INTERVAL = THREE_MINUTES_MILLIS;

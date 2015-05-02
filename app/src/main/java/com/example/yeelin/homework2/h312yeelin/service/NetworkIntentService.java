@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
@@ -44,7 +45,8 @@ public class NetworkIntentService extends IntentService {
     private static final String TAG = NetworkIntentService.class.getCanonicalName();
 
     //action in intent
-    private static final String ACTION_LOAD = NetworkIntentService.class.getSimpleName() + ".load";
+    private static final String ACTION_LOAD = NetworkIntentService.class.getSimpleName() + ".action.load";
+    private static final String ACTION_WAKEFUL_LOAD = NetworkIntentService.class.getSimpleName() + ".action.wakefulLoad";
 
     //minimum interval between fetches
     private static final int TEN_MINUTES_MILLIS = 10 * 60 * 1000;
@@ -98,16 +100,44 @@ public class NetworkIntentService extends IntentService {
     }
 
     /**
-     * Start this service.
+     * Start this service. Deprecated.
      * @param context
      */
-    public static void startService(Context context) {
+//    public static void startService(Context context) {
+//        Intent intent = new Intent(context, NetworkIntentService.class);
+//
+//        //set action and extras
+//        intent.setAction(ACTION_LOAD);
+//
+//        context.startService(intent);
+//    }
+
+    /**
+     * Builds a regular intent to start this service. Pass this intent to
+     * context.startService(). This is the regular counterpart to buildWakefulIntent.
+     * @param context
+     * @return
+     */
+    public static Intent buildIntent(Context context) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
-        //set action and extras
+        //set action
         intent.setAction(ACTION_LOAD);
+        return intent;
+    }
 
-        context.startService(intent);
+    /**
+     * Builds an intent to start a wakeful version of this service.
+     * When processing is done, it will call the WakefulBroadcastReceiver to release the wakeful lock.
+     * @param context
+     * @return
+     */
+    public static Intent buildWakefulIntent(Context context) {
+        Intent intent = new Intent(context, NetworkIntentService.class);
+
+        //set action
+        intent.setAction(ACTION_WAKEFUL_LOAD);
+        return intent;
     }
 
     /**
@@ -117,14 +147,33 @@ public class NetworkIntentService extends IntentService {
      */
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "onHandleIntent:Starting");
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_LOAD.equals(action)) {
+        Log.d(TAG, "onHandleIntent: Starting");
+
+        if (intent == null) {
+            Log.w(TAG, "onHandleIntent: Intent was null");
+            return;
+        }
+
+        final String action = intent.getAction();
+
+        if (ACTION_LOAD.equals(action)) {
+            FetchDataHelper.handleActionLoad(this.getApplicationContext());
+        }
+        else if (ACTION_WAKEFUL_LOAD.equals(action)) {
+            try {
                 FetchDataHelper.handleActionLoad(this.getApplicationContext());
             }
+            finally {
+                //always release the wakeful log regardless
+                WakefulBroadcastReceiver.completeWakefulIntent(intent);
+                Log.d(TAG, "onHandleIntent: Wakeful lock released");
+            }
         }
-        Log.d(TAG, "onHandleIntent:Done");
+        else {
+            Log.d(TAG, "onHandleIntent: Unknown action:" + action);
+        }
+
+        Log.d(TAG, "onHandleIntent: Done");
     }
 
 //        if (ensureLatestSSL()) {

@@ -30,23 +30,40 @@
                 android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
         </activity>
 
+        <!-- content provider -->
         <provider
             android:name=".provider.WeatherContentProvider"
             android:authorities="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
             android:enabled="true"
             android:exported="false" />
 
+        <!-- Not used anymore-->
         <service
             android:name=".service.WeatherService"
             android:exported="false" />
+
+        <!-- Intent service to fetch and load data -->
         <service
             android:name=".service.NetworkIntentService"
             android:exported="false" />
+
+        <!-- Job scheduler -->
         <service
             android:name=".service.NetworkJobService"
             android:enabled="@bool/use_job_service"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <!-- Broadcast receiver for alarms -->
+        <receiver
+            android:name=".receiver.AlarmBroadcastReceiver"
+            android:enabled="@bool/use_alarm_service"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="com.example.yeelin.homework2.h312yeelin.receiver.AlarmBroadcastReceiver.action.ALARM_TRIGGERED"/>
+            </intent-filter>
+        </receiver>
 
         <!-- Adding Google Play Services -->
         <meta-data

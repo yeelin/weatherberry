@@ -40,7 +40,8 @@ public class CurrentWeatherAndDailyForecastActivity
                     .commit();
         }
 
-        NetworkIntentService.startService(this);
+        //NetworkIntentService.startService(this);
+        startService(NetworkIntentService.buildIntent(this));
     }
 
     /**

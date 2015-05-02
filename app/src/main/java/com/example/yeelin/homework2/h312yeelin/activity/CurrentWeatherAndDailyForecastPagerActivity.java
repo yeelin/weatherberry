@@ -16,6 +16,7 @@ import com.example.yeelin.homework2.h312yeelin.adapter.CurrentWeatherStatePagerA
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
 import com.example.yeelin.homework2.h312yeelin.loader.CurrentWeatherLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.AlarmUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.JobUtils;
 import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
@@ -61,7 +62,8 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         viewPager.setCurrentItem(viewPagerPosition);
 
         //fetch fresh data
-        NetworkIntentService.startService(this);
+        //NetworkIntentService.startService(this);
+        startService(NetworkIntentService.buildIntent(this));
 
         //initialize the current weather loader
         Log.d(TAG, "onCreate: Init current weather loader");
@@ -116,14 +118,14 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     private void schedulePeriodicBackgroundFetch() {
         Log.d(TAG, "schedulePeriodicBackgroundFetch");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using job scheduler");
-            JobUtils.scheduleJob(this);
-        }
-        else {
-            //TODO: use alarm service
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using job scheduler");
+//            JobUtils.scheduleJob(this);
+//        }
+//        else {
             Log.d(TAG, "schedulePeriodicBackgroundFetch: Using Alarm service");
-        }
+            AlarmUtils.scheduleRecurringAlarm(this);
+        //}
     }
 
     /**
