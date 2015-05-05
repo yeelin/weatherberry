@@ -59,7 +59,9 @@ public class NetworkJobService extends JobService {
     /**
      * Async task to do the job
      */
-    private static class FetchDataAsyncTask extends AsyncTask<Void, Void, Void> {
+    private static class FetchDataAsyncTask
+            extends AsyncTask<Void, Void, Void>
+            implements FetchDataHelper.FetchDataHelperCallback {
         private final Context applicationContext;
         private final WeakReference<NetworkJobService> jobServiceWeakReference;
         private final JobParameters jobParameters;
@@ -76,16 +78,17 @@ public class NetworkJobService extends JobService {
         }
 
         /**
-         * Do stuff in the background. Stuff == download data
+         * Do stuff in the background. Stuff == download and store data
          * @param params
          * @return
          */
         @Override
         protected Void doInBackground(Void... params) {
             Log.d(TAG, "doInBackground");
-            //TODO: fetch data from network and persist data
-            FetchDataHelper.handleActionLoad(applicationContext);
+
+            FetchDataHelper.handleActionLoad(applicationContext, this);
             Log.d(TAG, "doInBackground: Done");
+
             return null;
         }
 
@@ -107,6 +110,15 @@ public class NetworkJobService extends JobService {
             //inform job manager that the job is done.
             //when system receives this message, it will release the wakelock
             jobService.jobFinished(jobParameters, false);
+        }
+
+        /**
+         * FetchDataHelperCallback method implementation.
+         * @return whether the asynctask has been cancelled
+         */
+        @Override
+        public boolean shouldCancelFetch() {
+            return isCancelled();
         }
     }
 }

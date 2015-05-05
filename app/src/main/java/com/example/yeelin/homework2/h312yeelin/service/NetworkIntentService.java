@@ -40,7 +40,9 @@ import java.util.TimeZone;
 /**
  * Created by ninjakiki on 4/15/15.
  */
-public class NetworkIntentService extends IntentService {
+public class NetworkIntentService
+        extends IntentService
+        implements FetchDataHelper.FetchDataHelperCallback {
     //logcat
     private static final String TAG = NetworkIntentService.class.getCanonicalName();
 
@@ -157,11 +159,11 @@ public class NetworkIntentService extends IntentService {
         final String action = intent.getAction();
 
         if (ACTION_LOAD.equals(action)) {
-            FetchDataHelper.handleActionLoad(this.getApplicationContext());
+            FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
         }
         else if (ACTION_WAKEFUL_LOAD.equals(action)) {
             try {
-                FetchDataHelper.handleActionLoad(this.getApplicationContext());
+                FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
             }
             finally {
                 //always release the wakeful log regardless
@@ -189,6 +191,16 @@ public class NetworkIntentService extends IntentService {
 //            Log.d(TAG, "onHandleIntent:Done");
 //        }
 //    }
+
+    /**
+     * FetchDataHelperCallback method implementation.
+     * @return false, always, since we don't want to cancel fetch ever from
+     * this class.
+     */
+    @Override
+    public boolean shouldCancelFetch() {
+        return false;
+    }
 
     /**
      * Helper method that checks the device has the latest security updates.

@@ -76,11 +76,15 @@ public class FetchDataHelper {
         TRIHOUR_FORECAST
     }
 
+    public interface FetchDataHelperCallback {
+        public boolean shouldCancelFetch();
+    }
+
     /**
      * Helper method that handles action load on the background thread.
      * Called from onHandleIntent.
      */
-    public static void handleActionLoad(Context context) {
+    public static void handleActionLoad(Context context, FetchDataHelperCallback helperCallback) {
         Log.d(TAG, "handleActionLoad");
 
         //check if we have the latest SSL, and if this fails, exit
@@ -115,10 +119,20 @@ public class FetchDataHelper {
                 formatter.format(new Date(lastFetchMillis))));
 
         try {
-            //retrieve weather data and return in format ready for persistent storage
+            //check if we should exit early
+            if (helperCallback.shouldCancelFetch()) {
+                Log.d(TAG, "handleActionLoad: Fetch was cancelled before getData.");
+                return;
+            }
             ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER);
             ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST);
             ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST);
+
+            //check if we should exit early
+            if (helperCallback.shouldCancelFetch()) {
+                Log.d(TAG, "handleActionLoad: Fetch was cancelled before persistData.");
+                return;
+            }
 
             //persist the weather data
             persistData(context, currentWeatherValues, WeatherDataType.CURRENT_WEATHER);
@@ -212,19 +226,25 @@ public class FetchDataHelper {
                     url = buildUrl(WeatherDataType.CURRENT_WEATHER);
                     valuesArray = performGet(url, WeatherDataType.CURRENT_WEATHER);
 
+                    //add unit and current timestamp if valuesArray is not null
                     if (valuesArray != null && valuesArray.length > 0) {
-                        Log.d(TAG, "Adding unit hack");
-                        //TODO: fix unit hack
-                        valuesArray[0].put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
 
-                        long feedTimeMillis = valuesArray[0].getAsLong(CurrentWeatherContract.Columns.TIMESTAMP);
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
-                        Log.d(TAG, String.format("Feed timestamp:" + feedTimeMillis + " Formatted:" + formatter.format(new Date(feedTimeMillis))));
+                        for (ContentValues values : valuesArray) {
+                            //TODO: add setting for user to choose unit type
+                            //add unit as imperial
+                            values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
 
-                        //insert timestamp
-                        long currentTimeMillis = new Date().getTime();
-                        Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
-                        valuesArray[0].put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
+                            //inspect feed timestamp
+                            //note: we are only inspecting. not using this as the insertion timestamp.
+                            long feedTimeMillis = values.getAsLong(CurrentWeatherContract.Columns.TIMESTAMP);
+                            long currentTimeMillis = new Date().getTime();
+                            SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
+                            Log.d(TAG, String.format("Feed timestamp:" + feedTimeMillis + " Formatted:" + formatter.format(new Date(feedTimeMillis))));
+                            Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
+
+                            //add current timestamp as the insertion timestamp by overwriting feed timestamp
+                            values.put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
+                        }
                     }
                     //logContentValuesArray(valuesArray, WeatherDataType.CURRENT_WEATHER);
                     break;
@@ -261,6 +281,7 @@ public class FetchDataHelper {
      */
     private static void persistData(Context context, @Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
         Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
+
         if (valuesArray != null) {
             //insert
             switch (weatherDataType) {
