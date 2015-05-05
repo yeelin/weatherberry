@@ -128,6 +128,7 @@ public class FetchDataHelper {
                 Log.d(TAG, "handleActionLoad: Fetch was cancelled before getData.");
                 return;
             }
+            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before getData.");
             ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER);
             ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST);
             ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST);
@@ -137,7 +138,7 @@ public class FetchDataHelper {
                 Log.d(TAG, "handleActionLoad: Fetch was cancelled before persistData.");
                 return;
             }
-
+            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before persistData.");
             //persist the weather data
             persistData(context, currentWeatherValues, WeatherDataType.CURRENT_WEATHER);
             persistData(context, dailyForecastValues, WeatherDataType.DAILY_FORECAST);

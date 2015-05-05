@@ -33,11 +33,13 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     //logcat
     private static final String TAG = CurrentWeatherAndDailyForecastPagerActivity.class.getCanonicalName();
 
-    public static final String EXTRA_PAGER_POSITION = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".pagerPosition";
+    private static final String EXTRA_PAGER_POSITION = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".pagerPosition";
+    private static final String EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".scheduledPeriodicBgFetch";
 
     private ViewPager viewPager;
 
     private int viewPagerPosition = 0;
+    private boolean hasScheduledPeriodicBgFetch = false;
 
 
     @Override
@@ -49,23 +51,25 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         //setupToolbar
         setupToolbar();
 
-        //setup View Pager
-        viewPager = (ViewPager) findViewById(R.id.currentWeatherAndDailyForecast_viewPager);
-
-        //configure the adapter on the view pager
-        viewPager.setAdapter(new CurrentWeatherStatePagerAdapter(getSupportFragmentManager(), null));
-        viewPager.setOnPageChangeListener(this);
+        //read saved instance state
         if (savedInstanceState != null) {
             viewPagerPosition = savedInstanceState.getInt(EXTRA_PAGER_POSITION, 0);
-            Log.d(TAG, "onCreate: Saved instance state is not null. Pager position: " + viewPagerPosition);
+            hasScheduledPeriodicBgFetch = savedInstanceState.getBoolean(EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH, false);
+
+            Log.d(TAG, String.format("onCreate: Saved instance state is not null. Pager position:%d, Periodic background fetch:%s",
+                    viewPagerPosition, hasScheduledPeriodicBgFetch));
         }
+
+        //setup View Pager
+        viewPager = (ViewPager) findViewById(R.id.currentWeatherAndDailyForecast_viewPager);
+        viewPager.setAdapter(new CurrentWeatherStatePagerAdapter(getSupportFragmentManager(), null));
+        viewPager.setOnPageChangeListener(this);
         viewPager.setCurrentItem(viewPagerPosition);
 
-        //fetch fresh data
-        //NetworkIntentService.startService(this);
+        //fetch fresh data from the network
         startService(NetworkIntentService.buildIntent(this));
 
-        //initialize the current weather loader
+        //initialize the current weather loader to load data from the database
         Log.d(TAG, "onCreate: Init current weather loader");
         CurrentWeatherLoaderCallbacks.initLoader(
                 this,
@@ -73,8 +77,11 @@ public class CurrentWeatherAndDailyForecastPagerActivity
                 this,
                 CurrentWeatherStatePagerAdapter.PROJECTION_CURRENT_WEATHER);
 
-        //schedule periodic background loading
-        schedulePeriodicBackgroundFetch();
+        //schedule periodic background fetching of fresh data
+        if (!hasScheduledPeriodicBgFetch) {
+            Log.d(TAG, "onCreate: Periodic background fetch has not been scheduled yet so scheduling now");
+            schedulePeriodicBackgroundFetch();
+        }
     }
 
     /**
@@ -86,7 +93,10 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         super.onSaveInstanceState(outState);
 
         outState.putInt(EXTRA_PAGER_POSITION, viewPagerPosition);
-        Log.d(TAG, "onSaveInstanceState: Pager position saved: " + viewPagerPosition);
+        outState.putBoolean(EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH, hasScheduledPeriodicBgFetch);
+
+        Log.d(TAG, String.format("onSaveInstanceState: Saving Pager position:%d, Periodic background fetch:%s",
+                viewPagerPosition, hasScheduledPeriodicBgFetch));
     }
 
     /**
@@ -99,8 +109,12 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
         if (savedInstanceState != null) {
             viewPagerPosition = savedInstanceState.getInt(EXTRA_PAGER_POSITION, 0);
+            hasScheduledPeriodicBgFetch = savedInstanceState.getBoolean(EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH, false);
+            Log.d(TAG, String.format("onRestoreInstanceState: Restoring Pager position:%d, Periodic background fetch:%s",
+                    viewPagerPosition, hasScheduledPeriodicBgFetch));
+
             viewPager.setCurrentItem(viewPagerPosition);
-            Log.d(TAG, "onRestoreInstanceState: Saved instance state is not null. Pager position: " + viewPagerPosition);
+
         }
     }
 
@@ -116,16 +130,18 @@ public class CurrentWeatherAndDailyForecastPagerActivity
      * Helper method to schedule periodic background fetching and loading of data
      */
     private void schedulePeriodicBackgroundFetch() {
-        Log.d(TAG, "schedulePeriodicBackgroundFetch");
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using job scheduler");
-//            JobUtils.scheduleJob(this);
-//        }
-//        else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.d(TAG, "schedulePeriodicBackgroundFetch: Using job scheduler");
+            JobUtils.scheduleJob(this);
+        }
+        else {
             Log.d(TAG, "schedulePeriodicBackgroundFetch: Using Alarm service");
             AlarmUtils.scheduleRecurringAlarm(this);
-        //}
+        }
+
+        //set this to true since we have scheduled either a job or an alarm for background fetching
+        hasScheduledPeriodicBgFetch = true;
     }
 
     /**

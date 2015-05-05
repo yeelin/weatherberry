@@ -62,6 +62,9 @@ public class NetworkJobService extends JobService {
     private static class FetchDataAsyncTask
             extends AsyncTask<Void, Void, Void>
             implements FetchDataHelper.FetchDataHelperCallback {
+
+        private final String TAG = FetchDataAsyncTask.class.getCanonicalName();
+
         private final Context applicationContext;
         private final WeakReference<NetworkJobService> jobServiceWeakReference;
         private final JobParameters jobParameters;
@@ -110,6 +113,7 @@ public class NetworkJobService extends JobService {
             //inform job manager that the job is done.
             //when system receives this message, it will release the wakelock
             jobService.jobFinished(jobParameters, false);
+            Log.d(TAG, "onPostExecute: Done");
         }
 
         /**
