@@ -82,7 +82,11 @@ public class FetchDataHelper {
 
     /**
      * Helper method that handles action load on the background thread.
-     * Called from onHandleIntent.
+     * Should be called from a background thread.
+     *
+     * Called from:
+     * 1. Network Intent Service: onHandleIntent()
+     * 2. Network Job Service: doInBackground()
      */
     public static void handleActionLoad(Context context, FetchDataHelperCallback helperCallback) {
         Log.d(TAG, "handleActionLoad");
