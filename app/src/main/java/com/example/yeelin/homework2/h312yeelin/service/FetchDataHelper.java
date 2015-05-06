@@ -291,8 +291,7 @@ public class FetchDataHelper {
             //insert
             switch (weatherDataType) {
                 case CURRENT_WEATHER:
-                    //TODO: using values[0] right now. need to fix hack
-                    context.getContentResolver().insert(CurrentWeatherContract.URI, valuesArray[0]);
+                    context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
                     break;
 
                 case DAILY_FORECAST:

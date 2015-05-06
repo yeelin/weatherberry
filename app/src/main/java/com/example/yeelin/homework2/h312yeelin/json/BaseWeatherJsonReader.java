@@ -184,7 +184,12 @@ public abstract class BaseWeatherJsonReader {
                     map.put(BaseWeatherContract.Columns.DESCRIPTION, jsonReader.nextString());
                     break;
 
-                //id, icon
+                //icon
+                case BaseWeatherContract.Json.ICON:
+                    map.put(BaseWeatherContract.Columns.ICON, jsonReader.nextString());
+                    break;
+
+                //id
                 default:
                     jsonReader.skipValue();
                     //Log.d(TAG, "processWeatherObject: Skipping value for name:" + name);

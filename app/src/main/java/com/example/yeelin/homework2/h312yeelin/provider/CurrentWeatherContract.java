@@ -37,7 +37,6 @@ public final class CurrentWeatherContract {
      * Database columns
      */
     public interface Columns extends BaseWeatherContract.Columns {
-        //TODO: leave out image for now
         //public String CITY_ID = BaseWeatherContract.Columns.CITY_ID; //city id used to query api
         public String CITY_NAME = "city_name"; //friendly name
         public String CITY_LATITUDE = "city_latitude"; //latitude
@@ -79,6 +78,7 @@ public final class CurrentWeatherContract {
             Columns.HUMIDITY + " REAL NOT NULL, " +
             Columns.WIND_SPEED + " REAL NOT NULL, " +
             Columns.UNIT + " INTEGER NOT NULL, " +
+            Columns.ICON + " TEXT NOT NULL, " +
             Columns.TIMESTAMP + " INTEGER NOT NULL" +
             " )";
 

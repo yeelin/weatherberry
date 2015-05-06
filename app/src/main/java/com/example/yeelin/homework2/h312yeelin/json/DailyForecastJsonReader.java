@@ -121,9 +121,8 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
 
                 //weather
                 case DailyForecastContract.Json.WEATHER_ARRAY:
-                    //TODO: call Base json reader's processWeatherArray when we need images later
-                    jsonReader.skipValue();
-                    //Log.d(TAG, "processListObject: Skipping value for name:" + name);
+                    HashMap<String, String> weatherMap = processWeatherArray();
+                    values.put(DailyForecastContract.Columns.ICON, weatherMap.get(DailyForecastContract.Columns.ICON));
                     break;
 
                 //pressure, humidity, speed, deg, clouds

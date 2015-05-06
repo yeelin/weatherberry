@@ -68,6 +68,7 @@ public class CurrentWeatherJsonReader extends BaseWeatherJsonReader {
                         HashMap<String, String> weatherMap = processWeatherArray();
                         values.put(CurrentWeatherContract.Columns.SUMMARY, weatherMap.get(CurrentWeatherContract.Columns.SUMMARY));
                         values.put(CurrentWeatherContract.Columns.DESCRIPTION, weatherMap.get(CurrentWeatherContract.Columns.DESCRIPTION));
+                        values.put(CurrentWeatherContract.Columns.ICON, weatherMap.get(CurrentWeatherContract.Columns.ICON));
                         break;
 
                     //main
@@ -88,10 +89,10 @@ public class CurrentWeatherJsonReader extends BaseWeatherJsonReader {
                         long dateMillis = jsonReader.nextLong() * 1000;
                         values.put(CurrentWeatherContract.Columns.TIMESTAMP, dateMillis);
                         //utc date
-                        Date dateUTC = new Date(dateMillis);
+                        //Date dateUTC = new Date(dateMillis);
                         //Log.d(TAG, "process: DateUTC:" + dateUTC);
                         //formatted date
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
+                        //SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
                         //Log.d(TAG, "process: Formatted date: " + formatter.format(dateUTC));
                         break;
 

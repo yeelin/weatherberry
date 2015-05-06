@@ -22,6 +22,7 @@ public final class BaseWeatherContract {
         public String WEATHER_ARRAY = "weather";
         public String SUMMARY = "main"; //weather summary string
         public String DESCRIPTION = "description"; //more descriptive string
+        public String ICON = "icon"; //name of the icon
     }
 
     /**
@@ -36,6 +37,7 @@ public final class BaseWeatherContract {
 
         public String SUMMARY = "summary"; //weather summary string
         public String DESCRIPTION = "description"; //more descriptive string
+        public String ICON = "icon"; //name of the icon
     }
 
     //helper strings for drop table

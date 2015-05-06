@@ -28,7 +28,6 @@ public final class DailyForecastContract {
      * Database columns
      */
     public interface Columns extends BaseWeatherContract.Columns {
-        //TODO: leave out image for now
         //public String CITY_ID = BaseWeatherContract.Columns.CITY_ID;
         public String FORECAST_DATETIME = "forecast_datetime";
         public String TEMPERATURE_LOW = "temperature_low";
@@ -49,7 +48,8 @@ public final class DailyForecastContract {
             Columns.CITY_ID + " INTEGER NOT NULL, " +
             Columns.FORECAST_DATETIME + " INTEGER NOT NULL, " +
             Columns.TEMPERATURE_LOW + " REAL NOT NULL, " +
-            Columns.TEMPERATURE_HIGH + " REAL NOT NULL" +
+            Columns.TEMPERATURE_HIGH + " REAL NOT NULL, " +
+            Columns.ICON + " TEXT NOT NULL" +
             " )";
     //index name
     static final String INDEX_NAME = "city_id_daily_date_index";

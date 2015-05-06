@@ -125,6 +125,7 @@ public class TriHourForecastJsonReader extends BaseWeatherJsonReader {
                 case TriHourForecastContract.Json.WEATHER_ARRAY:
                     HashMap<String, String> weatherMap = processWeatherArray();
                     values.put(TriHourForecastContract.Columns.DESCRIPTION, weatherMap.get(TriHourForecastContract.Columns.DESCRIPTION));
+                    values.put(TriHourForecastContract.Columns.ICON, weatherMap.get(TriHourForecastContract.Columns.ICON));
                     break;
 
                 /*

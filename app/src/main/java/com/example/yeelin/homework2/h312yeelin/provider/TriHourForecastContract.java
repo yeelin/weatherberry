@@ -30,7 +30,6 @@ public final class TriHourForecastContract {
      * Database columns
      */
     public interface Columns extends BaseWeatherContract.Columns {
-        //TODO: leave out image for now
         //public String CITY_ID = BaseWeatherContract.Columns.CITY_ID;
         //public String TEMPERATURE = BaseWeatherContract.Columns.TEMPERATURE;
         //public String DESCRIPTION = BaseWeatherContract.Columns.DESCRIPTION;
@@ -52,7 +51,8 @@ public final class TriHourForecastContract {
             Columns.CITY_ID + " INTEGER NOT NULL, " +
             Columns.FORECAST_DATETIME + " INTEGER NOT NULL, " +
             Columns.TEMPERATURE + " REAL NOT NULL, " +
-            Columns.DESCRIPTION + " TEXT NOT NULL" +
+            Columns.DESCRIPTION + " TEXT NOT NULL, " +
+            Columns.ICON + " TEXT NOT NULL" +
             " )";
 
     //index name
