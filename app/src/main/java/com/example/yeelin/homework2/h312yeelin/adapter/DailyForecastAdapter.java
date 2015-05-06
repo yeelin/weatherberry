@@ -6,9 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.yeelin.homework2.h312yeelin.R;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 
 import java.text.SimpleDateFormat;
@@ -28,7 +30,8 @@ public class DailyForecastAdapter extends CursorAdapter {
             DailyForecastContract.Columns.CITY_ID,
             DailyForecastContract.Columns.FORECAST_DATETIME,
             DailyForecastContract.Columns.TEMPERATURE_LOW,
-            DailyForecastContract.Columns.TEMPERATURE_HIGH
+            DailyForecastContract.Columns.TEMPERATURE_HIGH,
+            DailyForecastContract.Columns.ICON
     };
 
     //for bind view
@@ -37,7 +40,8 @@ public class DailyForecastAdapter extends CursorAdapter {
         CITY_ID_POS(1),
         FORECAST_DATETIME_POS(2),
         TEMP_LOW_POS(3),
-        TEMP_HIGH_POS(4);
+        TEMP_HIGH_POS(4),
+        ICON_POS(5);
 
         private int value;
         private DailyForecastCursorPosition(int value) {
@@ -89,10 +93,18 @@ public class DailyForecastAdapter extends CursorAdapter {
 
         double temperatureLow = cursor.getDouble(DailyForecastCursorPosition.TEMP_LOW_POS.getValue());
         double temperatureHigh = cursor.getDouble(DailyForecastCursorPosition.TEMP_HIGH_POS.getValue());
+        String iconName = cursor.getString(DailyForecastCursorPosition.ICON_POS.getValue());
 
         viewHolder.dayOfWeek.setText(dayOfWeek);
         viewHolder.tempLow.setText(String.valueOf(Math.round(temperatureLow)));
         viewHolder.tempHigh.setText(String.valueOf(Math.round(temperatureHigh)));
+
+        //load the image using picasso
+        ImageUtils.loadImage(context, iconName, viewHolder.icon);
+//        Picasso.with(context)
+//                .load(ImageUtils.buildIconUri(iconName))
+//                .into(viewHolder.icon);
+//        CacheUtils.logCache();
     }
 
     /**
@@ -102,11 +114,13 @@ public class DailyForecastAdapter extends CursorAdapter {
         final TextView dayOfWeek;
         final TextView tempHigh;
         final TextView tempLow;
+        final ImageView icon;
 
         ViewHolder(View view) {
             dayOfWeek = (TextView) view.findViewById(R.id.daily_forecast_dayOfWeek);
             tempHigh = (TextView) view.findViewById(R.id.daily_forecast_tempHigh);
             tempLow = (TextView) view.findViewById(R.id.daily_forecast_tempLow);
+            icon = (ImageView) view.findViewById(R.id.daily_forecast_image);
         }
     }
 }

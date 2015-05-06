@@ -7,10 +7,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.fragmentUtils.FormatUtils;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
 import java.util.Date;
@@ -28,7 +30,8 @@ public class TriHourForecastAdapter extends CursorAdapter {
             TriHourForecastContract.Columns.CITY_ID,
             TriHourForecastContract.Columns.FORECAST_DATETIME,
             TriHourForecastContract.Columns.TEMPERATURE,
-            TriHourForecastContract.Columns.DESCRIPTION
+            TriHourForecastContract.Columns.DESCRIPTION,
+            TriHourForecastContract.Columns.ICON
     };
 
     //for bind view
@@ -37,7 +40,8 @@ public class TriHourForecastAdapter extends CursorAdapter {
         CITY_ID_POS(1),
         FORECAST_DATETIME_POS(2),
         TEMP_POS(3),
-        DESCRIPTION_POS(4);
+        DESCRIPTION_POS(4),
+        ICON_POS(5);
 
         private int value;
         private TriHourForecastCursorPosition(int value) {
@@ -87,6 +91,7 @@ public class TriHourForecastAdapter extends CursorAdapter {
         long forecastMillis = cursor.getLong(TriHourForecastCursorPosition.FORECAST_DATETIME_POS.getValue());
         double temperature = cursor.getDouble(TriHourForecastCursorPosition.TEMP_POS.getValue());
         String description = cursor.getString(TriHourForecastCursorPosition.DESCRIPTION_POS.getValue());
+        String iconName = cursor.getString(TriHourForecastCursorPosition.ICON_POS.getValue());
 
         //format the time according to user's preference on device
         String forecastTimeInUserFormat = DateFormat.getTimeFormat(context).format(new Date(forecastMillis));
@@ -94,6 +99,13 @@ public class TriHourForecastAdapter extends CursorAdapter {
         viewHolder.triHour.setText(forecastTimeInUserFormat);
         viewHolder.temp.setText(String.valueOf(Math.round(temperature)));
         viewHolder.description.setText(FormatUtils.formatDescription(description));
+
+        //load the image using picasso
+        ImageUtils.loadImage(context, iconName, viewHolder.icon);
+//        Picasso.with(context)
+//                .load(ImageUtils.buildIconUri(iconName))
+//                .into(viewHolder.icon);
+
     }
 
     /**
@@ -103,11 +115,13 @@ public class TriHourForecastAdapter extends CursorAdapter {
         final TextView triHour;
         final TextView temp;
         final TextView description;
+        final ImageView icon;
 
         ViewHolder(View view) {
             triHour = (TextView) view.findViewById(R.id.tri_hour_forecast_time);
             temp = (TextView) view.findViewById(R.id.tri_hour_forecast_temp);
             description = (TextView) view.findViewById(R.id.tri_hour_forecast_description);
+            icon = (ImageView) view.findViewById(R.id.tri_hour_forecast_image);
         }
     }
 }

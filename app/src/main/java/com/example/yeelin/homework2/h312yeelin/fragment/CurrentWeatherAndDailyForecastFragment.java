@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -23,7 +24,9 @@ import com.example.yeelin.homework2.h312yeelin.loader.BaseWeatherLoaderCallbacks
 import com.example.yeelin.homework2.h312yeelin.loader.CurrentWeatherLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.DailyForecastLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
+
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,6 +48,7 @@ public class CurrentWeatherAndDailyForecastFragment
     private static final String ARG_TEMPERATURE = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".temperature";
     private static final String ARG_HUMIDITY = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".humidity";
     private static final String ARG_WIND_SPEED = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".windSpeed";
+    private static final String ARG_ICON = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".icon";
     private static final String ARG_TIMESTAMP = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".timestamp";
 
     //for loader initialization
@@ -81,10 +85,11 @@ public class CurrentWeatherAndDailyForecastFragment
     //member variables
     private long cityId = BaseWeatherContract.NO_ID;
     private String cityName;
-    private String description ;
+    private String description;
     private double temp;
     private double humidity;
     private double windSpeed;
+    private String iconName;
     private long lastUpdateMillis;
 
 
@@ -122,6 +127,7 @@ public class CurrentWeatherAndDailyForecastFragment
      * @param temp
      * @param humidity
      * @param windSpeed
+     * @param iconName
      * @param lastUpdateMillis
      * @return
      */
@@ -131,6 +137,7 @@ public class CurrentWeatherAndDailyForecastFragment
                                                                      double temp,
                                                                      double humidity,
                                                                      double windSpeed,
+                                                                     String iconName,
                                                                      long lastUpdateMillis) {
         Bundle args = new Bundle();
         args.putLong(ARG_CITY_ID, cityId);
@@ -139,6 +146,7 @@ public class CurrentWeatherAndDailyForecastFragment
         args.putDouble(ARG_TEMPERATURE, temp);
         args.putDouble(ARG_HUMIDITY, humidity);
         args.putDouble(ARG_WIND_SPEED, windSpeed);
+        args.putString(ARG_ICON, iconName);
         args.putLong(ARG_TIMESTAMP, lastUpdateMillis);
 
         CurrentWeatherAndDailyForecastFragment fragment = new CurrentWeatherAndDailyForecastFragment();
@@ -188,6 +196,7 @@ public class CurrentWeatherAndDailyForecastFragment
             temp = args.getDouble(ARG_TEMPERATURE, 0.0);
             humidity = args.getDouble(ARG_HUMIDITY, 0.0);
             windSpeed = args.getDouble(ARG_WIND_SPEED, 0.0);
+            iconName = args.getString(ARG_ICON, "");
             lastUpdateMillis = args.getLong(ARG_TIMESTAMP, 0);
         }
     }
@@ -387,6 +396,13 @@ public class CurrentWeatherAndDailyForecastFragment
         viewHolder.currentWindSpeed.setText(getString(R.string.current_windspeed_value, String.valueOf(Math.round(windSpeed))));
         viewHolder.lastUpdate.setText(getString(R.string.last_update_value, lastUpdateInUserFormat));
 
+        //load the image using picasso
+        ImageUtils.loadImage(getActivity(), iconName, viewHolder.currentIcon);
+//        Picasso.with(getActivity())
+//                .load(ImageUtils.buildIconUri(iconName))
+//                .into(viewHolder.currentIcon);
+//        CacheUtils.logCache();
+
         Log.i(TAG, String.format("onLoadComplete: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
                 cityName, description, temp, humidity, windSpeed, lastUpdateInUserFormat));
     }
@@ -410,6 +426,8 @@ public class CurrentWeatherAndDailyForecastFragment
         final TextView currentTemp;
         final TextView currentHumidity;
         final TextView currentWindSpeed;
+        final ImageView currentIcon;
+
         final ListView dailyForecastListView;
         final TextView lastUpdate;
 
@@ -421,6 +439,7 @@ public class CurrentWeatherAndDailyForecastFragment
             currentTemp = (TextView) view.findViewById(R.id.current_temp);
             currentHumidity = (TextView) view.findViewById(R.id.current_humidity);
             currentWindSpeed = (TextView) view.findViewById(R.id.current_wind_speed);
+            currentIcon = (ImageView) view.findViewById(R.id.current_image);
 
             dailyForecastListView = (ListView) view.findViewById(R.id.daily_forecast_listview);
             dailyForecastListView.setEmptyView(view.findViewById(R.id.daily_forecast_empty));

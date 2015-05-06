@@ -7,11 +7,13 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
 import com.example.yeelin.homework2.h312yeelin.json.DailyForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.CacheUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ConnectivityUtils;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
@@ -20,6 +22,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.security.ProviderInstaller;
+import com.squareup.picasso.Picasso;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +34,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -54,6 +58,10 @@ public class FetchDataHelper {
     private static final String AUTHORITY = "api.openweathermap.org";
     private static final String DATA = "data";
     private static final String API_VERSION = "2.5";
+    private static final String IMG = "img";
+    private static final String W_PATH = "w";
+    private static final String IMG_EXTENSION = ".png";
+
 
     private static final String CURRENT_WEATHER = "weather";
     private static final String FORECAST = "forecast";
@@ -147,6 +155,14 @@ public class FetchDataHelper {
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
             purgeOldData(context, WeatherDataType.DAILY_FORECAST);
             purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
+
+            //check if we should exit early
+            if (helperCallback.shouldCancelFetch()) {
+                Log.d(TAG, "handleActionLoad: Fetch was cancelled before icon fetch.");
+                return;
+            }
+            //fetch weather icons to pre-warm the cache
+            ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);
@@ -528,6 +544,9 @@ public class FetchDataHelper {
                 Log.d(TAG, "purgeOldData: Unknown weatherDataType: " + weatherDataType);
         }
     }
+
+
+
 
     /**
      * Helper method that just logs the values in the valuesArray.

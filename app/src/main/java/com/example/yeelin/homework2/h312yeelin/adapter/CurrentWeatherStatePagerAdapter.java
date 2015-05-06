@@ -25,6 +25,7 @@ public class CurrentWeatherStatePagerAdapter
             CurrentWeatherContract.Columns.TEMPERATURE,
             CurrentWeatherContract.Columns.HUMIDITY,
             CurrentWeatherContract.Columns.WIND_SPEED,
+            CurrentWeatherContract.Columns.ICON,
             CurrentWeatherContract.Columns.TIMESTAMP
     };
 
@@ -36,7 +37,8 @@ public class CurrentWeatherStatePagerAdapter
         TEMP_POS(3),
         HUMIDITY_POS(4),
         WINDSPEED_POS(5),
-        TIMESTAMP_POS(6);
+        ICON_POS(6),
+        TIMESTAMP_POS(7);
 
         private int value;
         private CurrentWeatherCursorPosition(int value) {
@@ -83,6 +85,7 @@ public class CurrentWeatherStatePagerAdapter
         double temp = cursor.getDouble(CurrentWeatherCursorPosition.TEMP_POS.getValue());
         double humidity = cursor.getDouble(CurrentWeatherCursorPosition.HUMIDITY_POS.getValue());
         double windSpeed = cursor.getDouble(CurrentWeatherCursorPosition.WINDSPEED_POS.getValue());
+        String iconName = cursor.getString(CurrentWeatherCursorPosition.ICON_POS.getValue());
         long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
 
         //instantiate a new fragment
@@ -93,6 +96,7 @@ public class CurrentWeatherStatePagerAdapter
                 temp,
                 humidity,
                 windSpeed,
+                iconName,
                 lastUpdateMillis);
 
         return fragment;
