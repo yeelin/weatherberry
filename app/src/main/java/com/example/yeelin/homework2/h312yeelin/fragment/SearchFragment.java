@@ -1,12 +1,14 @@
 package com.example.yeelin.homework2.h312yeelin.fragment;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.graphics.LinearGradient;
+import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -20,6 +22,9 @@ import android.widget.ListView;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.activity.DummyActivity;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
 
 /**
  * Created by ninjakiki on 5/13/15.
@@ -27,11 +32,23 @@ import com.example.yeelin.homework2.h312yeelin.activity.DummyActivity;
 public class SearchFragment
         extends Fragment
         implements AdapterView.OnItemClickListener,
-        SearchView.OnQueryTextListener {
+        SearchView.OnQueryTextListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
+
     //logcat
     private static final String TAG = SearchFragment.class.getCanonicalName();
 
+    //states for SaveInstanceState
+    private static final String EXTRA_RESOLVING_ERROR = SearchFragment.class.getSimpleName() + ".resolvingError";
+
+    //other constants
     private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
+    private static final int RESOLVE_ERROR_REQUEST = 110;
+
+    //member variables
+    private GoogleApiClient googleApiClient;
+    private boolean resolvingError;
 
     //listener member variable
     private SearchFragmentListener listener;
@@ -40,15 +57,30 @@ public class SearchFragment
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
      */
     public interface SearchFragmentListener {
-        public void addCity();
+        public void showPlayServicesErrorDialog(int errorCode);
 
-        public void noPlayServicesAvailable();
+        public void addCity();
     }
 
     /**
      * Required empty constructor
      */
     public SearchFragment() {
+    }
+
+    /**
+     * Activity uses this method to notify the fragment that play services error
+     * has been resolved. If not connected, or connecting, restart the connection process.
+     */
+    public void onPlayServicesAvailable() {
+        Log.d(TAG, "onPlayServicesAvailable");
+
+        resolvingError = false;
+
+        if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
+            googleApiClient.connect();
+            Log.d(TAG, "onPlayServicesAvailable: Connect called");
+        }
     }
 
     /**
@@ -81,6 +113,18 @@ public class SearchFragment
 
         //notify that we have an options menu so that we get the callback to create one later
         setHasOptionsMenu(true);
+
+        //read the saved instance state if it's not null
+        resolvingError = savedInstanceState != null && savedInstanceState.getBoolean(EXTRA_RESOLVING_ERROR, false);
+
+        //create a google api client instance
+        googleApiClient = new GoogleApiClient
+                .Builder(getActivity())
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
     }
 
     /**
@@ -136,6 +180,38 @@ public class SearchFragment
     }
 
     /**
+     *
+     */
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        //if resolving error, don't start the client. It is already started.
+        if (!resolvingError) {
+            googleApiClient.connect();
+        }
+    }
+
+    /**
+     * Save out the resolving error in case we get destroyed
+     * @param outState
+     */
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(EXTRA_RESOLVING_ERROR, resolvingError);
+    }
+
+    /**
+     *
+     */
+    @Override
+    public void onStop() {
+        googleApiClient.disconnect();
+        super.onStop();
+    }
+
+    /**
      * Nullify the listener before detaching
      */
     @Override
@@ -145,7 +221,7 @@ public class SearchFragment
     }
 
     /**
-     * AdapterView.OnItemClickListener override
+     * AdapterView.OnItemClickListener implementation
      * Handle clicks on a search result.
      * @param parent
      * @param view
@@ -155,10 +231,11 @@ public class SearchFragment
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d(TAG, "onItemClick");
+        listener.addCity();
     }
 
     /**
-     * SearchView.OnQueryTextListener override
+     * SearchView.OnQueryTextListener implementation
      * Returns true since we are handling the action and don't want the SearchView to perform
      * the default action of launching the associated intent.
      *
@@ -172,7 +249,7 @@ public class SearchFragment
     }
 
     /**
-     * SearchView.OnQueryTextListener override
+     * SearchView.OnQueryTextListener implementation
      * Returns true since we are handling the action and don't want the SearchView to perform
      * the default action of showing suggestions.
      * @param newText
@@ -186,6 +263,59 @@ public class SearchFragment
         Log.d(TAG, "onQueryTextChange: Query:" + newText);
 
         return true;
+    }
+
+    /**
+     * GoogleApiClient.ConnectionCallbacks implementation
+     * This callback happens when we are connected to Google Play Services.
+     * @param bundle
+     */
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d(TAG, "onConnected: Connected to Google Play Services!");
+    }
+
+    /**
+     * GoogleApiClient.ConnectionCallbacks implementation
+     * This callback happens when our connection is interrupted.
+     * @param i
+     */
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d(TAG, "onConnectionSuspended: Connection suspended");
+    }
+
+    /**
+     * GoogleApiClient.OnConnectionFailedListener implementation
+     * Handle errors that occurred while attempting to connect with Google.
+     * @param connectionResult
+     */
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed");
+        if (resolvingError) {
+            //already attempting to resolve the error
+            return;
+        }
+
+        if (connectionResult.hasResolution()) {
+            //If it returns true, you can request the user take immediate action to resolve the error
+            try {
+                resolvingError = true;
+                connectionResult.startResolutionForResult(getActivity(), RESOLVE_ERROR_REQUEST);
+
+            }
+            catch (IntentSender.SendIntentException e) {
+                //there was an error with the resolution. try again.
+                googleApiClient.connect();
+                resolvingError = false;
+            }
+        }
+        else {
+            // Show error dialog using GooglePlayServicesUtil.getErrorDialog()
+            listener.showPlayServicesErrorDialog(connectionResult.getErrorCode());
+            resolvingError = true;
+        }
     }
 
     /**

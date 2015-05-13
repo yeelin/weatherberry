@@ -4,6 +4,7 @@
     <string name="title_tri_hour_forecast_activity">Three Hour Forecast</string>
     <string name="title_search_activity">Search Cities</string>
     <string name="title_dummy_activity">Search Dummy</string>
+
     <!-- menu options -->
     <string name="action_settings">Settings</string>
     <string name="action_add">Add</string>
@@ -47,6 +48,9 @@
     <!-- common strings -->
     <string name="weather_image_contentDescription">Weather image</string>
     <string name="title_activity_main">MainActivity</string>
+
+    <!-- Google play services -->
+    <string name="play_services_error">Failed to resolve Google Play Services error. Restart app to try again</string>
 
     <string name="hello_world">Hello world!</string>
 

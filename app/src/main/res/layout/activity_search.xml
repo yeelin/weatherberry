@@ -17,7 +17,7 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
 
     <fragment
-        android:id="@+id/search_fragmentContainer"
+        android:id="@+id/search_fragment"
         android:name="com.example.yeelin.homework2.h312yeelin.fragment.SearchFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
