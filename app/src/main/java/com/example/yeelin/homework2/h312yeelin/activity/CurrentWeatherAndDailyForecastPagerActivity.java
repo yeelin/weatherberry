@@ -10,6 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.adapter.CurrentWeatherStatePagerAdapter;
@@ -40,7 +42,6 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
     private int viewPagerPosition = 0;
     private boolean hasScheduledPeriodicBgFetch = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +82,28 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         if (!hasScheduledPeriodicBgFetch) {
             Log.d(TAG, "onCreate: Periodic background fetch has not been scheduled yet so scheduling now");
             schedulePeriodicBackgroundFetch();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_cities, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_add:
+                startActivity(SearchActivity.buildIntent(this));
+                return true;
+
+            case R.id.action_settings:
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

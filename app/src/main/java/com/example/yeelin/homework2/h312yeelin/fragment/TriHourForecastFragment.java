@@ -223,7 +223,7 @@ public class TriHourForecastFragment
     /**
      * View holder class
      */
-    class ViewHolder {
+    private class ViewHolder {
         //member variables
         final View triHourForecastListContainer;
         final ListView triHourForecastListView;

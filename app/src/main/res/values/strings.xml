@@ -2,9 +2,11 @@
     <string name="app_name">H312 yeelin</string>
     <string name="title_current_weather_activity">Roomba Weather</string>
     <string name="title_tri_hour_forecast_activity">Three Hour Forecast</string>
-
+    <string name="title_search_activity">Search Cities</string>
     <!-- menu options -->
     <string name="action_settings">Settings</string>
+    <string name="action_add">Add</string>
+    <string name="action_search">Search</string>
 
     <!-- toolbar strings -->
     <string name="current_weather_toolbar_subtitle">Today, %1$s %2$s</string>
@@ -31,6 +33,7 @@
     <string name="no_city_name">City name unavailable</string>
     <string name="no_daily_forecast">Daily forecast unavailable</string>
     <string name="no_tri_hour_forecast">Three hour forecast unavailable</string>
+    <string name="no_search_cities">No cities found</string>
 
     <!-- labels used on current weather -->
     <string name="current_humidity_label">Humidity</string>
