@@ -35,6 +35,14 @@
             android:name=".activity.SearchActivity"
             android:label="@string/title_search_activity"
             android:parentActivityName=".activity.CurrentWeatherAndDailyForecastPagerActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
+        </activity>
+        <activity
+            android:name=".activity.DummyActivity"
+            android:label="@string/title_dummy_activity"
+            android:parentActivityName=".activity.SearchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
@@ -43,9 +51,9 @@
                 android:resource="@xml/searchable"/>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
-
+                android:value=".activity.SearchActivity" />
         </activity>
+
         <!-- content provider -->
         <provider
             android:name=".provider.WeatherContentProvider"

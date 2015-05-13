@@ -3,6 +3,7 @@
     <string name="title_current_weather_activity">Roomba Weather</string>
     <string name="title_tri_hour_forecast_activity">Three Hour Forecast</string>
     <string name="title_search_activity">Search Cities</string>
+    <string name="title_dummy_activity">Search Dummy</string>
     <!-- menu options -->
     <string name="action_settings">Settings</string>
     <string name="action_add">Add</string>
@@ -11,6 +12,7 @@
     <!-- toolbar strings -->
     <string name="current_weather_toolbar_subtitle">Today, %1$s %2$s</string>
     <string name="tri_hour_forecast_toolbar_subtitle">%1$s, %2$s</string>
+    <string name="search_query_hint">Enter city name</string>
 
     <!-- default strings for current weather section -->
     <string name="current_description_default_value">Weather description</string>
