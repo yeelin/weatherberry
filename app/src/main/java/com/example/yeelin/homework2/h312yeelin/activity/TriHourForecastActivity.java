@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -24,7 +24,7 @@ import java.util.Locale;
  * Created by ninjakiki on 4/13/15.
  */
 public class TriHourForecastActivity
-        extends ActionBarActivity {
+        extends AppCompatActivity {
 
     //logcat
     private static final String TAG = TriHourForecastActivity.class.getCanonicalName();

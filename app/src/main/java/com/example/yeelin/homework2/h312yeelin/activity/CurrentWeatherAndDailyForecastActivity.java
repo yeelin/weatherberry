@@ -2,7 +2,7 @@ package com.example.yeelin.homework2.h312yeelin.activity;
 
 import android.content.Intent;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.os.Bundle;
 
@@ -12,7 +12,7 @@ import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
 
 public class CurrentWeatherAndDailyForecastActivity
-        extends ActionBarActivity
+        extends AppCompatActivity
         implements CurrentWeatherAndDailyForecastFragment.CurrentWeatherAndDailyForecastFragmentListener {
     //logcat
     private static final String TAG = CurrentWeatherAndDailyForecastActivity.class.getCanonicalName();

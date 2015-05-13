@@ -143,6 +143,15 @@ public class FetchDataHelper {
 
             //check if we should exit early
             if (helperCallback.shouldCancelFetch()) {
+                Log.d(TAG, "handleActionLoad: Fetch was cancelled before getImages.");
+                return;
+            }
+            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before getImages.");
+            //fetch weather icons to pre-warm the cache
+            ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
+
+            //check if we should exit early
+            if (helperCallback.shouldCancelFetch()) {
                 Log.d(TAG, "handleActionLoad: Fetch was cancelled before persistData.");
                 return;
             }
@@ -155,14 +164,6 @@ public class FetchDataHelper {
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
             purgeOldData(context, WeatherDataType.DAILY_FORECAST);
             purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
-
-            //check if we should exit early
-            if (helperCallback.shouldCancelFetch()) {
-                Log.d(TAG, "handleActionLoad: Fetch was cancelled before icon fetch.");
-                return;
-            }
-            //fetch weather icons to pre-warm the cache
-            ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);

@@ -6,7 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -26,7 +26,7 @@ import java.util.Date;
  * Created by ninjakiki on 4/26/15.
  */
 public class CurrentWeatherAndDailyForecastPagerActivity
-        extends ActionBarActivity
+        extends AppCompatActivity
         implements CurrentWeatherAndDailyForecastFragment.CurrentWeatherAndDailyForecastFragmentListener,
         CurrentWeatherLoaderCallbacks.CurrentWeatherLoaderListener,
         ViewPager.OnPageChangeListener {
