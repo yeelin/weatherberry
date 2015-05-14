@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">H312 yeelin</string>
-    <string name="title_current_weather_activity">Roomba Weather</string>
-    <string name="title_tri_hour_forecast_activity">Three Hour Forecast</string>
-    <string name="title_search_activity">Search Cities</string>
-    <string name="title_dummy_activity">Search Dummy</string>
+    <string name="title_current_weather_activity">Current conditions</string>
+    <string name="title_tri_hour_forecast_activity">Three hour forecast</string>
+    <string name="title_search_activity">Search cities</string>
+    <string name="title_dummy_activity">Search dummy</string>
 
     <!-- menu options -->
     <string name="action_settings">Settings</string>

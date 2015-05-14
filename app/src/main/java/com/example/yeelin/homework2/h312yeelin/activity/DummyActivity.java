@@ -9,6 +9,10 @@ import android.util.Log;
 
 /**
  * Created by ninjakiki on 5/13/15.
+ * The Activity that receives the search query in the intent's Query extra, searches the data,
+ * and displays the search results.  This is declared in the manifest as such.
+ * However, since we are using autocomplete, we would never get here.  Regardless,
+ * Android requires that we have a "searchable activity", so here it is.
  */
 public class DummyActivity extends AppCompatActivity {
     //logcat

@@ -88,12 +88,13 @@ public class SearchFragment
     }
 
     /**
-     * Activity uses this method to notify the fragment that play services error
-     * has been resolved. If not connected, or connecting, restart the connection process.
+     * The hosting Activity uses this method to notify this fragment that play services error
+     * has been resolved. If not connected, or connecting, it will restart the connection process.
      */
     public void onPlayServicesAvailable() {
         Log.d(TAG, "onPlayServicesAvailable");
 
+        //we are done resolving the error so set to false
         resolvingError = false;
 
         if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
@@ -193,13 +194,12 @@ public class SearchFragment
         ComponentName componentName = new ComponentName(getActivity(), DummyActivity.class);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName));
 
-        searchView.setOnQueryTextListener(this);
         searchView.setQueryHint(getString(R.string.search_query_hint));
-        //searchView.setIconifiedByDefault(false); //do not iconify the widget, expand it by default
+        searchView.setOnQueryTextListener(this); //listen for user actions within the search view
     }
 
     /**
-     *
+     * Call connect on the google api client
      */
     @Override
     public void onStart() {
@@ -222,7 +222,7 @@ public class SearchFragment
     }
 
     /**
-     *
+     * Disconnect the google api client
      */
     @Override
     public void onStop() {
@@ -278,7 +278,7 @@ public class SearchFragment
                                 foundPlace.getLatLng().latitude,
                                 foundPlace.getLatLng().longitude,
                                 foundPlace.getPlaceTypes());
-                        //release the places buffer
+                        //release the places buffer, foundPlace shouldn't be used after this
                         places.release();
                     }
                 });
