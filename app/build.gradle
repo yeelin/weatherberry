@@ -5,7 +5,7 @@ android {
     buildToolsVersion "22.0.1"
 
     defaultConfig {
-        applicationId "com.example.yeelin.homework1.h311yeelin"
+        applicationId "com.example.yeelin.homework2.h312yeelin"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1

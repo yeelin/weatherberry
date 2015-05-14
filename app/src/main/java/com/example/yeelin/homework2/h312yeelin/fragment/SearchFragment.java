@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
@@ -19,12 +18,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.activity.DummyActivity;
+import com.example.yeelin.homework2.h312yeelin.adapter.SearchAdapter;
+import com.example.yeelin.homework2.h312yeelin.adapter.SearchResultItem;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.AutocompletePredictionBuffer;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ninjakiki on 5/13/15.
@@ -34,7 +45,8 @@ public class SearchFragment
         implements AdapterView.OnItemClickListener,
         SearchView.OnQueryTextListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        ResultCallback<AutocompletePredictionBuffer> {
 
     //logcat
     private static final String TAG = SearchFragment.class.getCanonicalName();
@@ -43,12 +55,17 @@ public class SearchFragment
     private static final String EXTRA_RESOLVING_ERROR = SearchFragment.class.getSimpleName() + ".resolvingError";
 
     //other constants
-    private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
     private static final int RESOLVE_ERROR_REQUEST = 110;
+    private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
+    private static final int PENDING_RESULT_TIME_SECONDS = 60; //30 seconds
+    private static final LatLng US_SW = new LatLng(24.498899, -124.422985); //TODO: change this
+    private static final LatLng US_NE = new LatLng(48.902104, -67.008434); //TODO: change this:
+    private static final LatLngBounds US_LAT_LNG_BOUNDS = new LatLngBounds(US_SW, US_NE);
 
     //member variables
     private GoogleApiClient googleApiClient;
     private boolean resolvingError;
+    private PendingResult<AutocompletePredictionBuffer> pendingResult;
 
     //listener member variable
     private SearchFragmentListener listener;
@@ -257,12 +274,68 @@ public class SearchFragment
      */
     @Override
     public boolean onQueryTextChange(String newText) {
-        if (newText.length() < MINIMUM_QUERY_TEXT_LENGTH) {
+        if (!googleApiClient.isConnected() || newText.length() < MINIMUM_QUERY_TEXT_LENGTH) {
             return true;
         }
+
         Log.d(TAG, "onQueryTextChange: Query:" + newText);
 
+        //clear out any old pending results
+        if (pendingResult != null) {
+            pendingResult.cancel();
+            pendingResult = null;
+        }
+
+        //send the query to the places api
+        pendingResult = Places.GeoDataApi.getAutocompletePredictions(
+                googleApiClient,
+                newText,
+                US_LAT_LNG_BOUNDS,
+                null);
+        pendingResult.setResultCallback(this, PENDING_RESULT_TIME_SECONDS, TimeUnit.SECONDS);
+
         return true;
+    }
+
+    /**
+     * ResultCallback<AutocompletePredictionBuffer> implementation
+     * @param autocompletePredictions
+     */
+    @Override
+    public void onResult(AutocompletePredictionBuffer autocompletePredictions) {
+        pendingResult = null;
+
+        Status status = autocompletePredictions.getStatus();
+        if (!status.isSuccess()) {
+            //failed to get autocomplete results
+            autocompletePredictions.release();
+
+            //notify the user and log the error
+            Toast.makeText(getActivity(), "Error contacting Google Places Autocomplete API: " + status.toString(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "onResult: Error contacting Google Places Autocomplete API: " + status.toString());
+            return;
+        }
+
+        //we have autocomplete results
+        //check if we still have a view
+        ViewHolder viewHolder = getViewHolder();
+        if (viewHolder == null) {
+            //too late, view is gone
+            autocompletePredictions.release();
+            Log.d(TAG, "onResult: No view when Google Places Autocomplete API returned");
+            return;
+        }
+
+        //good, we still have a view so populate it
+        //read search results from the predictions buffer and then release it
+        ArrayList<SearchResultItem> searchResultItems = SearchResultItem.buildSearchResultItems(autocompletePredictions);
+        autocompletePredictions.release();
+
+        //set the adapter with the search results
+        SearchAdapter searchAdapter = new SearchAdapter(viewHolder.searchListView.getContext(), searchResultItems);
+        viewHolder.searchListView.setAdapter(searchAdapter);
+
+        Log.d(TAG, "onResult: Done");
     }
 
     /**
