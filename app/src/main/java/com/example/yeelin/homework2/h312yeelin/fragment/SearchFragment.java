@@ -1,7 +1,6 @@
 package com.example.yeelin.homework2.h312yeelin.fragment;
 
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -30,11 +29,14 @@ import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.AutocompletePredictionBuffer;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -57,15 +59,15 @@ public class SearchFragment
     //other constants
     private static final int RESOLVE_ERROR_REQUEST = 110;
     private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
-    private static final int PENDING_RESULT_TIME_SECONDS = 60; //30 seconds
-    private static final LatLng US_SW = new LatLng(24.498899, -124.422985); //TODO: change this
-    private static final LatLng US_NE = new LatLng(48.902104, -67.008434); //TODO: change this:
-    private static final LatLngBounds US_LAT_LNG_BOUNDS = new LatLngBounds(US_SW, US_NE);
+    private static final int PENDING_RESULT_TIME_SECONDS = 30; //30 seconds
+    private static final LatLng US_SW = new LatLng(24.498899, -124.422985);
+    private static final LatLng US_NE = new LatLng(48.902104, -67.008434);
+    private static final LatLngBounds US_LAT_LNG_BOUNDS = new LatLngBounds(US_SW, US_NE); //rectangle encapsulating USA
 
     //member variables
     private GoogleApiClient googleApiClient;
     private boolean resolvingError;
-    private PendingResult<AutocompletePredictionBuffer> pendingResult;
+    private PendingResult<AutocompletePredictionBuffer> autocompletePendingResult;
 
     //listener member variable
     private SearchFragmentListener listener;
@@ -76,7 +78,7 @@ public class SearchFragment
     public interface SearchFragmentListener {
         public void showPlayServicesErrorDialog(int errorCode);
 
-        public void addCity();
+        public void onPlaceSelected(String name, double latitude, double longitude, List<Integer> placeTypes);
     }
 
     /**
@@ -248,7 +250,38 @@ public class SearchFragment
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d(TAG, "onItemClick");
-        listener.addCity();
+
+        SearchResultItem searchResultItem = (SearchResultItem) parent.getItemAtPosition(position);
+        Log.d(TAG, String.format("onItemClick: Description:%s PlaceId:%s", searchResultItem.getDescription(), searchResultItem.getPlaceId()));
+
+        Places.GeoDataApi.getPlaceById(googleApiClient, searchResultItem.getPlaceId())
+                .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                    @Override
+                    public void onResult(PlaceBuffer places) {
+                        Status placesStatus = places.getStatus();
+                        if (!placesStatus.isSuccess()) {
+                            //failed to get results, so log error
+                            places.release();
+                            Log.e(TAG, "onResult: Error contacting getPlaceById API: " + placesStatus.toString());
+                            return;
+                        }
+
+                        //found a place matching the placeId
+                        final Place foundPlace = places.get(0);
+                        Log.d(TAG, String.format("onResult: Found place. Name:%s LatLng:%f, %f PlaceTypes:%s",
+                                foundPlace.getName().toString(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude, foundPlace.getPlaceTypes().toString()));
+
+                        //TODO: query the weather api for closest city given the latlong and store in the database
+
+                        //notify the listener
+                        listener.onPlaceSelected(foundPlace.getName().toString(),
+                                foundPlace.getLatLng().latitude,
+                                foundPlace.getLatLng().longitude,
+                                foundPlace.getPlaceTypes());
+                        //release the places buffer
+                        places.release();
+                    }
+                });
     }
 
     /**
@@ -281,18 +314,18 @@ public class SearchFragment
         Log.d(TAG, "onQueryTextChange: Query:" + newText);
 
         //clear out any old pending results
-        if (pendingResult != null) {
-            pendingResult.cancel();
-            pendingResult = null;
+        if (autocompletePendingResult != null) {
+            autocompletePendingResult.cancel();
+            autocompletePendingResult = null;
         }
 
         //send the query to the places api
-        pendingResult = Places.GeoDataApi.getAutocompletePredictions(
+        autocompletePendingResult = Places.GeoDataApi.getAutocompletePredictions(
                 googleApiClient,
-                newText,
-                US_LAT_LNG_BOUNDS,
-                null);
-        pendingResult.setResultCallback(this, PENDING_RESULT_TIME_SECONDS, TimeUnit.SECONDS);
+                newText, //user query
+                US_LAT_LNG_BOUNDS, //restrict results to a bounding rectangle that encapsulates the US
+                null); //no autocomplete filter
+        autocompletePendingResult.setResultCallback(this, PENDING_RESULT_TIME_SECONDS, TimeUnit.SECONDS);
 
         return true;
     }
@@ -303,7 +336,7 @@ public class SearchFragment
      */
     @Override
     public void onResult(AutocompletePredictionBuffer autocompletePredictions) {
-        pendingResult = null;
+        autocompletePendingResult = null;
 
         Status status = autocompletePredictions.getStatus();
         if (!status.isSuccess()) {
@@ -322,7 +355,7 @@ public class SearchFragment
         if (viewHolder == null) {
             //too late, view is gone
             autocompletePredictions.release();
-            Log.d(TAG, "onResult: No view when Google Places Autocomplete API returned");
+            Log.d(TAG, "onResult: View is null");
             return;
         }
 

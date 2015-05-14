@@ -17,6 +17,8 @@ import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.fragment.PlayServicesErrorDialogFragment;
 import com.example.yeelin.homework2.h312yeelin.fragment.SearchFragment;
 
+import java.util.List;
+
 /**
  * Created by ninjakiki on 5/12/15.
  */
@@ -155,10 +157,13 @@ public class SearchActivity
 
     /**
      * Callback from SearchFragment
+     * This callback happens when the user selects a search result in the list.
      */
     @Override
-    public void addCity() {
-        Log.d(TAG, "addCity:");
+    public void onPlaceSelected(String name, double latitude, double longitude, List<Integer> placeTypes) {
+        Log.d(TAG, "onPlaceSelected");
+
+        //TODO:close out the search activity and go back to the pager activity
     }
 
     /**

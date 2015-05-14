@@ -33,6 +33,5 @@
         android:layout_above="@id/search_attribution"
         android:layout_alignParentTop="true"
         android:gravity="center"
-        android:text="@string/no_search_cities"
-        android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+        android:text="@string/no_search_cities"/>
 </RelativeLayout>
