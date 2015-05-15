@@ -22,8 +22,10 @@ public class NetworkIntentService
 
     //extras in intent
     private static final String EXTRA_CITY_ID = NetworkIntentService.class.getSimpleName() + ".cityId";
+    private static final String EXTRA_CITY_NAME = NetworkIntentService.class.getSimpleName() + ".cityName";
     private static final String EXTRA_CITY_LATITUDE = NetworkIntentService.class.getSimpleName() + ".cityLatitude";
     private static final String EXTRA_CITY_LONGITUDE = NetworkIntentService.class.getSimpleName() + ".cityLongitude";
+    private static final String EXTRA_USER_FAVORITE = NetworkIntentService.class.getSimpleName() + ".isFavorite";
 
     /**
      * Required by the manifest.
@@ -77,14 +79,16 @@ public class NetworkIntentService
      * @param context
      * @return
      */
-    public static Intent buildIntentForSingleCityLoad(Context context, double latitude, double longitude) {
+    public static Intent buildIntentForSingleCityLoad(Context context, String cityName, double latitude, double longitude, boolean userFavorite) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
         intent.setAction(ACTION_SINGLE_LOAD);
         //set extras
+        intent.putExtra(EXTRA_CITY_NAME, cityName);
         intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
         intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
+        intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);
 
         return intent;
     }
@@ -128,9 +132,10 @@ public class NetworkIntentService
             //loads data for a single city
             FetchDataHelper.handleActionSingleLoad(
                     this.getApplicationContext(),
-                    this,
+                    intent.getStringExtra(EXTRA_CITY_NAME),
                     intent.getDoubleExtra(EXTRA_CITY_LATITUDE, 0),
-                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0));
+                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0),
+                    intent.getBooleanExtra(EXTRA_USER_FAVORITE, false));
         }
         else if (ACTION_WAKEFUL_LOAD.equals(action)) {
             //called by alarm service

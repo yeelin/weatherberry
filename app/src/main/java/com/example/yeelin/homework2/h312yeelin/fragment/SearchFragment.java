@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -272,11 +273,17 @@ public class SearchFragment
                         Log.d(TAG, String.format("onResult: Found place. Name:%s LatLng:%f, %f PlaceTypes:%s",
                                 foundPlace.getName().toString(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude, foundPlace.getPlaceTypes().toString()));
 
-                        //TODO: query the weather api for closest city given the latlong and store in the database
-                        getActivity().startService(NetworkIntentService.buildIntentForSingleCityLoad(getActivity(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude));
+                        Intent singleCityLoadIntent = NetworkIntentService.buildIntentForSingleCityLoad(
+                                getActivity(),
+                                foundPlace.getName().toString(),
+                                foundPlace.getLatLng().latitude,
+                                foundPlace.getLatLng().longitude,
+                                true); //true since this is a user favorite
+                        getActivity().startService(singleCityLoadIntent);
 
                         //notify the listener
-                        listener.onPlaceSelected(foundPlace.getName().toString(),
+                        listener.onPlaceSelected(
+                                foundPlace.getName().toString(),
                                 foundPlace.getLatLng().latitude,
                                 foundPlace.getLatLng().longitude,
                                 foundPlace.getPlaceTypes());
