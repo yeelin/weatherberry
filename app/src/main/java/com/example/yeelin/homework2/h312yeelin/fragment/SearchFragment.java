@@ -23,6 +23,7 @@ import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.activity.DummyActivity;
 import com.example.yeelin.homework2.h312yeelin.adapter.SearchAdapter;
 import com.example.yeelin.homework2.h312yeelin.adapter.SearchResultItem;
+import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -248,7 +249,7 @@ public class SearchFragment
      * @param id
      */
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    public void onItemClick(final AdapterView<?> parent, View view, int position, long id) {
         Log.d(TAG, "onItemClick");
 
         SearchResultItem searchResultItem = (SearchResultItem) parent.getItemAtPosition(position);
@@ -272,6 +273,7 @@ public class SearchFragment
                                 foundPlace.getName().toString(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude, foundPlace.getPlaceTypes().toString()));
 
                         //TODO: query the weather api for closest city given the latlong and store in the database
+                        getActivity().startService(NetworkIntentService.buildIntentForSingleCityLoad(getActivity(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude));
 
                         //notify the listener
                         listener.onPlaceSelected(foundPlace.getName().toString(),

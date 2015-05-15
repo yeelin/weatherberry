@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -58,22 +59,21 @@ public class FetchDataHelper {
     private static final String AUTHORITY = "api.openweathermap.org";
     private static final String DATA = "data";
     private static final String API_VERSION = "2.5";
-    private static final String IMG = "img";
-    private static final String W_PATH = "w";
-    private static final String IMG_EXTENSION = ".png";
-
 
     private static final String CURRENT_WEATHER = "weather";
     private static final String FORECAST = "forecast";
     private static final String DAILY = "daily";
 
-    private static final String QUERY_CITYID = "id";
+    private static final String QUERY_CITY_ID = "id";
+    private static final String QUERY_CITY_LATITUDE = "lat";
+    private static final String QUERY_CITY_LONGITUDE = "lon";
     private static final String QUERY_UNIT = "units";
     private static final String QUERY_COUNT = "cnt";
-    private static final String QUERY_APPID = "APPID";
+    private static final String QUERY_APP_ID = "APPID";
+    private static final String CITY_ID_SEPARATOR = ",";
 
     //TODO: remove these hardcoded values
-    private static final String CITY_ID = "5809844"; //city id for Seattle
+    private static final long SEATTLE_CITY_ID = 5809844; //city id for Seattle
     private static final String UNIT_IMPERIAL = "imperial";
     private static final int DAILY_FORECAST_COUNT = 5;
     private static final String APP_ID = "3284992e5bfef187c44863ce0f31ad30";
@@ -84,8 +84,89 @@ public class FetchDataHelper {
         TRIHOUR_FORECAST
     }
 
+    private enum WeatherQueryType {
+        CITY_ID,
+        CITY_LATLNG,
+        CITY_MULTI //TODO: Not used yet
+    }
+
+    /**
+     * Convenience inner class that handles latlong of cities
+     */
+    private static class LatLng {
+        final double latitude;
+        final double longitude;
+
+        LatLng(double latitude, double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+    }
+
     public interface FetchDataHelperCallback {
         public boolean shouldCancelFetch();
+    }
+
+    /**
+     * Helper method that handles action load on the background thread.
+     * Should be called from a background thread.
+     *
+     * Called from:
+     * 1. Network Intent Service: onHandleIntent()
+     * @param context
+     * @param helperCallback
+     * @param latitude
+     * @param longitude
+     */
+    public static void handleActionSingleLoad(Context context, FetchDataHelperCallback helperCallback,
+                                              double latitude, double longitude) {
+        Log.d(TAG, "handleActionSingleLoad");
+
+        //check if we have the latest SSL, and if this fails, exit
+        if (!ensureLatestSSL(context)) {
+            return;
+        }
+
+        //no network, so do nothing and return
+        if (ConnectivityUtils.isNotConnected(context)) {
+            Log.d(TAG, "handleActionSingleLoad: Not connected to network");
+            return;
+        }
+
+        //initialize the cache
+        //if already exists, then the existing one is used
+        CacheUtils.initializeCache(context);
+
+        try {
+            //get data
+            ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, new LatLng(latitude, longitude));
+
+            //get the city Id before calling the other apis so that we can query by cityId
+            if (currentWeatherValues != null && currentWeatherValues.length > 0) {
+                long cityId = currentWeatherValues[0].getAsLong(CurrentWeatherContract.Columns.CITY_ID);
+                long[] cityIds = new long[] {cityId};
+
+                ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
+                ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
+
+                //get images
+                ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
+
+                //persist data
+                persistData(context, WeatherDataType.CURRENT_WEATHER, currentWeatherValues);
+                persistData(context, WeatherDataType.DAILY_FORECAST, dailyForecastValues);
+                persistData(context, WeatherDataType.TRIHOUR_FORECAST, triHourForecastValues);
+            }
+            else {
+                Log.w(TAG, String.format("handleActionSingleLoad: No current weather data for lat:%f, long:%f", latitude, longitude));
+            }
+
+        }
+        catch (Exception e) {
+            Log.d(TAG, "handleActionSingleLoad: Unexpected error", e);
+        }
+
+        CacheUtils.logCache();
     }
 
     /**
@@ -137,9 +218,10 @@ public class FetchDataHelper {
                 return;
             }
             Log.d(TAG, "handleActionLoad: Fetch was not cancelled before getData.");
-            ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER);
-            ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST);
-            ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST);
+            long[] cityIds = new long[] {SEATTLE_CITY_ID};
+            ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_ID, cityIds, null);
+            ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
+            ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
 
             //check if we should exit early
             if (helperCallback.shouldCancelFetch()) {
@@ -157,9 +239,9 @@ public class FetchDataHelper {
             }
             Log.d(TAG, "handleActionLoad: Fetch was not cancelled before persistData.");
             //persist the weather data
-            persistData(context, currentWeatherValues, WeatherDataType.CURRENT_WEATHER);
-            persistData(context, dailyForecastValues, WeatherDataType.DAILY_FORECAST);
-            persistData(context, triHourForecastValues, WeatherDataType.TRIHOUR_FORECAST);
+            persistData(context, WeatherDataType.CURRENT_WEATHER, currentWeatherValues);
+            persistData(context, WeatherDataType.DAILY_FORECAST, dailyForecastValues);
+            persistData(context, WeatherDataType.TRIHOUR_FORECAST, triHourForecastValues);
 
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
             purgeOldData(context, WeatherDataType.DAILY_FORECAST);
@@ -236,17 +318,20 @@ public class FetchDataHelper {
      * @return
      */
     @Nullable
-    private static ContentValues[] getData(WeatherDataType weatherDataType) {
-        Log.d(TAG, "getData: weatherDataType: " + weatherDataType);
+    private static ContentValues[] getData(@NonNull WeatherDataType weatherDataType, @NonNull WeatherQueryType weatherQueryType,
+                                           @Nullable long[] cityIds, @Nullable LatLng latLng) {
+        Log.d(TAG, "getData: " + weatherDataType + ", " + weatherQueryType);
+
         ContentValues[] valuesArray = null;
 
         try {
-            URL url;
+            URL url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
+            valuesArray = performGet(url, weatherDataType);
 
             switch (weatherDataType) {
                 case CURRENT_WEATHER:
-                    url = buildUrl(WeatherDataType.CURRENT_WEATHER);
-                    valuesArray = performGet(url, WeatherDataType.CURRENT_WEATHER);
+//                    url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
+//                    valuesArray = performGet(url, weatherDataType);
 
                     //add unit and current timestamp if valuesArray is not null
                     if (valuesArray != null && valuesArray.length > 0) {
@@ -268,19 +353,16 @@ public class FetchDataHelper {
                             values.put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
                         }
                     }
-                    //logContentValuesArray(valuesArray, WeatherDataType.CURRENT_WEATHER);
                     break;
 
                 case DAILY_FORECAST:
-                    url = buildUrl(WeatherDataType.DAILY_FORECAST);
-                    valuesArray = performGet(url, WeatherDataType.DAILY_FORECAST);
-                    //logContentValuesArray(valuesArray, WeatherDataType.DAILY_FORECAST);
+//                    url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
+//                    valuesArray = performGet(url, weatherDataType);
                     break;
 
                 case TRIHOUR_FORECAST:
-                    url = buildUrl(WeatherDataType.TRIHOUR_FORECAST);
-                    valuesArray = performGet(url, WeatherDataType.TRIHOUR_FORECAST);
-                    //logContentValuesArray(valuesArray, WeatherDataType.TRIHOUR_FORECAST);
+//                    url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
+//                    valuesArray = performGet(url, weatherDataType);
                     break;
 
             }
@@ -292,7 +374,6 @@ public class FetchDataHelper {
             Log.d(TAG, "Unexpected error:", e);
         }
 
-        //Log.d(TAG, "getData: values:" + valuesArray);
         return valuesArray;
     }
 
@@ -301,7 +382,7 @@ public class FetchDataHelper {
      * @param valuesArray
      * @param weatherDataType
      */
-    private static void persistData(Context context, @Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
+    private static void persistData(Context context, @NonNull WeatherDataType weatherDataType, @Nullable ContentValues[] valuesArray) {
         Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
 
         if (valuesArray != null) {
@@ -335,11 +416,14 @@ public class FetchDataHelper {
      * http://api.openweathermap.org/data/2.5/forecast?id=5809844&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
      *
      * @param weatherDataType
+     * @param weatherQueryType
      * @return
      * @throws MalformedURLException
      */
-    private static URL buildUrl(WeatherDataType weatherDataType) throws MalformedURLException {
-        Log.d(TAG, "buildUrl: weatherDataType: " + weatherDataType);
+    private static URL buildUrl(@NonNull WeatherDataType weatherDataType, @NonNull WeatherQueryType weatherQueryType,
+                                @Nullable long[] cityIds, @Nullable LatLng latLng) throws MalformedURLException {
+        Log.d(TAG, "buidUrl: " + weatherDataType + ", " + weatherQueryType);
+
         Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme(SCHEME)
                 .authority(AUTHORITY)
@@ -362,10 +446,41 @@ public class FetchDataHelper {
                 break;
         }
 
+        //append the appropriate query parameter for city
+        switch (weatherQueryType) {
+            case CITY_ID:
+                if (cityIds == null) {
+                    throw new MalformedURLException("CityIds should not be null for weatherQueryType:" + weatherQueryType);
+                }
+                uriBuilder.appendQueryParameter(QUERY_CITY_ID, String.valueOf(cityIds[0]));
+                break;
+
+            case CITY_LATLNG:
+                if (latLng == null) {
+                    throw new MalformedURLException("LatLng should not be null for weatherQueryType:" + weatherQueryType);
+                }
+                uriBuilder.appendQueryParameter(QUERY_CITY_LATITUDE, String.valueOf(latLng.latitude));
+                uriBuilder.appendQueryParameter(QUERY_CITY_LONGITUDE, String.valueOf(latLng.longitude));
+                break;
+
+            case CITY_MULTI:
+                //TODO: verify, this is not really used anywhere yet
+                if (cityIds == null) {
+                    throw new MalformedURLException("CityIds should not be null for weatherQueryType:" + weatherQueryType);
+                }
+                StringBuilder cityIdsBuilder = new StringBuilder();
+                for (int i=0; i<cityIds.length; i++) {
+                    cityIdsBuilder.append(String.valueOf(cityIds[i]));
+                    if (i != cityIds.length-1)
+                        cityIdsBuilder.append(CITY_ID_SEPARATOR);
+                }
+                uriBuilder.appendQueryParameter(QUERY_CITY_ID, cityIdsBuilder.toString());
+                break;
+        }
+
         //append the required query parameters for every weather data type
-        uriBuilder.appendQueryParameter(QUERY_CITYID, CITY_ID)
-                .appendQueryParameter(QUERY_UNIT, UNIT_IMPERIAL)
-                .appendQueryParameter(QUERY_APPID, APP_ID);
+        uriBuilder.appendQueryParameter(QUERY_UNIT, UNIT_IMPERIAL)
+                .appendQueryParameter(QUERY_APP_ID, APP_ID);
 
         Uri uri = uriBuilder.build();
         Log.d(TAG, "buildUrl: " + uri.toString());
@@ -545,9 +660,6 @@ public class FetchDataHelper {
                 Log.d(TAG, "purgeOldData: Unknown weatherDataType: " + weatherDataType);
         }
     }
-
-
-
 
     /**
      * Helper method that just logs the values in the valuesArray.

@@ -17,7 +17,13 @@ public class NetworkIntentService
 
     //action in intent
     private static final String ACTION_LOAD = NetworkIntentService.class.getSimpleName() + ".action.load";
+    private static final String ACTION_SINGLE_LOAD = NetworkIntentService.class.getSimpleName() + "action.singleLoad";
     private static final String ACTION_WAKEFUL_LOAD = NetworkIntentService.class.getSimpleName() + ".action.wakefulLoad";
+
+    //extras in intent
+    private static final String EXTRA_CITY_ID = NetworkIntentService.class.getSimpleName() + ".cityId";
+    private static final String EXTRA_CITY_LATITUDE = NetworkIntentService.class.getSimpleName() + ".cityLatitude";
+    private static final String EXTRA_CITY_LONGITUDE = NetworkIntentService.class.getSimpleName() + ".cityLongitude";
 
     /**
      * Required by the manifest.
@@ -61,6 +67,25 @@ public class NetworkIntentService
 
         //set action
         intent.setAction(ACTION_LOAD);
+
+        return intent;
+    }
+
+    /**
+     * Builds an intent to load data for a single city. Pass this intent to
+     * context.startService().
+     * @param context
+     * @return
+     */
+    public static Intent buildIntentForSingleCityLoad(Context context, double latitude, double longitude) {
+        Intent intent = new Intent(context, NetworkIntentService.class);
+
+        //set action
+        intent.setAction(ACTION_SINGLE_LOAD);
+        //set extras
+        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
+        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
+
         return intent;
     }
 
@@ -96,7 +121,16 @@ public class NetworkIntentService
 
         if (ACTION_LOAD.equals(action)) {
             //app is in the foreground, user is interacting
+            //loads data for all cities
             FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
+        }
+        else if (ACTION_SINGLE_LOAD.equals(action)) {
+            //loads data for a single city
+            FetchDataHelper.handleActionSingleLoad(
+                    this.getApplicationContext(),
+                    this,
+                    intent.getDoubleExtra(EXTRA_CITY_LATITUDE, 0),
+                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0));
         }
         else if (ACTION_WAKEFUL_LOAD.equals(action)) {
             //called by alarm service

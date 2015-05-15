@@ -164,6 +164,7 @@ public class SearchActivity
         Log.d(TAG, "onPlaceSelected");
 
         //TODO:close out the search activity and go back to the pager activity
+        navigateUpToParentActivity();
     }
 
     /**

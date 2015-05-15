@@ -3,6 +3,8 @@ package com.example.yeelin.homework2.h312yeelin.networkUtils;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -53,9 +55,9 @@ public class ImageUtils {
      * @param triHourForecastValues
      */
     public static void getImages(Context context,
-                                  ContentValues[] currentWeatherValues,
-                                  ContentValues[] dailyForecastValues,
-                                  ContentValues[] triHourForecastValues) {
+                                  @Nullable ContentValues[] currentWeatherValues,
+                                  @Nullable ContentValues[] dailyForecastValues,
+                                  @Nullable ContentValues[] triHourForecastValues) {
         Log.d(TAG, "getImages");
         //get all the unique icons to fetch
         HashMap<String, String> iconNameMap = getUniqueIconNamesToFetch(currentWeatherValues, dailyForecastValues, triHourForecastValues);
@@ -115,40 +117,46 @@ public class ImageUtils {
      * @param triHourForecastValues
      * @return
      */
-    private static HashMap<String, String> getUniqueIconNamesToFetch(ContentValues[] currentWeatherValues,
-                                                                     ContentValues[] dailyForecastValues,
-                                                                     ContentValues[] triHourForecastValues) {
+    @NonNull
+    private static HashMap<String, String> getUniqueIconNamesToFetch(@Nullable ContentValues[] currentWeatherValues,
+                                                                     @Nullable ContentValues[] dailyForecastValues,
+                                                                     @Nullable ContentValues[] triHourForecastValues) {
         HashMap<String, String> iconNameMap = new HashMap<>();
 
         //get unique icon names
-        for (ContentValues values : currentWeatherValues) {
-            String iconName = (String) values.get(CurrentWeatherContract.Columns.ICON);
-            if (!iconNameMap.containsKey(iconName)) {
-                Log.d(TAG, "Adding to iconmap:" + iconName);
-                iconNameMap.put(iconName, iconName);
-            }
-            else {
-                Log.d(TAG, "Iconmap already contains " + iconName);
-            }
-        }
-        for (ContentValues values : dailyForecastValues) {
-            String iconName = (String) values.get(DailyForecastContract.Columns.ICON);
-            if (!iconNameMap.containsKey(iconName)) {
-                Log.d(TAG, "Adding to iconmap:" + iconName);
-                iconNameMap.put(iconName, iconName);
-            }
-            else {
-                Log.d(TAG, "Iconmap already contains " + iconName);
+        if (currentWeatherValues != null) {
+            for (ContentValues values : currentWeatherValues) {
+                String iconName = (String) values.get(CurrentWeatherContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    Log.d(TAG, "Iconmap already contains " + iconName);
+                }
             }
         }
-        for (ContentValues values : triHourForecastValues) {
-            String iconName = (String) values.get(TriHourForecastContract.Columns.ICON);
-            if (!iconNameMap.containsKey(iconName)) {
-                Log.d(TAG, "Adding to iconmap:" + iconName);
-                iconNameMap.put(iconName, iconName);
+
+        if (dailyForecastValues != null) {
+            for (ContentValues values : dailyForecastValues) {
+                String iconName = (String) values.get(DailyForecastContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    Log.d(TAG, "Iconmap already contains " + iconName);
+                }
             }
-            else {
-                Log.d(TAG, "Iconmap already contains " + iconName);
+        }
+
+        if (triHourForecastValues != null) {
+            for (ContentValues values : triHourForecastValues) {
+                String iconName = (String) values.get(TriHourForecastContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    Log.d(TAG, "Iconmap already contains " + iconName);
+                }
             }
         }
 
@@ -163,7 +171,8 @@ public class ImageUtils {
      * @param iconName
      * @return
      */
-    private static Uri buildIconUri(String iconName) {
+    @NonNull
+    private static Uri buildIconUri(@NonNull String iconName) {
 
         Uri uri = new Uri.Builder()
                 .scheme(SCHEME)
