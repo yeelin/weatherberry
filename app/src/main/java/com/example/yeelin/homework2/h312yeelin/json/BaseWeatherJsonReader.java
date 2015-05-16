@@ -50,6 +50,7 @@ public abstract class BaseWeatherJsonReader {
         jsonReader = new JsonReader(new InputStreamReader(stream, encoding));
     }
 
+    @NonNull
     public abstract ContentValues[] process() throws IOException;
 
     /**
@@ -60,7 +61,7 @@ public abstract class BaseWeatherJsonReader {
     @NonNull
     protected HashMap<String, Long> processCityObject() throws IOException {
         //Log.d(TAG, "processCityObject");
-        HashMap<String, Long> map = new HashMap<>();
+        HashMap<String, Long> map = new HashMap<>(1);
 
         jsonReader.beginObject();
         while (jsonReader.hasNext()) {
@@ -85,6 +86,13 @@ public abstract class BaseWeatherJsonReader {
         return map;
     }
 
+    /**
+     * ProcessListArray is used by daily and trihour json readers to process the list array.
+     *
+     * @param cityId
+     * @return
+     * @throws IOException
+     */
     @NonNull
     protected ArrayList<ContentValues> processListArray(long cityId) throws IOException {
         //Log.d(TAG, "processListArray");
@@ -99,6 +107,7 @@ public abstract class BaseWeatherJsonReader {
         return list;
     }
 
+    @NonNull
     protected abstract ContentValues processListObject(long cityId) throws IOException;
 
     /**
@@ -109,7 +118,7 @@ public abstract class BaseWeatherJsonReader {
     @NonNull
     protected HashMap<String, Double> processMainObject() throws IOException {
         //Log.d(TAG, "processMainObject");
-        HashMap<String, Double> map = new HashMap<>();
+        HashMap<String, Double> map = new HashMap<>(2);
 
         jsonReader.beginObject();
         while (jsonReader.hasNext()) {
@@ -139,23 +148,23 @@ public abstract class BaseWeatherJsonReader {
     }
 
     /**
-     * ProcessWeatherArray is used for summary and description strings for now by
-     * current and trihour json readers.
-     * Later, it will be used for images too by all readers.
-     * TODO: Add image support
+     * ProcessWeatherArray is used for summary, description, and icon names for now by
+     * current, daily, and trihour json readers.
+     * *
      * @return
      * @throws IOException
      */
-    @NonNull
+    @Nullable
     protected HashMap<String, String> processWeatherArray() throws IOException {
         //Log.d(TAG, "processWeatherArray");
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> map = null;
 
-        jsonReader.beginArray();
+        jsonReader.beginArray(); //consume [
         while(jsonReader.hasNext()) {
+            //there is only 1 weather object so this is safe
             map = processWeatherObject();
         }
-        jsonReader.endArray();
+        jsonReader.endArray(); //consume ]
 
         return map;
     }
@@ -165,11 +174,12 @@ public abstract class BaseWeatherJsonReader {
      * @return
      * @throws IOException
      */
+    @NonNull
     private HashMap<String, String> processWeatherObject() throws IOException {
         //Log.d(TAG, "processWeatherObject");
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> map = new HashMap<>(3);
 
-        jsonReader.beginObject();
+        jsonReader.beginObject(); //consume {
         while(jsonReader.hasNext()) {
             String name = jsonReader.nextName();
             //Log.d(TAG, "processWeatherObject: name:" + name);
@@ -196,7 +206,7 @@ public abstract class BaseWeatherJsonReader {
                     break;
             }
         }
-        jsonReader.endObject();
+        jsonReader.endObject(); //consume }
 
         return map;
     }

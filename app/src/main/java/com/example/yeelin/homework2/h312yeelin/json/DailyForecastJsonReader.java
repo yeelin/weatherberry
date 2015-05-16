@@ -1,6 +1,7 @@
 package com.example.yeelin.homework2.h312yeelin.json;
 
 import android.content.ContentValues;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
@@ -42,9 +43,9 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
     }
 
     @Override
+    @NonNull
     public ContentValues[] process() throws IOException {
         //Log.d(TAG, "process");
-
         ArrayList<ContentValues> valuesArrayList = new ArrayList<>();
         long cityId = 0;
 
@@ -86,6 +87,7 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
     }
 
     @Override
+    @NonNull
     protected ContentValues processListObject(long cityId) throws IOException {
         //Log.d(TAG, "processListObject");
         ContentValues values = new ContentValues();
@@ -105,10 +107,10 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
                     values.put(DailyForecastContract.Columns.FORECAST_DATETIME, dateMillis);
 
                     //utc date
-                    Date dateUTC = new Date(dateMillis);
+                    //Date dateUTC = new Date(dateMillis);
                     //Log.d(TAG,"processListObject: DateUTC:" + dateUTC);
                     //formatted date
-                    SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
+                    //SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
                     //Log.d(TAG, "processListObject: Formatted date: " + formatter.format(dateUTC));
                     break;
 
@@ -122,7 +124,9 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
                 //weather
                 case DailyForecastContract.Json.WEATHER_ARRAY:
                     HashMap<String, String> weatherMap = processWeatherArray();
-                    values.put(DailyForecastContract.Columns.ICON, weatherMap.get(DailyForecastContract.Columns.ICON));
+                    if (weatherMap != null) {
+                        values.put(DailyForecastContract.Columns.ICON, weatherMap.get(DailyForecastContract.Columns.ICON));
+                    }
                     break;
 
                 //pressure, humidity, speed, deg, clouds
@@ -137,9 +141,10 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
         return values;
     }
 
+    @NonNull
     private HashMap<String, Double> processTemperatureObject() throws IOException {
         //Log.d(TAG, "processTemperatureObject");
-        HashMap<String, Double> map = new HashMap<>();
+        HashMap<String, Double> map = new HashMap<>(2);
 
         jsonReader.beginObject(); //consume {
         while (jsonReader.hasNext()) {

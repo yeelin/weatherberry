@@ -137,7 +137,7 @@ public class CurrentWeatherLoaderCallbacks
      */
     @Override
     public Loader onCreateLoader(int loaderId, Bundle args) {
-        Log.d(TAG, "onCreateLoader");
+        //Log.d(TAG, "onCreateLoader");
 
         //get bundle args
         Uri uri = args.getParcelable(ARG_URI);
@@ -161,12 +161,12 @@ public class CurrentWeatherLoaderCallbacks
      */
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        Log.d(TAG, "onLoadFinished: Result is " + (cursor != null ? "not null" : "null"));
+        //Log.d(TAG, "onLoadFinished: Result is " + (cursor != null ? "not null" : "null"));
 
         //let the listener know
         CurrentWeatherLoaderListener listener = listenerWeakReference.get();
         if (listener != null) {
-            Log.d(TAG, "onLoadFinished: Notifying listener");
+            //Log.d(TAG, "onLoadFinished: Notifying listener");
             listener.onLoadComplete(LoaderIds.getLoaderIdForInt(loader.getId()), cursor);
         }
     }
@@ -177,7 +177,7 @@ public class CurrentWeatherLoaderCallbacks
      */
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        Log.d(TAG, "onLoaderReset");
+        //Log.d(TAG, "onLoaderReset");
 
         //let the listener know
         onLoadFinished(loader, null);

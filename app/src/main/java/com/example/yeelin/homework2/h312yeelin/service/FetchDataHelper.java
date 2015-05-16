@@ -11,10 +11,12 @@ import android.util.Log;
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
 import com.example.yeelin.homework2.h312yeelin.json.DailyForecastJsonReader;
+import com.example.yeelin.homework2.h312yeelin.json.GroupCurrentWeatherJsonReader;
 import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.CacheUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ConnectivityUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.PlayServicesUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
@@ -33,7 +35,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -61,6 +66,7 @@ public class FetchDataHelper {
     private static final String API_VERSION = "2.5";
 
     private static final String CURRENT_WEATHER = "weather";
+    private static final String GROUP = "group";
     private static final String FORECAST = "forecast";
     private static final String DAILY = "daily";
 
@@ -72,6 +78,11 @@ public class FetchDataHelper {
     private static final String QUERY_APP_ID = "APPID";
     private static final String CITY_ID_SEPARATOR = ",";
 
+    //projections
+    private static final String[] MAX_TIMESTAMP_PROJECTION = new String[] {"max(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"};
+    private static final String[] CITY_ID_PROJECTION = new String[] { CurrentWeatherContract.Columns.CITY_ID };
+    private static final String[] ICON_PROJECTION = new String[] { BaseWeatherContract.Columns.ICON };
+
     //TODO: remove these hardcoded values
     private static final long SEATTLE_CITY_ID = 5809844; //city id for Seattle
     private static final String UNIT_IMPERIAL = "imperial";
@@ -79,6 +90,7 @@ public class FetchDataHelper {
     private static final String APP_ID = "3284992e5bfef187c44863ce0f31ad30";
 
     private enum WeatherDataType {
+        GROUP_CURRENT_WEATHER,
         CURRENT_WEATHER,
         DAILY_FORECAST,
         TRIHOUR_FORECAST
@@ -87,7 +99,7 @@ public class FetchDataHelper {
     private enum WeatherQueryType {
         CITY_ID,
         CITY_LATLNG,
-        CITY_MULTI //TODO: Not used yet
+        CITY_MULTI
     }
 
     /**
@@ -108,7 +120,7 @@ public class FetchDataHelper {
     }
 
     /**
-     * Helper method that handles action load on the background thread.
+     * Helper method that handles action single load on the background thread.
      * Should be called from a background thread.
      *
      * Called from:
@@ -125,7 +137,7 @@ public class FetchDataHelper {
         Log.d(TAG, "handleActionSingleLoad");
 
         //check if we have the latest SSL, and if this fails, exit
-        if (!ensureLatestSSL(context)) {
+        if (!PlayServicesUtils.ensureLatestSSL(context)) {
             return;
         }
 
@@ -135,37 +147,23 @@ public class FetchDataHelper {
             return;
         }
 
-        //initialize the cache
-        //if already exists, then the existing one is used
+        //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
         try {
+            long cityId = findCityId(cityName, new LatLng(latitude, longitude));
+
+            if (cityId == 0) {
+                Log.d(TAG, "handleActionSingleLoad: Could not find cityId for: " + cityName);
+                return;
+            }
             //get data
-            ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, new LatLng(latitude, longitude));
+            //getData(context, WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, new LatLng(latitude, longitude));
+            ContentValues[] currentWeatherValues = getData(context, WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, userFavorite);
+            ContentValues[] dailyForecastValues = getData(context, WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, userFavorite);
+            ContentValues[] triHourForecastValues = getData(context, WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, userFavorite);
 
-            //get the city Id before calling the other apis so that we can query by cityId
-            if (currentWeatherValues != null && currentWeatherValues.length > 0) {
-                long cityId = currentWeatherValues[0].getAsLong(CurrentWeatherContract.Columns.CITY_ID);
-                long[] cityIds = new long[] {cityId};
-
-                ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
-                ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
-
-                //get images
-                ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
-
-                //augment data as appropriate
-                augmentData(WeatherDataType.CURRENT_WEATHER, currentWeatherValues, userFavorite);
-
-                //persist data
-                persistData(context, WeatherDataType.CURRENT_WEATHER, currentWeatherValues);
-                persistData(context, WeatherDataType.DAILY_FORECAST, dailyForecastValues);
-                persistData(context, WeatherDataType.TRIHOUR_FORECAST, triHourForecastValues);
-            }
-            else {
-                Log.w(TAG, String.format("handleActionSingleLoad: No current weather data for lat:%f, long:%f", latitude, longitude));
-            }
-
+            ImageUtils.getImages(context, getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionSingleLoad: Unexpected error", e);
@@ -173,6 +171,27 @@ public class FetchDataHelper {
 
         CacheUtils.logCache();
     }
+
+    //TODO: Fix this implementation of findCityId by switching to the other API
+    private static long findCityId(String cityName, LatLng latLng) {
+        ContentValues[] valuesArray;
+        try {
+            URL url = buildUrl(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, latLng);
+            valuesArray = performGet(url, WeatherDataType.CURRENT_WEATHER);
+
+            if (valuesArray != null) {
+                ContentValues values = valuesArray[0];
+                return values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
 
     /**
      * Helper method that handles action load on the background thread.
@@ -186,7 +205,7 @@ public class FetchDataHelper {
         Log.d(TAG, "handleActionLoad");
 
         //check if we have the latest SSL, and if this fails, exit
-        if (!ensureLatestSSL(context)) {
+        if (!PlayServicesUtils.ensureLatestSSL(context)) {
             return;
         }
 
@@ -196,25 +215,13 @@ public class FetchDataHelper {
             return;
         }
 
-        //initialize the cache
-        //if already exists, then the existing one is used
+        //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
-        //check last fetch time before fetching again
-        long lastFetchMillis = determineLastFetch(context);
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm Z", Locale.US);
-        if (System.currentTimeMillis() - lastFetchMillis < TEN_MINUTES_MILLIS) {
-            //last fetch < 10 minutes ago so skip
-            Log.d(TAG, String.format("handleActionLoad: Last fetch was less than 10 minutes ago. Current time:%s, Last fetch:%s",
-                    formatter.format(new Date(System.currentTimeMillis())),
-                    formatter.format(new Date(lastFetchMillis))));
+        if (!isDataStale(context)) {
+            Log.d(TAG, "handleActionLoad: Data is still fresh");
             return;
         }
-
-        //last fetch > 10 minutes ago so continue
-        Log.d(TAG, String.format("handleActionLoad: Last fetch was more than 10 minutes ago. Current time:%s, Last fetch:%s",
-                formatter.format(new Date(System.currentTimeMillis())),
-                formatter.format(new Date(lastFetchMillis))));
 
         try {
             //check if we should exit early
@@ -222,39 +229,30 @@ public class FetchDataHelper {
                 Log.d(TAG, "handleActionLoad: Fetch was cancelled before getData.");
                 return;
             }
-            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before getData.");
-            long[] cityIds = new long[] {SEATTLE_CITY_ID};
-            ContentValues[] currentWeatherValues = getData(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_ID, cityIds, null);
-            ContentValues[] dailyForecastValues = getData(WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
-            ContentValues[] triHourForecastValues = getData(WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, cityIds, null);
 
-            //check if we should exit early
-            if (helperCallback.shouldCancelFetch()) {
-                Log.d(TAG, "handleActionLoad: Fetch was cancelled before getImages.");
+            //get all the city ids
+            Long[] cityIds = getCityIds(context);
+            if (cityIds == null) {
+                Log.d(TAG, "handleActionLoad: No cities in the db so nothing to load");
                 return;
             }
-            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before getImages.");
-            //fetch weather icons to pre-warm the cache
-            ImageUtils.getImages(context, currentWeatherValues, dailyForecastValues, triHourForecastValues);
+            //get current weather data using group query
+            getData(context, WeatherDataType.GROUP_CURRENT_WEATHER, WeatherQueryType.CITY_MULTI, cityIds, null, true);
 
-            //check if we should exit early
-            if (helperCallback.shouldCancelFetch()) {
-                Log.d(TAG, "handleActionLoad: Fetch was cancelled before persistData.");
-                return;
+            //loop through all city ids and get forecast data since forecast API doesn't support group queries
+            for (Long cityId : cityIds) {
+                //get daily forecast data
+                getData(context, WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, true);
+                //get tri hour forecast data
+                getData(context, WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, true);
             }
-            Log.d(TAG, "handleActionLoad: Fetch was not cancelled before persistData.");
-
-            //augment data as appropriate
-            augmentData(WeatherDataType.CURRENT_WEATHER, currentWeatherValues, true);
-
-            //persist the weather data
-            persistData(context, WeatherDataType.CURRENT_WEATHER, currentWeatherValues);
-            persistData(context, WeatherDataType.DAILY_FORECAST, dailyForecastValues);
-            persistData(context, WeatherDataType.TRIHOUR_FORECAST, triHourForecastValues);
 
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
             purgeOldData(context, WeatherDataType.DAILY_FORECAST);
             purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
+
+            //fetch weather icons to pre-warm the cache
+            ImageUtils.getImages(context, getUniqueIconNames(context));
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);
@@ -264,28 +262,27 @@ public class FetchDataHelper {
     }
 
     /**
-     * Helper method that checks the device has the latest security updates.
+     * Helper method that checks if data is stale
+     * @param context
      * @return
      */
-    private static boolean ensureLatestSSL(Context context) {
-        try {
-            //ensure the latest SSL per
-            //http://developer.android.com/training/articles/security-gms-provider.html
-            ProviderInstaller.installIfNeeded(context);
-            return true;
-        }
-        catch (GooglePlayServicesRepairableException e) {
-            //since this is a background service, show a notification
-            GooglePlayServicesUtil.showErrorNotification(e.getConnectionStatusCode(), context);
-            Log.d(TAG, "ensureLatestSSL: Repairable error updating SSL");
+    private static boolean isDataStale(Context context) {
+        //check last fetch time before fetching again
+        long lastFetchMillis = determineLastFetch(context);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm Z", Locale.US);
+        if (System.currentTimeMillis() - lastFetchMillis < TEN_MINUTES_MILLIS) {
+            //last fetch < 10 minutes ago so skip
+            Log.d(TAG, String.format("isDataStale: Last fetch was less than 10 minutes ago. Current time:%s, Last fetch:%s",
+                    formatter.format(new Date(System.currentTimeMillis())),
+                    formatter.format(new Date(lastFetchMillis))));
             return false;
         }
-        catch (GooglePlayServicesNotAvailableException e) {
-            //since this is a background service, show a notification
-            GooglePlayServicesUtil.showErrorNotification(e.errorCode, context);
-            Log.d(TAG, "ensureLatestSSL: Missing play servers updating SSL");
-            return false;
-        }
+
+        //last fetch > 10 minutes ago so yes data is stale
+        Log.d(TAG, String.format("isDataStale: Last fetch was more than 10 minutes ago. Current time:%s, Last fetch:%s",
+                formatter.format(new Date(System.currentTimeMillis())),
+                formatter.format(new Date(lastFetchMillis))));
+        return true;
     }
 
     /**
@@ -295,16 +292,7 @@ public class FetchDataHelper {
      */
     private static long determineLastFetch(Context context) {
         //retrieve the timestamp from the current_weather table
-        String[] projection = new String[] {
-                "max(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"
-        };
-        Cursor cursor = context.getContentResolver().query(
-                CurrentWeatherContract.URI,
-                projection,
-                null,
-                null,
-                null);
-
+        Cursor cursor = context.getContentResolver().query(CurrentWeatherContract.URI, MAX_TIMESTAMP_PROJECTION, null, null, null);
         long lastFetchMillis = 0;
         try {
             if (cursor.moveToFirst() && !cursor.isNull(0)) {
@@ -320,6 +308,128 @@ public class FetchDataHelper {
     }
 
     /**
+     * Gets all the city ids from the current_weather table.  Guaranteed unique since cityId is the unique key for the table.
+     * @param context
+     * @return
+     */
+    @Nullable
+    private static Long[] getCityIds (Context context) {
+        //retrieve all the city ids from the current_weather table
+        Cursor cursor = context.getContentResolver().query(CurrentWeatherContract.URI, CITY_ID_PROJECTION, null, null, null);
+
+        if (cursor == null || cursor.getCount() == 0) {
+            Log.d(TAG, "getCityIds: No cities in the db");
+            return null;
+        }
+
+        ArrayList<Long> cityIdsList = new ArrayList<>(cursor.getCount());
+        try {
+            while(cursor.moveToNext()) {
+                cityIdsList.add(cursor.getLong(0));
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        Log.d(TAG, "getCityIds: CityIds: " + cityIdsList);
+        Long[] cityIdsArray = new Long[cityIdsList.size()];
+        return cityIdsList.toArray(cityIdsArray);
+    }
+
+    /**
+     * Gets unique icon names from all the tables.
+     * TODO: I don't like how I'm using a hashmap to get the unique names.  Need to find a way to return distinct rows.
+     * @param context
+     * @return
+     */
+    @NonNull
+    private static Collection<String> getUniqueIconNames(Context context) {
+        HashMap<String, String> iconNameMap = new HashMap<>();
+
+        //retrieve all icons from all the tables
+        Cursor currentWeatherIconCursor = context.getContentResolver().query(CurrentWeatherContract.URI, ICON_PROJECTION, null, null, null);
+        Cursor dailyForecastIconCursor = context.getContentResolver().query(DailyForecastContract.URI, ICON_PROJECTION, null, null, null);
+        Cursor triHourForecastIconCursor = context.getContentResolver().query(TriHourForecastContract.URI, ICON_PROJECTION, null, null, null);
+
+        getUniqueIconNamesHelper(currentWeatherIconCursor, iconNameMap);
+        getUniqueIconNamesHelper(dailyForecastIconCursor, iconNameMap);
+        getUniqueIconNamesHelper(triHourForecastIconCursor, iconNameMap);
+
+        return iconNameMap.values();
+    }
+
+    private static void getUniqueIconNamesHelper(@Nullable Cursor cursor, @NonNull HashMap<String, String> iconNameMap) {
+        if (cursor == null || cursor.getCount() == 0) {
+            return;
+        }
+
+        try {
+            while (cursor.moveToNext()) {
+                String iconName = cursor.getString(0);
+                iconNameMap.put(iconName, iconName);
+            }
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /**
+     * Loops over all the values inserted into the database and retrieves the unique icons
+     * that need to be fetched.
+     * @param currentWeatherValues
+     * @param dailyForecastValues
+     * @param triHourForecastValues
+     * @return
+     */
+    @NonNull
+    private static Collection<String> getUniqueIconNames(@Nullable ContentValues[] currentWeatherValues,
+                                                         @Nullable ContentValues[] dailyForecastValues,
+                                                         @Nullable ContentValues[] triHourForecastValues) {
+        HashMap<String, String> iconNameMap = new HashMap<>();
+
+        //get unique icon names
+        if (currentWeatherValues != null) {
+            for (ContentValues values : currentWeatherValues) {
+                String iconName = (String) values.get(CurrentWeatherContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    //Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    //Log.d(TAG, "Iconmap already contains " + iconName);
+                }
+            }
+        }
+
+        if (dailyForecastValues != null) {
+            for (ContentValues values : dailyForecastValues) {
+                String iconName = (String) values.get(DailyForecastContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    //Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    //Log.d(TAG, "Iconmap already contains " + iconName);
+                }
+            }
+        }
+
+        if (triHourForecastValues != null) {
+            for (ContentValues values : triHourForecastValues) {
+                String iconName = (String) values.get(TriHourForecastContract.Columns.ICON);
+                if (!iconNameMap.containsKey(iconName)) {
+                    //Log.d(TAG, "Adding to iconmap:" + iconName);
+                    iconNameMap.put(iconName, iconName);
+                } else {
+                    //Log.d(TAG, "Iconmap already contains " + iconName);
+                }
+            }
+        }
+
+        Log.d(TAG, String.format("getUniqueIconNamesToFetch: Count:%d, Contents:%s", iconNameMap.size(), iconNameMap.toString()));
+        return iconNameMap.values();
+    }
+
+    /**
      * Retrieves data from the API by first building the url, calling the API, and then
      * processing the response into content values.
      *
@@ -327,34 +437,62 @@ public class FetchDataHelper {
      * @return
      */
     @Nullable
-    private static ContentValues[] getData(@NonNull WeatherDataType weatherDataType, @NonNull WeatherQueryType weatherQueryType,
-                                           @Nullable long[] cityIds, @Nullable LatLng latLng) {
+    private static ContentValues[] getData(Context context,
+                                           @NonNull WeatherDataType weatherDataType,
+                                           @NonNull WeatherQueryType weatherQueryType,
+                                           @Nullable Long[] cityIds,
+                                           @Nullable LatLng latLng,
+                                           boolean userFavorite) {
         Log.d(TAG, "getData: " + weatherDataType + ", " + weatherQueryType);
 
         ContentValues[] valuesArray = null;
-
+        //get data
         try {
             URL url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
             valuesArray = performGet(url, weatherDataType);
+        } catch (MalformedURLException e) {
+            Log.d(TAG, "getData: Unexpected error:", e);
+        } catch (IOException e) {
+            Log.d(TAG, "getData: Unexpected error:", e);
         }
-        catch (MalformedURLException e) {
-            Log.d(TAG, "Unexpected error:", e);
+
+        if (valuesArray == null || valuesArray.length == 0) {
+            Log.d(TAG, "getData: ValuesArray is null or empty so not persisting");
+            return null;
         }
-        catch (IOException e) {
-            Log.d(TAG, "Unexpected error:", e);
+
+        //persist data
+        switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
+            case CURRENT_WEATHER:
+                augmentData(weatherDataType, valuesArray, userFavorite);
+                persistData(context, weatherDataType, valuesArray);
+                break;
+
+            case DAILY_FORECAST:
+                persistData(context, weatherDataType, valuesArray);
+                break;
+
+            case TRIHOUR_FORECAST:
+                persistData(context, weatherDataType, valuesArray);
+                break;
         }
 
         return valuesArray;
     }
 
-    private static void augmentData(@NonNull WeatherDataType weatherDataType, @Nullable ContentValues[] valuesArray, boolean userFavorite) {
-
-        if (valuesArray == null || valuesArray.length == 0) {
-            Log.d(TAG, "augmentData: valuesArray is null or empty. Nothing to augment.");
-            return;
-        }
-
+    /**
+     * Augments the data before inserting into the database
+     * @param weatherDataType
+     * @param valuesArray
+     * @param userFavorite
+     */
+    private static void augmentData(@NonNull WeatherDataType weatherDataType,
+                                    @NonNull ContentValues[] valuesArray,
+                                    boolean userFavorite) {
+        Log.d(TAG, "augmentData");
         switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
             case CURRENT_WEATHER:
                 //add unit and current timestamp
                 for (ContentValues values : valuesArray) {
@@ -390,28 +528,26 @@ public class FetchDataHelper {
 
 
     /**
-     * Persists the data into the database.
+     * Inserts the data into the database.
      * @param valuesArray
      * @param weatherDataType
      */
-    private static void persistData(Context context, @NonNull WeatherDataType weatherDataType, @Nullable ContentValues[] valuesArray) {
+    private static void persistData(Context context, @NonNull WeatherDataType weatherDataType, @NonNull ContentValues[] valuesArray) {
         Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
+        //insert
+        switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
+            case CURRENT_WEATHER:
+                context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
+                break;
 
-        if (valuesArray != null) {
-            //insert
-            switch (weatherDataType) {
-                case CURRENT_WEATHER:
-                    context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
-                    break;
+            case DAILY_FORECAST:
+                context.getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
+                break;
 
-                case DAILY_FORECAST:
-                    context.getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
-                    break;
-
-                case TRIHOUR_FORECAST:
-                    context.getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
-                    break;
-            }
+            case TRIHOUR_FORECAST:
+                context.getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
+                break;
         }
     }
 
@@ -419,7 +555,9 @@ public class FetchDataHelper {
      * Builds a url for querying the open weather api.
      * Format depends on the weather data type:
      * Current weather:
-     * http://api.openweathermap.org/data/2.5/weather?id=5128638&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     * By City Id:      http://api.openweathermap.org/data/2.5/weather?id=5128638&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     * By LatLng:       http://api.openweathermap.org/data/2.5/weather?lat=47.610377&lon=-122.2006786&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     * By Multi cities: http://api.openweathermap.org/data/2.5/group?id=5809844,5786882&units=imperial&cnt=5&APPID=3284992e5bfef187c44863ce0f31ad30
      *
      * Daily forecast:
      * http://api.openweathermap.org/data/2.5/forecast/daily?id=5809844&units=imperial&cnt=5&APPID=3284992e5bfef187c44863ce0f31ad30
@@ -433,8 +571,8 @@ public class FetchDataHelper {
      * @throws MalformedURLException
      */
     private static URL buildUrl(@NonNull WeatherDataType weatherDataType, @NonNull WeatherQueryType weatherQueryType,
-                                @Nullable long[] cityIds, @Nullable LatLng latLng) throws MalformedURLException {
-        Log.d(TAG, "buidUrl: " + weatherDataType + ", " + weatherQueryType);
+                                @Nullable Long[] cityIds, @Nullable LatLng latLng) throws MalformedURLException {
+        Log.d(TAG, "buildUrl: " + weatherDataType + ", " + weatherQueryType);
 
         Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme(SCHEME)
@@ -443,6 +581,10 @@ public class FetchDataHelper {
                 .appendPath(API_VERSION);
 
         switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
+                uriBuilder.appendPath(GROUP);
+                break;
+
             case CURRENT_WEATHER:
                 uriBuilder.appendPath(CURRENT_WEATHER);
                 break;
@@ -592,6 +734,10 @@ public class FetchDataHelper {
         Log.d(TAG, "buildContentValues: weatherDataType:" + weatherDataType);
 
         switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
+                GroupCurrentWeatherJsonReader groupCurrentWeatherJsonReader = new GroupCurrentWeatherJsonReader(stream, encoding);
+                return groupCurrentWeatherJsonReader.process();
+
             case CURRENT_WEATHER:
                 CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(stream, encoding);
                 return currentWeatherJsonReader.process();
@@ -628,6 +774,7 @@ public class FetchDataHelper {
         simpleDateFormat.setTimeZone(TimeZone.getDefault());
 
         switch (weatherDataType) {
+            case GROUP_CURRENT_WEATHER:
             case CURRENT_WEATHER:
                 //nothing to purge
                 break;
@@ -712,5 +859,4 @@ public class FetchDataHelper {
 
         Log.w(TAG, builder.toString());
     }
-
 }

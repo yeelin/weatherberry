@@ -1,6 +1,7 @@
 package com.example.yeelin.homework2.h312yeelin.json;
 
 import android.content.ContentValues;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
@@ -44,9 +45,9 @@ public class TriHourForecastJsonReader extends BaseWeatherJsonReader {
     }
 
     @Override
+    @NonNull
     public ContentValues[] process() throws IOException {
         //Log.d(TAG, "process");
-
         ArrayList<ContentValues> valuesArrayList = new ArrayList<>();
         long cityId = 0;
 
@@ -86,6 +87,7 @@ public class TriHourForecastJsonReader extends BaseWeatherJsonReader {
     }
 
     @Override
+    @NonNull
     protected ContentValues processListObject(long cityId) throws IOException {
         //Log.d(TAG, "processListObject");
         ContentValues values = new ContentValues();
@@ -105,13 +107,13 @@ public class TriHourForecastJsonReader extends BaseWeatherJsonReader {
                     values.put(TriHourForecastContract.Columns.FORECAST_DATETIME, utcDateMillis);
 
                     //utc date
-                    Date utcDate = new Date(utcDateMillis);
-                    SimpleDateFormat utcDateFormatter1 = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ");
-                    utcDateFormatter1.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    //Log.d(TAG,"processListObject: dt: DateUTC:" + utcDateFormatter1.format(utcDate));
+                    //Date utcDate = new Date(utcDateMillis);
+                    //SimpleDateFormat utcDateFormatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ");
+                    //utcDateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    //Log.d(TAG,"processListObject: dt: DateUTC:" + utcDateFormatter.format(utcDate));
 
                     //formatted date
-                    SimpleDateFormat usDateFormatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
+                    //SimpleDateFormat usDateFormatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
                     //Log.d(TAG, "processListObject: dt: Formatted date: " + usDateFormatter.format(utcDate));
                     break;
 
@@ -124,8 +126,10 @@ public class TriHourForecastJsonReader extends BaseWeatherJsonReader {
                 //weather
                 case TriHourForecastContract.Json.WEATHER_ARRAY:
                     HashMap<String, String> weatherMap = processWeatherArray();
-                    values.put(TriHourForecastContract.Columns.DESCRIPTION, weatherMap.get(TriHourForecastContract.Columns.DESCRIPTION));
-                    values.put(TriHourForecastContract.Columns.ICON, weatherMap.get(TriHourForecastContract.Columns.ICON));
+                    if (weatherMap != null) {
+                        values.put(TriHourForecastContract.Columns.DESCRIPTION, weatherMap.get(TriHourForecastContract.Columns.DESCRIPTION));
+                        values.put(TriHourForecastContract.Columns.ICON, weatherMap.get(TriHourForecastContract.Columns.ICON));
+                    }
                     break;
 
                 /*
