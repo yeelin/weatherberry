@@ -5,7 +5,6 @@ import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -25,7 +24,6 @@ import com.example.yeelin.homework2.h312yeelin.activity.DummyActivity;
 import com.example.yeelin.homework2.h312yeelin.adapter.SearchAdapter;
 import com.example.yeelin.homework2.h312yeelin.adapter.SearchResultItem;
 import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -45,21 +43,15 @@ import java.util.concurrent.TimeUnit;
  * Created by ninjakiki on 5/13/15.
  */
 public class SearchFragment
-        extends Fragment
+        extends BasePlayServicesFragment
         implements AdapterView.OnItemClickListener,
         SearchView.OnQueryTextListener,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
         ResultCallback<AutocompletePredictionBuffer> {
 
     //logcat
     private static final String TAG = SearchFragment.class.getCanonicalName();
 
-    //states for SaveInstanceState
-    private static final String EXTRA_RESOLVING_ERROR = SearchFragment.class.getSimpleName() + ".resolvingError";
-
     //other constants
-    private static final int RESOLVE_ERROR_REQUEST = 110;
     private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
     private static final int PENDING_RESULT_TIME_SECONDS = 30; //30 seconds
     private static final LatLng US_SW = new LatLng(24.498899, -124.422985);
@@ -67,42 +59,33 @@ public class SearchFragment
     private static final LatLngBounds US_LAT_LNG_BOUNDS = new LatLngBounds(US_SW, US_NE); //rectangle encapsulating USA
 
     //member variables
-    private GoogleApiClient googleApiClient;
-    private boolean resolvingError;
     private PendingResult<AutocompletePredictionBuffer> autocompletePendingResult;
 
     //listener member variable
-    private SearchFragmentListener listener;
+    private SearchFragmentListener searchListener;
 
     /**
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
      */
-    public interface SearchFragmentListener {
-        public void showPlayServicesErrorDialog(int errorCode);
-
+    public interface SearchFragmentListener extends BasePlayServicesFragmentListener {
         public void onPlaceSelected(String name, double latitude, double longitude, List<Integer> placeTypes);
     }
 
     /**
      * Required empty constructor
      */
-    public SearchFragment() {
-    }
+    public SearchFragment() {}
 
     /**
-     * The hosting Activity uses this method to notify this fragment that play services error
-     * has been resolved. If not connected, or connecting, it will restart the connection process.
+     * Creates a new google api client builder that does places search
+     * @return
      */
-    public void onPlayServicesAvailable() {
-        Log.d(TAG, "onPlayServicesAvailable");
-
-        //we are done resolving the error so set to false
-        resolvingError = false;
-
-        if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
-            googleApiClient.connect();
-            Log.d(TAG, "onPlayServicesAvailable: Connect called");
-        }
+    @Override
+    public GoogleApiClient.Builder buildGoogleApiClient() {
+        return new GoogleApiClient
+                .Builder(getActivity())
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API);
     }
 
     /**
@@ -117,7 +100,7 @@ public class SearchFragment
         Object objectToCast = parent != null ? parent : activity;
 
         try {
-            listener = (SearchFragmentListener) objectToCast;
+            searchListener = (SearchFragmentListener) objectToCast;
         }
         catch (ClassCastException e) {
             throw new ClassCastException(objectToCast.getClass().getSimpleName()
@@ -135,18 +118,6 @@ public class SearchFragment
 
         //notify that we have an options menu so that we get the callback to create one later
         setHasOptionsMenu(true);
-
-        //read the saved instance state if it's not null
-        resolvingError = savedInstanceState != null && savedInstanceState.getBoolean(EXTRA_RESOLVING_ERROR, false);
-
-        //create a google api client instance
-        googleApiClient = new GoogleApiClient
-                .Builder(getActivity())
-                .addApi(Places.GEO_DATA_API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
     }
 
     /**
@@ -201,43 +172,11 @@ public class SearchFragment
     }
 
     /**
-     * Call connect on the google api client
-     */
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        //if resolving error, don't start the client. It is already started.
-        if (!resolvingError) {
-            googleApiClient.connect();
-        }
-    }
-
-    /**
-     * Save out the resolving error in case we get destroyed
-     * @param outState
-     */
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(EXTRA_RESOLVING_ERROR, resolvingError);
-    }
-
-    /**
-     * Disconnect the google api client
-     */
-    @Override
-    public void onStop() {
-        googleApiClient.disconnect();
-        super.onStop();
-    }
-
-    /**
      * Nullify the listener before detaching
      */
     @Override
     public void onDetach() {
-        listener = null;
+        searchListener = null;
         super.onDetach();
     }
 
@@ -282,7 +221,7 @@ public class SearchFragment
                         getActivity().startService(singleCityLoadIntent);
 
                         //notify the listener
-                        listener.onPlaceSelected(
+                        searchListener.onPlaceSelected(
                                 foundPlace.getName().toString(),
                                 foundPlace.getLatLng().latitude,
                                 foundPlace.getLatLng().longitude,
@@ -378,59 +317,6 @@ public class SearchFragment
         viewHolder.searchListView.setAdapter(searchAdapter);
 
         Log.d(TAG, "onResult: Done");
-    }
-
-    /**
-     * GoogleApiClient.ConnectionCallbacks implementation
-     * This callback happens when we are connected to Google Play Services.
-     * @param bundle
-     */
-    @Override
-    public void onConnected(Bundle bundle) {
-        Log.d(TAG, "onConnected: Connected to Google Play Services!");
-    }
-
-    /**
-     * GoogleApiClient.ConnectionCallbacks implementation
-     * This callback happens when our connection is interrupted.
-     * @param i
-     */
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.d(TAG, "onConnectionSuspended: Connection suspended");
-    }
-
-    /**
-     * GoogleApiClient.OnConnectionFailedListener implementation
-     * Handle errors that occurred while attempting to connect with Google.
-     * @param connectionResult
-     */
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed");
-        if (resolvingError) {
-            //already attempting to resolve the error
-            return;
-        }
-
-        if (connectionResult.hasResolution()) {
-            //If it returns true, you can request the user take immediate action to resolve the error
-            try {
-                resolvingError = true;
-                connectionResult.startResolutionForResult(getActivity(), RESOLVE_ERROR_REQUEST);
-
-            }
-            catch (IntentSender.SendIntentException e) {
-                //there was an error with the resolution. try again.
-                googleApiClient.connect();
-                resolvingError = false;
-            }
-        }
-        else {
-            // Show error dialog using GooglePlayServicesUtil.getErrorDialog()
-            listener.showPlayServicesErrorDialog(connectionResult.getErrorCode());
-            resolvingError = true;
-        }
     }
 
     /**
