@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SearchView;
@@ -81,6 +82,7 @@ public class SearchFragment
      * @return
      */
     @Override
+    @NonNull
     public GoogleApiClient.Builder buildGoogleApiClient() {
         return new GoogleApiClient
                 .Builder(getActivity())
@@ -286,7 +288,7 @@ public class SearchFragment
     public void onResult(AutocompletePredictionBuffer autocompletePredictions) {
         autocompletePendingResult = null;
 
-        Status status = autocompletePredictions.getStatus();
+        final Status status = autocompletePredictions.getStatus();
         if (!status.isSuccess()) {
             //failed to get autocomplete results
             autocompletePredictions.release();

@@ -3,6 +3,7 @@ package com.example.yeelin.homework2.h312yeelin.fragment;
 import android.app.Activity;
 import android.content.IntentSender;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -52,6 +53,7 @@ public abstract class BasePlayServicesFragment
      * Abstract method.  Build the google api client that uses the APIs that the implementing class needs.
      * This method is called in onCreate and must be implemented by child classes.
      */
+    @NonNull
     public abstract GoogleApiClient.Builder buildGoogleApiClient();
 
     /**
@@ -164,7 +166,7 @@ public abstract class BasePlayServicesFragment
      */
     @Override
     public void onConnectionSuspended(int i) {
-        Log.d(TAG, "onConnectionSuspended: Connection suspended");
+        Log.d(TAG, "onConnectionSuspended: Connection to Google Play Services suspended");
     }
 
     /**
@@ -174,7 +176,7 @@ public abstract class BasePlayServicesFragment
      */
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed");
+        Log.d(TAG, "onConnectionFailed: Failed to connect to Google Play Services");
         if (resolvingError) {
             //already attempting to resolve the error
             return;
