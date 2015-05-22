@@ -66,42 +66,6 @@ public class SearchActivity
     }
 
     /**
-     * PS:Callback from Play Services dialog result
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        Log.d(TAG, "onActivityResult");
-//        // Handle the play services dialog result. This code is used whether the play
-//        // services dialog fragment was started by the fragment or the activity. Google
-//        // play services starts the activity such that only the activity is able to handle
-//        // the request code in onActivityResult.
-//        if (requestCode == BasePlayServicesFragment.REQUEST_CODE_PLAY_SERVICES_DIALOG) {
-//            if (resultCode == RESULT_OK) {
-//                // Situation resolved. Can now activate GPS services
-//                Log.d(TAG, "onActivityResult: Google play services available");
-//
-//                // Notify all fragments that we may have a connection to google play services.
-//                // I'd probably try to limit it to one fragment per activity to keep things
-//                // simple. In this example, need to notify the places fragment that play
-//                // services are available and to retry the connection.
-//                SearchFragment searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment);
-//                searchFragment.onPlayServicesAvailable();
-//            }
-//            else {
-//                // Update failed. Do something reasonable. Here leaving the app...
-//                Log.w(TAG, "onActivityResult: Result not ok");
-//                noPlayServicesAvailable();
-//            }
-//        }
-//    }
-
-    /**
      * BasePlayServicesActivity override
      * Helper method. Used when no play services are available. Shows a toast and then navigate back to parent activity
      * since search isn't going to work.
@@ -166,26 +130,4 @@ public class SearchActivity
         //enable the Up arrow
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
-
-    /**
-     * PS:Callback from BasePlayServicesFragmentListener
-     * @param errorCode
-     */
-//    @Override
-//    public void showPlayServicesErrorDialog(int errorCode) {
-//        DialogFragment errorDialogFragment = PlayServicesErrorDialogFragment.newInstance(errorCode);
-//        errorDialogFragment.show(getSupportFragmentManager(), TAG_GOOGLE_PLAY_ERROR_DIALOG);
-//    }
-
-    /**
-     * PlayServicesErrorDialogFragment.PlayServicesErrorDialogFragmentListener implementation
-     *
-     * This callback happens when the user cancels the PlayServicesErrorDialogFragment without
-     * resolving the error.
-     */
-//    @Override
-//    public void onPlayServicesErrorDialogCancelled() {
-//        Log.d(TAG, "onPlayServicesErrorDialogCancelled");
-//        noPlayServicesAvailable();
-//    }
 }
