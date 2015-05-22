@@ -13,6 +13,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 /**
  * Created by ninjakiki on 5/21/15.
+ * This is the base fragment for all fragments that wish to use google play services.
  */
 public abstract class BasePlayServicesFragment
         extends Fragment
@@ -25,8 +26,9 @@ public abstract class BasePlayServicesFragment
     //states for SaveInstanceState
     private static final String EXTRA_RESOLVING_ERROR = SearchFragment.class.getSimpleName() + ".resolvingError";
 
-    //other constants
-    private static final int RESOLVE_ERROR_REQUEST = 110;
+    //request code constants
+    public static final int REQUEST_CODE_PLAY_SERVICES_RESOLUTION = 100;
+    public static final int REQUEST_CODE_LOCATION_SETTINGS_RESOLUTION = 115;
 
     //member variables
     protected GoogleApiClient googleApiClient;
@@ -186,7 +188,8 @@ public abstract class BasePlayServicesFragment
             //If it returns true, you can request the user take immediate action to resolve the error
             try {
                 resolvingError = true;
-                connectionResult.startResolutionForResult(getActivity(), RESOLVE_ERROR_REQUEST);
+                //check for the result in onActivityResult() in the activity class
+                connectionResult.startResolutionForResult(getActivity(), REQUEST_CODE_PLAY_SERVICES_RESOLUTION);
 
             }
             catch (IntentSender.SendIntentException e) {

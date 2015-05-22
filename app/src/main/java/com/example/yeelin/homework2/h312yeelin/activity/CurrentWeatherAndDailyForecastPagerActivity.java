@@ -2,20 +2,23 @@ package com.example.yeelin.homework2.h312yeelin.activity;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.adapter.CurrentWeatherStatePagerAdapter;
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
+import com.example.yeelin.homework2.h312yeelin.fragment.LocationFragment;
 import com.example.yeelin.homework2.h312yeelin.loader.CurrentWeatherLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.AlarmUtils;
@@ -28,18 +31,24 @@ import java.util.Date;
  * Created by ninjakiki on 4/26/15.
  */
 public class CurrentWeatherAndDailyForecastPagerActivity
-        extends AppCompatActivity
+        extends BasePlayServicesActivity
         implements CurrentWeatherAndDailyForecastFragment.CurrentWeatherAndDailyForecastFragmentListener,
         CurrentWeatherLoaderCallbacks.CurrentWeatherLoaderListener,
-        ViewPager.OnPageChangeListener {
+        ViewPager.OnPageChangeListener,
+        LocationFragment.LocationFragmentListener {
     //logcat
     private static final String TAG = CurrentWeatherAndDailyForecastPagerActivity.class.getCanonicalName();
 
+    //tag for location fragment
+    private static final String TAG_LOCATION_FRAGMENT = CurrentWeatherAndDailyForecastActivity.class.getSimpleName() + ".locationFragment";
+
+    //extras for savedInstanceState
     private static final String EXTRA_PAGER_POSITION = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".pagerPosition";
     private static final String EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".scheduledPeriodicBgFetch";
 
     private ViewPager viewPager;
 
+    //these member variables need to be saved into savedInstanceState
     private int viewPagerPosition = 0;
     private boolean hasScheduledPeriodicBgFetch = false;
 
@@ -52,8 +61,21 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         //setupToolbar
         setupToolbar();
 
-        //read saved instance state
-        if (savedInstanceState != null) {
+
+        if (savedInstanceState == null) {
+            //check if we already have the location fragment
+            Fragment locationFragment = getSupportFragmentManager().findFragmentByTag(TAG_LOCATION_FRAGMENT);
+            if (locationFragment == null) {
+                Log.d(TAG, "onCreate: Creating a location fragment");
+                //create a location fragment
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .add(LocationFragment.newInstance(), TAG_LOCATION_FRAGMENT)
+                        .commit();
+            }
+        }
+        else {
+            //read saved instance state
             viewPagerPosition = savedInstanceState.getInt(EXTRA_PAGER_POSITION, 0);
             hasScheduledPeriodicBgFetch = savedInstanceState.getBoolean(EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH, false);
 
@@ -274,5 +296,84 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     @Override
     public void onPageScrollStateChanged(int state) {
 
+    }
+
+    /**
+     * Callback from Play Services dialogs. Callback can originate from:
+     * 1. status.startResolutionForResult(getActivity(), REQUEST_CODE_LOCATION_SETTINGS_RESOLUTION) in LocationFragment
+     * 2. PlayServicesErrorDialog (handled by super class - BasePlayServicesActivity)
+     *
+     * BasePlayServices has a version of this that handles just the generic PlayServices error. This one handles
+     * location-specific results.
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult");
+
+        switch (requestCode) {
+            case LocationFragment.REQUEST_CODE_LOCATION_SETTINGS_RESOLUTION:
+                LocationFragment locationFragment = (LocationFragment) getSupportFragmentManager().findFragmentByTag(TAG_LOCATION_FRAGMENT);
+
+                if (resultCode == RESULT_OK) {
+                    Log.d(TAG, "onActivityResult: User enabled location settings");
+                    locationFragment.onLocationSettingEnabled();
+                }
+                else {
+                    Log.d(TAG, "onActivityResult: User did not enable location settings");
+                    locationFragment.onLocationSettingNotEnabled();
+                }
+                break;
+
+        default:
+            //ask BasePlayServicesActivity to handle the rest
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    /**
+     * BasePlayServicesActivity override
+     * Helper method. Used when no play services are available. Shows a toast.
+     */
+    @Override
+    protected void noPlayServicesAvailable() {
+        Log.d(TAG, "noPlayServicesAvailable");
+        Toast.makeText(this, R.string.play_services_error, Toast.LENGTH_LONG).show();
+
+        //at this point, the app will have to continue with no current location
+    }
+
+    /**
+     * BasePlayServicesActivity override
+     * Helper method. Used when play services become available. Notify search fragment that play services are available
+     * and to retry connection.
+     */
+    @Override
+    protected void onPlayServicesAvailable() {
+        Log.d(TAG, "onPlayServicesAvailable");
+        LocationFragment locationFragment = (LocationFragment) getSupportFragmentManager().findFragmentByTag(TAG_LOCATION_FRAGMENT);
+        if (locationFragment != null) {
+            locationFragment.onPlayServicesAvailable();
+        }
+    }
+
+    /**
+     * Callback from LocationFragmentListener
+     * @param location
+     */
+    @Override
+    public void onNewLocation(@Nullable Location location) {
+        Log.d(TAG, "onNewLocation: Location: " + location);
+        if (location != null) {
+            Toast.makeText(this,
+                    String.format("Current location is %f, %f,", location.getLatitude(), location.getLongitude()),
+                    Toast.LENGTH_LONG)
+                    .show();
+
+            //TODO: do something interesting
+        }
     }
 }

@@ -31,6 +31,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 public class LocationFragment
         extends BasePlayServicesFragment
         implements LocationListener {
+
     //logcat
     private static final String TAG = LocationFragment.class.getCanonicalName();
 
@@ -39,9 +40,6 @@ public class LocationFragment
     private static final long ONE_MINUTE = 60 * 1000; //milliseconds
     private static final long THREE_MINUTES = 3 * ONE_MINUTE;
     private static final long THIRTY_SECONDS = 30 * 1000; //milliseconds
-
-    //other constants
-    private static final int RESOLVE_LOCATION_SETTINGS_REQUEST = 115;
 
     //member variables
     private Location currentBestLocation;
@@ -54,13 +52,42 @@ public class LocationFragment
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
      */
     public interface LocationFragmentListener extends BasePlayServicesFragmentListener {
-        public void onNewLocation(Location location);
+        public void onNewLocation(@Nullable Location location);
+    }
+
+    /**
+     * Returns a new instance of the Location fragment. Use this instead of calling the constructor
+     * directly.
+     * @return
+     */
+    public static LocationFragment newInstance() {
+        return new LocationFragment();
     }
 
     /**
      * Required empty public constructor
      */
     public LocationFragment() {}
+
+    /**
+     * Called from activity when location setting is enabled by the user when
+     * presented with the dialog.
+     * Starts the process of getting location updates.
+     */
+    public void onLocationSettingEnabled() {
+        Log.d(TAG, "onLocationSettingEnabled: Requesting location updates now");
+        requestLocationUpdates();
+    }
+
+    /**
+     * Called from activity when the user does not enable the location setting when
+     * presented with the dialog.
+     * Starts the process of getting the last known location (as requested by other apps).
+     */
+    public void onLocationSettingNotEnabled() {
+        Log.d(TAG, "onLocationSettingNotEnabled: Requesting last known location");
+        requestLastKnownLocation();
+    }
 
     /**
      * Creates a new google api client builder that gets the current location
@@ -88,7 +115,8 @@ public class LocationFragment
             locationListener = (LocationFragmentListener) objectToCast;
         }
         catch (ClassCastException e) {
-            throw new ClassCastException(objectToCast.getClass().getSimpleName() + " must implement LocationFragmentListener");
+            throw new ClassCastException(objectToCast.getClass().getSimpleName()
+                    + " must implement LocationFragmentListener");
         }
     }
 
@@ -107,6 +135,7 @@ public class LocationFragment
     }
 
     /**
+     * Override BasePlayServicesFragment
      * Unsubscribe from location updates before stopping
      */
     @Override
@@ -147,16 +176,18 @@ public class LocationFragment
                 switch (status.getStatusCode()) {
 
                     case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can initialize location requests here.
+                        //all location settings are satisfied. The client can initialize location requests.
+                        Log.d(TAG, "onConnected: LocationSettingsStatusCodes.SUCCESS");
                         requestLocationUpdates();
                         break;
 
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied. But could be fixed by showing the user a dialog.
+                        //location settings are not satisfied, but could be fixed by showing the user a dialog.
+                        Log.d(TAG, "onConnected: LocationSettingsStatusCodes.RESOLUTION_REQUIRED");
                         try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
-                            status.startResolutionForResult(getActivity(), RESOLVE_LOCATION_SETTINGS_REQUEST);
+                            //show dialog by calling startResolutionForResult(),
+                            //check the result in onActivityResult().
+                            status.startResolutionForResult(getActivity(), REQUEST_CODE_LOCATION_SETTINGS_RESOLUTION);
                         }
                         catch (IntentSender.SendIntentException e) {
                             //ignore the error, since there is nothing we can do
@@ -167,10 +198,12 @@ public class LocationFragment
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                         // Location settings are not satisfied. However, we have no way to fix the
                         // settings so we won't show the dialog.
+                        Log.d(TAG, "onConnected: LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE");
                         requestLastKnownLocation();
                         break;
 
                     default:
+                        Log.d(TAG, "onConnected: LocationSettingsStatusCodes.default");
                         requestLastKnownLocation();
                 }
             }
@@ -199,6 +232,7 @@ public class LocationFragment
      * @return
      */
     private LocationRequest createLocationRequest() {
+        Log.d(TAG, "createLocationRequest");
         return LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setSmallestDisplacement(ONE_KILOMETER)
@@ -212,6 +246,7 @@ public class LocationFragment
      * doesn't wait.  Then requests for updates from Fused api using LocationRequest object created earlier.
      */
     private void requestLocationUpdates() {
+        Log.d(TAG, "requestLocationUpdates");
         //request last known so that user doesn't wait
         requestLastKnownLocation();
 
@@ -227,6 +262,7 @@ public class LocationFragment
      * and returns the better of the two.
      */
     private void requestLastKnownLocation() {
+        Log.d(TAG, "requestLastKnownLocation");
         Location candidateLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
 
         if (LocationUtils.isBetterLocation(candidateLocation, currentBestLocation)) {
@@ -248,7 +284,8 @@ public class LocationFragment
      *
      * @param location
      */
-    private void updateLocation (Location location) {
+    private void updateLocation (@Nullable Location location) {
+        Log.d(TAG, "updateLocation: Location: " + location);
         //update the current best to the new location
         currentBestLocation = location;
 

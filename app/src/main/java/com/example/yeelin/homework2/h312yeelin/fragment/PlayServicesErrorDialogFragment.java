@@ -13,14 +13,13 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 /**
  * Created by ninjakiki on 5/13/15.
  * A wrapper around the play services dialog. The activity is required to handle the
- * PLAY_SERVICES_DIALOG_RESULT in onActivityResult() if you want to be notified that
+ * REQUEST_CODE_PLAY_SERVICES_RESOLUTION in onActivityResult() if you want to be notified that
  * play services are ready for use, or failed to install.
  */
 public class PlayServicesErrorDialogFragment extends DialogFragment {
 
-    public static final int PLAY_SERVICES_DIALOG_RESULT = 100;
-
     private static final String ARG_ERROR_CODE = PlayServicesErrorDialogFragment.class.getSimpleName() + ".errorCode";
+    private static final String ARG_REQUEST_CODE = PlayServicesErrorDialogFragment.class.getSimpleName() + ".requestCode";
 
     //listener member variable
     private PlayServicesErrorDialogFragmentListener listener;
@@ -37,11 +36,12 @@ public class PlayServicesErrorDialogFragment extends DialogFragment {
      * @param errorCode
      * @return
      */
-    public static PlayServicesErrorDialogFragment newInstance(int errorCode) {
+    public static PlayServicesErrorDialogFragment newInstance(int errorCode, int requestCode) {
         PlayServicesErrorDialogFragment fragment = new PlayServicesErrorDialogFragment();
 
         Bundle args = new Bundle();
         args.putInt(ARG_ERROR_CODE, errorCode);
+        args.putInt(ARG_REQUEST_CODE, requestCode);
         fragment.setArguments(args);
 
         return fragment;
@@ -71,10 +71,12 @@ public class PlayServicesErrorDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Bundle args = getArguments();
         int errorCode = args.getInt(ARG_ERROR_CODE);
+        int requestCode = args.getInt(ARG_REQUEST_CODE);
 
         // All play services dialogs start activity for result from the activity, so the activity is
         // responsible for handling.
-        return GooglePlayServicesUtil.getErrorDialog(errorCode, getActivity(), PLAY_SERVICES_DIALOG_RESULT);
+        //check for the result in onActivityResult() in the activity class
+        return GooglePlayServicesUtil.getErrorDialog(errorCode, getActivity(), requestCode);
     }
 
     @Override

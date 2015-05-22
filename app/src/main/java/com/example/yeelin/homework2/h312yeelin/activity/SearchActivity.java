@@ -1,20 +1,16 @@
 package com.example.yeelin.homework2.h312yeelin.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.yeelin.homework2.h312yeelin.R;
-import com.example.yeelin.homework2.h312yeelin.fragment.PlayServicesErrorDialogFragment;
 import com.example.yeelin.homework2.h312yeelin.fragment.SearchFragment;
 
 import java.util.List;
@@ -23,14 +19,10 @@ import java.util.List;
  * Created by ninjakiki on 5/12/15.
  */
 public class SearchActivity
-        extends AppCompatActivity
-        implements SearchFragment.SearchFragmentListener,
-        PlayServicesErrorDialogFragment.PlayServicesErrorDialogFragmentListener {
+        extends BasePlayServicesActivity
+        implements SearchFragment.SearchFragmentListener {
     //logcat
     private static final String TAG = SearchActivity.class.getCanonicalName();
-    //error dialog
-    private static final String TAG_GOOGLE_PLAY_ERROR_DIALOG = SearchActivity.class.getSimpleName() + ".googlePlayServicesErrorDialog";
-
 
     /**
      * Builds intent to start this activity
@@ -43,7 +35,7 @@ public class SearchActivity
     }
 
     /**
-     *
+     * Creates the search activity and sets up the toolbar
      * @param savedInstanceState
      */
     @Override
@@ -57,7 +49,7 @@ public class SearchActivity
     }
 
     /**
-     *
+     * Handle up navigation
      * @param item
      * @return
      */
@@ -74,48 +66,77 @@ public class SearchActivity
     }
 
     /**
-     * Callback from Play Services dialog result
+     * PS:Callback from Play Services dialog result
      *
      * @param requestCode
      * @param resultCode
      * @param data
      */
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        Log.d(TAG, "onActivityResult");
+//        // Handle the play services dialog result. This code is used whether the play
+//        // services dialog fragment was started by the fragment or the activity. Google
+//        // play services starts the activity such that only the activity is able to handle
+//        // the request code in onActivityResult.
+//        if (requestCode == BasePlayServicesFragment.REQUEST_CODE_PLAY_SERVICES_DIALOG) {
+//            if (resultCode == RESULT_OK) {
+//                // Situation resolved. Can now activate GPS services
+//                Log.d(TAG, "onActivityResult: Google play services available");
+//
+//                // Notify all fragments that we may have a connection to google play services.
+//                // I'd probably try to limit it to one fragment per activity to keep things
+//                // simple. In this example, need to notify the places fragment that play
+//                // services are available and to retry the connection.
+//                SearchFragment searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment);
+//                searchFragment.onPlayServicesAvailable();
+//            }
+//            else {
+//                // Update failed. Do something reasonable. Here leaving the app...
+//                Log.w(TAG, "onActivityResult: Result not ok");
+//                noPlayServicesAvailable();
+//            }
+//        }
+//    }
+
+    /**
+     * BasePlayServicesActivity override
+     * Helper method. Used when no play services are available. Shows a toast and then navigate back to parent activity
+     * since search isn't going to work.
+     */
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void noPlayServicesAvailable() {
+        Log.d(TAG, "noPlayServicesAvailable");
+        Toast.makeText(this, R.string.play_services_error, Toast.LENGTH_LONG).show();
 
-        Log.d(TAG, "onActivityResult");
-        // Handle the play services dialog result. This code is used whether the play
-        // services dialog fragment was started by the fragment or the activity. Google
-        // play services starts the activity such that only the activity is able to handle
-        // the request code in onActivityResult.
-        if (requestCode == PlayServicesErrorDialogFragment.PLAY_SERVICES_DIALOG_RESULT) {
-            if (resultCode == RESULT_OK) {
-                // Situation resolved. Can now activate GPS services
-                Log.d(TAG, "onActivityResult: Google play services available");
+        //not much else to do here since places search won't work, so navigate back to parent seems logical
+        navigateUpToParentActivity();
+    }
 
-                // Notify all fragments that we may have a connection to google play services.
-                // I'd probably try to limit it to one fragment per activity to keep things
-                // simple. In this example, need to notify the places fragment that play
-                // services are available and to retry the connection.
-                SearchFragment searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment);
-                searchFragment.onPlayServicesAvailable();
-            }
-            else {
-                // Update failed. Do something reasonable. Here leaving the app...
-                Log.w(TAG, "onActivityResult: Result not ok");
-                noPlayServicesAvailable();
-            }
+    /**
+     * BasePlayServicesActivity override
+     * Helper method. Used when play services become available. Notify search fragment that play services are available
+     * and to retry connection.
+     */
+    @Override
+    protected void onPlayServicesAvailable() {
+        Log.d(TAG, "onPlayServicesAvailable");
+        SearchFragment searchFragment = (SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment);
+        if (searchFragment != null) {
+            searchFragment.onPlayServicesAvailable();
         }
     }
 
     /**
-     * Helper method. Used when no play services are available. Shows a toast and then quits.
+     * Callback from SearchFragmentListener
+     * This callback happens when the user selects a search result in the list.
      */
-    private void noPlayServicesAvailable() {
-        Log.d(TAG, "noPlayServicesAvailable");
-        Toast.makeText(this, R.string.play_services_error, Toast.LENGTH_LONG).show();
-        finish();
+    @Override
+    public void onPlaceSelected(String name, double latitude, double longitude, List<Integer> placeTypes) {
+        Log.d(TAG, "onPlaceSelected");
+        navigateUpToParentActivity();
     }
 
     /**
@@ -147,25 +168,14 @@ public class SearchActivity
     }
 
     /**
-     * Callback from SearchFragment
+     * PS:Callback from BasePlayServicesFragmentListener
+     * @param errorCode
      */
-    @Override
-    public void showPlayServicesErrorDialog(int errorCode) {
-        DialogFragment errorDialogFragment = PlayServicesErrorDialogFragment.newInstance(errorCode);
-        errorDialogFragment.show(getSupportFragmentManager(), TAG_GOOGLE_PLAY_ERROR_DIALOG);
-    }
-
-    /**
-     * Callback from SearchFragment
-     * This callback happens when the user selects a search result in the list.
-     */
-    @Override
-    public void onPlaceSelected(String name, double latitude, double longitude, List<Integer> placeTypes) {
-        Log.d(TAG, "onPlaceSelected");
-
-        //TODO:close out the search activity and go back to the pager activity
-        navigateUpToParentActivity();
-    }
+//    @Override
+//    public void showPlayServicesErrorDialog(int errorCode) {
+//        DialogFragment errorDialogFragment = PlayServicesErrorDialogFragment.newInstance(errorCode);
+//        errorDialogFragment.show(getSupportFragmentManager(), TAG_GOOGLE_PLAY_ERROR_DIALOG);
+//    }
 
     /**
      * PlayServicesErrorDialogFragment.PlayServicesErrorDialogFragmentListener implementation
@@ -173,9 +183,9 @@ public class SearchActivity
      * This callback happens when the user cancels the PlayServicesErrorDialogFragment without
      * resolving the error.
      */
-    @Override
-    public void onPlayServicesErrorDialogCancelled() {
-        Log.d(TAG, "onPlayServicesErrorDialogCancelled");
-        noPlayServicesAvailable();
-    }
+//    @Override
+//    public void onPlayServicesErrorDialogCancelled() {
+//        Log.d(TAG, "onPlayServicesErrorDialogCancelled");
+//        noPlayServicesAvailable();
+//    }
 }
