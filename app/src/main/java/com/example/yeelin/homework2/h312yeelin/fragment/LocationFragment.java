@@ -271,7 +271,7 @@ public class LocationFragment
         }
         else {
             Log.d(TAG, "requestLastKnownLocation: Using current best location:" + currentBestLocation);
-            updateLocation(currentBestLocation);
+            //updateLocation(currentBestLocation);
         }
     }
 
