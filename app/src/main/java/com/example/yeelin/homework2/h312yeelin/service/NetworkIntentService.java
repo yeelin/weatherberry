@@ -3,6 +3,7 @@ package com.example.yeelin.homework2.h312yeelin.service;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
@@ -79,13 +80,15 @@ public class NetworkIntentService
      * @param context
      * @return
      */
-    public static Intent buildIntentForSingleCityLoad(Context context, String cityName, double latitude, double longitude, boolean userFavorite) {
+    public static Intent buildIntentForSingleCityLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
         intent.setAction(ACTION_SINGLE_LOAD);
         //set extras
-        intent.putExtra(EXTRA_CITY_NAME, cityName);
+        if (cityName != null) {
+            intent.putExtra(EXTRA_CITY_NAME, cityName);
+        }
         intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
         intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
         intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);

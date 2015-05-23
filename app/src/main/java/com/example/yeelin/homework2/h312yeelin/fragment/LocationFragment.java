@@ -1,8 +1,13 @@
 package com.example.yeelin.homework2.h312yeelin.fragment;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +15,7 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.fragmentUtils.LocationUtils;
+import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -20,6 +26,10 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.List;
 
 
 /**
@@ -35,7 +45,7 @@ public class LocationFragment
     //logcat
     private static final String TAG = LocationFragment.class.getCanonicalName();
 
-    //constants
+    //location service constants
     private static final float ONE_KILOMETER = 1000f; //1000 meters
     private static final long ONE_MINUTE = 60 * 1000; //milliseconds
     private static final long THREE_MINUTES = 3 * ONE_MINUTE;
@@ -289,10 +299,121 @@ public class LocationFragment
         //update the current best to the new location
         currentBestLocation = location;
 
+        //attempt to geocode the new location
+        geocodeCurrentLocation();
+
         //notify listener
         locationListener.onNewLocation(currentBestLocation);
 
         //save it in shared preferences
         LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation);
+    }
+
+    /**
+     * If the geocoder is present, try to geocode the current location before calling
+     * the open weather api.  Otherwise, just call the open weather api.
+     */
+    @Nullable
+    private void geocodeCurrentLocation() {
+        if (Geocoder.isPresent()) {
+            //try to geocode the lat/long before calling open weather api
+            new GeocodeTask(getActivity(), this, currentBestLocation).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+        else {
+            //no geocoder present, so just call open weather api directly
+            fetchDataForCurrentLocation(false, null);
+        }
+    }
+
+    /**
+     * Starts an intent service to load the current location's weather data.
+     * @param cityName
+     */
+    private void fetchDataForCurrentLocation(boolean isLocationGeocoded, @Nullable String cityName) {
+
+        //use buildIntentForSingleCityLoad
+        Intent singleCityLoadIntent = NetworkIntentService.buildIntentForSingleCityLoad(
+                getActivity(),
+                cityName,
+                currentBestLocation.getLatitude(),
+                currentBestLocation.getLongitude(),
+                false); //false since this is not a user favorite
+
+        getActivity().startService(singleCityLoadIntent);
+    }
+
+    /**
+     * Async task for geocoding a location.
+     */
+    private class GeocodeTask extends AsyncTask<Void, Void, String> {
+        //logcat
+        private final String TAG = GeocodeTask.class.getCanonicalName();
+        //constants
+        private final int MAX_GEOCODING_RESULTS = 1;
+        //member variables
+        private final WeakReference<LocationFragment> locationFragmentWeakReference;
+        private final Context applicationContext;
+        private final Location location;
+
+        GeocodeTask(Context context, LocationFragment locationFragment, Location location) {
+            locationFragmentWeakReference = new WeakReference<LocationFragment>(locationFragment);
+            applicationContext = context.getApplicationContext();
+            this.location = location;
+        }
+
+        /**
+         * Calls geocoder.getFromLocation and returns the cityName for the given location.
+         * @param params
+         * @return
+         */
+        @Nullable
+        @Override
+        protected String doInBackground(Void... params) {
+            Geocoder geocoder = new Geocoder(applicationContext);
+            try {
+                //geocoder.getFromLocation is a synchronous call
+                //for simplicity, we are requesting max results of 1
+                List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), MAX_GEOCODING_RESULTS);
+                if (addressList == null || addressList.isEmpty()) {
+                    Log.d(TAG, "doInBackground: No address was found");
+                }
+                else {
+                    Address address = addressList.get(0);
+                    String cityName = address.getLocality();
+                    Log.d(TAG, "doInBackground: City name: " + cityName);
+                    return cityName;
+                }
+            }
+            catch (IOException e) {
+                //catch network or other i/o problems
+                Log.e(TAG, "doInBackground: Geocoder is unavailable", e);
+            }
+            catch (IllegalArgumentException e) {
+                //catch invalid latitude or longitude values
+                Log.e(TAG, String.format("doInBackground: Invalid location values: %f, %f", location.getLatitude(), location.getLongitude()), e);
+            }
+
+            //no address was found, or we hit an exception so return null
+            return null;
+        }
+
+        /**
+         * The string result from doInBackground is passed in as parameter.
+         * Calls location fragment's on
+         * @param s city name (as geocoded from the lat/long)
+         */
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            LocationFragment locationFragment = locationFragmentWeakReference.get();
+            if (locationFragment == null) {
+                Log.d(TAG, "onPostExecute: Location fragment has gone away");
+                return;
+            }
+
+            Log.d(TAG, "onPostExecute: City name: " + s);
+            locationFragment.fetchDataForCurrentLocation(s != null, s);
+        }
     }
 }

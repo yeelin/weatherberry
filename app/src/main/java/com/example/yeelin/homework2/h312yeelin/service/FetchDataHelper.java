@@ -127,12 +127,14 @@ public class FetchDataHelper {
      * 1. Network Intent Service: onHandleIntent()
      *
      * @param context
+     * @param cityName
      * @param latitude
      * @param longitude
      */
     public static void handleActionSingleLoad(Context context,
                                               @Nullable String cityName,
-                                              double latitude, double longitude,
+                                              double latitude,
+                                              double longitude,
                                               boolean userFavorite) {
         Log.d(TAG, "handleActionSingleLoad");
 
