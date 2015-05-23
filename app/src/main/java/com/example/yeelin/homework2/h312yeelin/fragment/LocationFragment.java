@@ -53,6 +53,7 @@ public class LocationFragment
 
     //member variables
     private Location currentBestLocation;
+    private String currentBestLocationName;
     private LocationRequest locationRequest;
 
     //listener member variable
@@ -62,7 +63,7 @@ public class LocationFragment
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
      */
     public interface LocationFragmentListener extends BasePlayServicesFragmentListener {
-        public void onNewLocation(@Nullable Location location);
+        public void onNewLocation(@Nullable Location location, @Nullable String locationName);
     }
 
     /**
@@ -100,6 +101,7 @@ public class LocationFragment
     }
 
     /**
+     * BasePlayServicesFragment override
      * Creates a new google api client builder that gets the current location
      * @return
      */
@@ -140,6 +142,8 @@ public class LocationFragment
 
         //read the current best location from shared preferences
         currentBestLocation = LocationUtils.getSavedCurrentLocation(getActivity());
+        currentBestLocationName = LocationUtils.getSavedCurrentLocationName(getActivity());
+
         //create a location request, will be used in onConnected
         locationRequest = createLocationRequest();
     }
@@ -201,6 +205,7 @@ public class LocationFragment
                         }
                         catch (IntentSender.SendIntentException e) {
                             //ignore the error, since there is nothing we can do
+                            //request last known location
                             requestLastKnownLocation();
                         }
                         break;
@@ -209,11 +214,13 @@ public class LocationFragment
                         // Location settings are not satisfied. However, we have no way to fix the
                         // settings so we won't show the dialog.
                         Log.d(TAG, "onConnected: LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE");
+                        //request last known location
                         requestLastKnownLocation();
                         break;
 
                     default:
                         Log.d(TAG, "onConnected: LocationSettingsStatusCodes.default");
+                        //request last known location
                         requestLastKnownLocation();
                 }
             }
@@ -257,10 +264,10 @@ public class LocationFragment
      */
     private void requestLocationUpdates() {
         Log.d(TAG, "requestLocationUpdates");
-        //request last known so that user doesn't wait
+        //request last known location so that user doesn't wait
         requestLastKnownLocation();
 
-        //request updates
+        //request fresh location updates
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 googleApiClient,
                 locationRequest,
@@ -276,10 +283,12 @@ public class LocationFragment
         Location candidateLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
 
         if (LocationUtils.isBetterLocation(candidateLocation, currentBestLocation)) {
+            //candidate location is better
             Log.d(TAG, "requestLastKnownLocation: Using candidate location:" + candidateLocation);
             updateLocation(candidateLocation);
         }
         else {
+            //candidate is not better, do nothing
             Log.d(TAG, "requestLastKnownLocation: Using current best location:" + currentBestLocation);
             //updateLocation(currentBestLocation);
         }
@@ -299,42 +308,57 @@ public class LocationFragment
         //update the current best to the new location
         currentBestLocation = location;
 
-        //attempt to geocode the new location
-        geocodeCurrentLocation();
+        if (currentBestLocation != null) {
+            //attempt to geocode the new location
+            geocodeCurrentLocation();
 
-        //notify listener
-        locationListener.onNewLocation(currentBestLocation);
+            //notify listener later when geocoder task returns
+            //locationListener.onNewLocation(currentBestLocation);
 
-        //save it in shared preferences
-        LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation);
+            //save location in shared preferences
+            //LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation);
+        }
     }
 
     /**
      * If the geocoder is present, try to geocode the current location before calling
      * the open weather api.  Otherwise, just call the open weather api.
+     *
+     * Note: currentBestLocation should not be null when this method is called.
      */
-    @Nullable
     private void geocodeCurrentLocation() {
         if (Geocoder.isPresent()) {
             //try to geocode the lat/long before calling open weather api
             new GeocodeTask(getActivity(), this, currentBestLocation).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
         else {
-            //no geocoder present, so just call open weather api directly
+            //no geocoder present, so just call open weather api
             fetchDataForCurrentLocation(false, null);
         }
     }
 
     /**
-     * Starts an intent service to load the current location's weather data.
+     * Starts an intent service to load the current location's weather data. This is called by the Geocode
+     * async task when it's done geocoding the current best location.
+     *
+     * Note: currentBestLocation should not be null when this method is called.
+     * @param isLocationGeocoded
      * @param cityName
      */
     private void fetchDataForCurrentLocation(boolean isLocationGeocoded, @Nullable String cityName) {
+        //update the current best location's name
+        currentBestLocationName = cityName;
+
+        //save current location and it's name in shared preferences
+        LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation, currentBestLocationName);
+
+        //notify listener about the new location with city name
+        locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
 
         //use buildIntentForSingleCityLoad
         Intent singleCityLoadIntent = NetworkIntentService.buildIntentForSingleCityLoad(
                 getActivity(),
-                cityName,
+                currentBestLocationName,
                 currentBestLocation.getLatitude(),
                 currentBestLocation.getLongitude(),
                 false); //false since this is not a user favorite
@@ -356,7 +380,7 @@ public class LocationFragment
         private final Location location;
 
         GeocodeTask(Context context, LocationFragment locationFragment, Location location) {
-            locationFragmentWeakReference = new WeakReference<LocationFragment>(locationFragment);
+            locationFragmentWeakReference = new WeakReference<>(locationFragment);
             applicationContext = context.getApplicationContext();
             this.location = location;
         }

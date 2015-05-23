@@ -362,18 +362,25 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
     /**
      * Callback from LocationFragmentListener
+     * Presents a toast saying that current location has been fixed and geocoded. Open weather API has not been called yet.
+     * TODO: Should probably remove this in a real app
+     *
      * @param location
+     * @param locationName
      */
     @Override
-    public void onNewLocation(@Nullable Location location) {
-        Log.d(TAG, "onNewLocation: Location: " + location);
-        if (location != null) {
-            Toast.makeText(this,
-                    String.format("Current location is %f, %f,", location.getLatitude(), location.getLongitude()),
-                    Toast.LENGTH_LONG)
-                    .show();
+    public void onNewLocation(@Nullable Location location, @Nullable String locationName) {
+        Log.d(TAG, "onNewLocation: Location Name: " + locationName + " Location : " + location);
 
-            //TODO: do something interesting
+        if (location != null) {
+            String msg = null;
+            if (locationName != null) {
+                msg = String.format("Current location is %s (%f, %f),", locationName, location.getLatitude(), location.getLongitude());
+            }
+            else {
+                msg = String.format("Current location is (%f, %f),", location.getLatitude(), location.getLongitude());
+            }
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         }
     }
 }

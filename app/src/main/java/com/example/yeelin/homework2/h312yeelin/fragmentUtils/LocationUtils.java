@@ -20,6 +20,7 @@ public class LocationUtils {
     private static final String LOCATION_LONGITUDE = "sharedPrefs.locationLongitude";
     private static final String LOCATION_TIME = "sharedPrefs.locationTime";
     private static final String LOCATION_ACCURACY = "sharedPrefs.locationAccuracy";
+    private static final String LOCATION_NAME = "sharedPrefs.locationName";
 
     //constants for checking if candidate location is better
     private static final long ONE_MINUTE_MILLIS = 60 * 1000;
@@ -114,11 +115,12 @@ public class LocationUtils {
     }
 
     /**
-     * Saves current location to shared preferences.  Does not save null locations.
+     * Saves current location to shared preferences.  Does not save null locations or location names.
      * @param context
      * @param location
+     * @param locationName
      */
-    public static void saveCurrentLocation(Context context, @Nullable Location location) {
+    public static void saveCurrentLocation(Context context, @Nullable Location location, @Nullable String locationName) {
         if (location == null) {
             Log.d(TAG, "saveCurrentLocation: Not saving null location");
             return;
@@ -133,6 +135,10 @@ public class LocationUtils {
         editor.putLong(LOCATION_LONGITUDE, Double.doubleToLongBits(location.getLongitude()));
         editor.putLong(LOCATION_TIME, location.getTime());
         editor.putFloat(LOCATION_ACCURACY, location.getAccuracy());
+
+        if (locationName != null) {
+            editor.putString(LOCATION_NAME, locationName);
+        }
 
         //asynchronous write
         editor.apply();
@@ -164,5 +170,18 @@ public class LocationUtils {
 
         Log.d(TAG, "getSavedCurrentLocation: Saved location:" + savedLocation);
         return savedLocation;
+    }
+
+    /**
+     * Returns the saved current location name from shared preferences
+     * @param context
+     * @return
+     */
+    @Nullable
+    public static String getSavedCurrentLocationName(Context context) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(LOCATION_SHARED_PREFS, Context.MODE_PRIVATE);
+
+        String locationName = sharedPreferences.getString(LOCATION_NAME, null);
+        return locationName;
     }
 }
