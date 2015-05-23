@@ -142,8 +142,6 @@ public class CurrentWeatherLoaderCallbacks
         //get bundle args
         Uri uri = args.getParcelable(ARG_URI);
         String[] projection = args.getStringArray(ARG_PROJECTION);
-        //String selection = args.getString(ARG_SELECTION);
-        //String[] selectionArgs = args.getStringArray(ARG_SELECTION_ARGS);
 
         //return a new cursor loader
         return new CursorLoader(applicationContext,
@@ -151,7 +149,7 @@ public class CurrentWeatherLoaderCallbacks
                 projection,
                 null,
                 null,
-                null); //TODO: may have to change sort order
+                CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc"); //TODO: may have to change sort order
     }
 
     /**
