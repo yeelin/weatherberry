@@ -352,18 +352,17 @@ public class LocationFragment
         //save current location and it's name in shared preferences
         LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation, currentBestLocationName);
 
-        //notify listener about the new location with city name
-        locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
-
-        //use buildIntentForCurrentLocationLoad
+        //fetch weather data for current location from the network
         Intent currentLocationLoadIntent = NetworkIntentService.buildIntentForCurrentLocationLoad(
                 getActivity(),
                 currentBestLocationName,
                 currentBestLocation.getLatitude(),
                 currentBestLocation.getLongitude(),
                 false); //false since this is not a user favorite
-
         getActivity().startService(currentLocationLoadIntent);
+
+        //notify listener about the new location with city name
+        locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
     }
 
     /**

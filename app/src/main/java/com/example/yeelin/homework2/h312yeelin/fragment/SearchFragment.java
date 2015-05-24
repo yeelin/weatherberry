@@ -214,6 +214,7 @@ public class SearchFragment
                         Log.d(TAG, String.format("onResult: Found place. Name:%s LatLng:%f, %f PlaceTypes:%s",
                                 foundPlace.getName().toString(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude, foundPlace.getPlaceTypes().toString()));
 
+                        //fetch weather data for the favorited city from the network
                         Intent favCityLoadIntent = NetworkIntentService.buildIntentForFavoriteCityLoad(
                                 getActivity(),
                                 foundPlace.getName().toString(),
