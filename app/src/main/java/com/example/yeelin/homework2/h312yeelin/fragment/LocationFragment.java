@@ -355,15 +355,15 @@ public class LocationFragment
         //notify listener about the new location with city name
         locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
 
-        //use buildIntentForSingleCityLoad
-        Intent singleCityLoadIntent = NetworkIntentService.buildIntentForSingleCityLoad(
+        //use buildIntentForCurrentLocationLoad
+        Intent currentLocationLoadIntent = NetworkIntentService.buildIntentForCurrentLocationLoad(
                 getActivity(),
                 currentBestLocationName,
                 currentBestLocation.getLatitude(),
                 currentBestLocation.getLongitude(),
                 false); //false since this is not a user favorite
 
-        getActivity().startService(singleCityLoadIntent);
+        getActivity().startService(currentLocationLoadIntent);
     }
 
     /**

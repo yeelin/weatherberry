@@ -74,7 +74,7 @@ public final class CurrentWeatherContract {
             "CREATE TABLE " + TABLE +
             " ( " +
             BaseColumns._ID + " INTEGER PRIMARY KEY, " +
-            Columns.CITY_ID + " INTEGER UNIQUE NOT NULL, " +
+            Columns.CITY_ID + " INTEGER NOT NULL, " +
             Columns.CITY_NAME + " TEXT NOT NULL, " +
             Columns.CITY_LATITUDE + " REAL NOT NULL, " +
             Columns.CITY_LONGITUDE + " REAL NOT NULL, " +
@@ -88,6 +88,14 @@ public final class CurrentWeatherContract {
             Columns.ICON + " TEXT NOT NULL, " +
             Columns.TIMESTAMP + " INTEGER NOT NULL" +
             " )";
+
+    //index name
+    static final String INDEX_NAME = "city_id_user_favorite_index";
+    //create index
+    static final String CREATE_INDEX =
+            "CREATE UNIQUE INDEX IF NOT EXISTS " + INDEX_NAME +
+                    " ON " + TABLE +
+                    " ( " + Columns.CITY_ID + ", " + Columns.USER_FAVORITE + " )";
 
     /**
      * Content Provider related

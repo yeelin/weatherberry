@@ -131,32 +131,21 @@ public class FetchDataHelper {
      * @param latitude
      * @param longitude
      */
-    public static void handleActionSingleLoad(Context context,
-                                              @Nullable String cityName,
-                                              double latitude,
-                                              double longitude,
-                                              boolean userFavorite) {
-        Log.d(TAG, "handleActionSingleLoad");
+    public static void handleActionFavoriteCityLoad(Context context,
+                                                    @Nullable String cityName,
+                                                    double latitude,
+                                                    double longitude,
+                                                    boolean userFavorite) {
 
-        //check if we have the latest SSL, and if this fails, exit
-        if (!PlayServicesUtils.ensureLatestSSL(context)) {
-            return;
-        }
-
-        //no network, so do nothing and return
-        if (ConnectivityUtils.isNotConnected(context)) {
-            Log.d(TAG, "handleActionSingleLoad: Not connected to network");
-            return;
-        }
-
+        Log.d(TAG, "handleActionFavoriteCityLoad");
+        if(!isPreNetworkCheckSuccessful(context)) return;
         //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
         try {
             long cityId = findCityId(cityName, new LatLng(latitude, longitude));
-
             if (cityId == 0) {
-                Log.d(TAG, "handleActionSingleLoad: Could not find cityId for: " + cityName);
+                Log.d(TAG, "handleActionFavoriteCityLoad: Could not find cityId for: " + cityName);
                 return;
             }
             //get data
@@ -168,14 +157,20 @@ public class FetchDataHelper {
             ImageUtils.getImages(context, getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
         }
         catch (Exception e) {
-            Log.d(TAG, "handleActionSingleLoad: Unexpected error", e);
+            Log.d(TAG, "handleActionFavoriteCityLoad: Unexpected error", e);
         }
 
         CacheUtils.logCache();
     }
 
+    /**
+     *
+     * @param cityName
+     * @param latLng
+     * @return
+     */
     //TODO: Fix this implementation of findCityId by switching to the other API
-    private static long findCityId(String cityName, LatLng latLng) {
+    private static long findCityId(@Nullable String cityName, LatLng latLng) {
         ContentValues[] valuesArray;
         try {
             URL url = buildUrl(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, latLng);
@@ -194,6 +189,64 @@ public class FetchDataHelper {
         return 0;
     }
 
+    /**
+     * Helper method that handles action to load data for the current location (user_favorite = false)
+     * on the background thread.  This method must be called from a background thread.
+     *
+     * Called from:
+     * 1. Network Intent Service: onHandleIntent()
+     * @param context
+     * @param cityName
+     * @param latitude
+     * @param longitude
+     */
+    public static void handleActionCurrentLocationLoad(Context context,
+                                                       @Nullable String cityName,
+                                                       double latitude,
+                                                       double longitude) {
+        Log.d(TAG, "handleActionCurrentLocationLoad");
+        if(!isPreNetworkCheckSuccessful(context)) return;
+        //initialize the cache. if already exists, then the existing one is used
+        CacheUtils.initializeCache(context);
+
+        try {
+            //find city id
+            long cityId = findCityId(cityName, new LatLng(latitude, longitude));
+            if (cityId == 0) {
+                Log.d(TAG, "handleActionCurrentLocationLoad: Could not find cityId for: " + cityName);
+                return;
+            }
+
+            //delete previous entry for current location
+            purgeOldData(context, WeatherDataType.CURRENT_WEATHER);
+
+            //get current weather, daily forecast, and tri hour for city id
+            ContentValues[] currentWeatherValues = getData(context, WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, false);
+            ContentValues[] dailyForecastValues = getData(context, WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, false);
+            ContentValues[] triHourForecastValues = getData(context, WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, false);
+
+            //get images
+            ImageUtils.getImages(context, getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
+        }
+        catch (Exception e) {
+            Log.d(TAG, "handleActionFavoriteCityLoad: Unexpected error", e);
+        }
+        CacheUtils.logCache();
+    }
+
+    private static boolean isPreNetworkCheckSuccessful (Context context) {
+        //check if we have the latest SSL, and if this fails, exit
+        if (!PlayServicesUtils.ensureLatestSSL(context)) {
+            return false;
+        }
+
+        //no network, so do nothing and return
+        if (ConnectivityUtils.isNotConnected(context)) {
+            Log.d(TAG, "isPreNetworkCheckSuccessful: Not connected to network");
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Helper method that handles action load on the background thread.
@@ -205,18 +258,7 @@ public class FetchDataHelper {
      */
     public static void handleActionLoad(Context context, FetchDataHelperCallback helperCallback) {
         Log.d(TAG, "handleActionLoad");
-
-        //check if we have the latest SSL, and if this fails, exit
-        if (!PlayServicesUtils.ensureLatestSSL(context)) {
-            return;
-        }
-
-        //no network, so do nothing and return
-        if (ConnectivityUtils.isNotConnected(context)) {
-            Log.d(TAG, "handleActionLoad: Not connected to network");
-            return;
-        }
-
+        if(!isPreNetworkCheckSuccessful(context)) return;
         //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
@@ -259,7 +301,6 @@ public class FetchDataHelper {
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);
         }
-
         CacheUtils.logCache();
     }
 
@@ -362,9 +403,7 @@ public class FetchDataHelper {
     }
 
     private static void getUniqueIconNamesHelper(@Nullable Cursor cursor, @NonNull HashMap<String, String> iconNameMap) {
-        if (cursor == null || cursor.getCount() == 0) {
-            return;
-        }
+        if (cursor == null || cursor.getCount() == 0) return;
 
         try {
             while (cursor.moveToNext()) {
@@ -397,8 +436,6 @@ public class FetchDataHelper {
                 if (!iconNameMap.containsKey(iconName)) {
                     //Log.d(TAG, "Adding to iconmap:" + iconName);
                     iconNameMap.put(iconName, iconName);
-                } else {
-                    //Log.d(TAG, "Iconmap already contains " + iconName);
                 }
             }
         }
@@ -409,8 +446,6 @@ public class FetchDataHelper {
                 if (!iconNameMap.containsKey(iconName)) {
                     //Log.d(TAG, "Adding to iconmap:" + iconName);
                     iconNameMap.put(iconName, iconName);
-                } else {
-                    //Log.d(TAG, "Iconmap already contains " + iconName);
                 }
             }
         }
@@ -421,8 +456,6 @@ public class FetchDataHelper {
                 if (!iconNameMap.containsKey(iconName)) {
                     //Log.d(TAG, "Adding to iconmap:" + iconName);
                     iconNameMap.put(iconName, iconName);
-                } else {
-                    //Log.d(TAG, "Iconmap already contains " + iconName);
                 }
             }
         }
@@ -492,7 +525,7 @@ public class FetchDataHelper {
     private static void augmentData(@NonNull WeatherDataType weatherDataType,
                                     @NonNull ContentValues[] valuesArray,
                                     boolean userFavorite) {
-        Log.d(TAG, "augmentData");
+        //Log.d(TAG, "augmentData");
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
             case CURRENT_WEATHER:
@@ -535,7 +568,7 @@ public class FetchDataHelper {
      * @param weatherDataType
      */
     private static void persistData(Context context, @NonNull WeatherDataType weatherDataType, @NonNull ContentValues[] valuesArray) {
-        Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
+        //Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
         //insert
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
@@ -620,7 +653,6 @@ public class FetchDataHelper {
                 break;
 
             case CITY_MULTI:
-                //TODO: verify, this is not really used anywhere yet
                 if (cityIds == null) {
                     throw new MalformedURLException("CityIds should not be null for weatherQueryType:" + weatherQueryType);
                 }
@@ -666,8 +698,6 @@ public class FetchDataHelper {
             int httpStatus = urlConnection.getResponseCode();
             Log.d(TAG, "performGet: HTTP status:" + httpStatus);
             if (httpStatus == HttpURLConnection.HTTP_OK) {
-                Log.d(TAG, "performGet: Http status OK");
-
                 String encoding = getEncodingFromHeader(urlConnection);
 
                 return buildContentValues(
@@ -718,7 +748,7 @@ public class FetchDataHelper {
             }
         }
 
-        Log.d(TAG, "getEncodingFromContentTypeHeader: Encoding:" + encoding);
+        //Log.d(TAG, "getEncodingFromContentTypeHeader: Encoding:" + encoding);
         return (encoding == null || encoding.equals("")) ? null : encoding;
     }
 
@@ -733,7 +763,7 @@ public class FetchDataHelper {
     private static ContentValues[] buildContentValues(InputStream stream,
                                                String encoding,
                                                WeatherDataType weatherDataType) throws IOException {
-        Log.d(TAG, "buildContentValues: weatherDataType:" + weatherDataType);
+        //Log.d(TAG, "buildContentValues: weatherDataType:" + weatherDataType);
 
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
@@ -765,7 +795,9 @@ public class FetchDataHelper {
      * no longer returns forecast for those times.
      *
      * This is not a problem for the current weather table because the unique key is the city id which means the row is always replaced.
+     * However, current weather table needs to be have non user favorites cleaned out every time a new current location is added.
      *
+     * Current weather table: Purge all data that is not a user favorite
      * Daily forecast table:  Purge all data that is earlier than 12:01 AM today.
      * Tri hour forecast table: Purge all data earlier than current time.
      */
@@ -777,8 +809,14 @@ public class FetchDataHelper {
 
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
-            case CURRENT_WEATHER:
                 //nothing to purge
+                break;
+            case CURRENT_WEATHER:
+                //purge old non user favorites from current weather table
+                context.getContentResolver().delete(
+                        CurrentWeatherContract.URI,
+                        BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
+                        BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
                 break;
 
             case DAILY_FORECAST:

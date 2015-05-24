@@ -48,8 +48,9 @@ public class DBHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onCreate(SQLiteDatabase db) {
-        //create the current weather table
+        //create the current weather table along with the index
         db.execSQL(CurrentWeatherContract.CREATE_TABLE);
+        db.execSQL(CurrentWeatherContract.CREATE_INDEX);
 
         //create the daily forecast table along with the index
         db.execSQL(DailyForecastContract.CREATE_TABLE);

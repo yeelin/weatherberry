@@ -17,8 +17,9 @@ public class NetworkIntentService
     private static final String TAG = NetworkIntentService.class.getCanonicalName();
 
     //action in intent
-    private static final String ACTION_LOAD = NetworkIntentService.class.getSimpleName() + ".action.load";
-    private static final String ACTION_SINGLE_LOAD = NetworkIntentService.class.getSimpleName() + "action.singleLoad";
+    private static final String ACTION_MULTI_CITY_LOAD = NetworkIntentService.class.getSimpleName() + ".action.multiCityload";
+    private static final String ACTION_FAVORITE_CITY_LOAD = NetworkIntentService.class.getSimpleName() + ".action.favoriteCityLoad";
+    private static final String ACTION_CURRENT_LOCATION_LOAD = NetworkIntentService.class.getSimpleName() + ".action.currentLocationLoad";
     private static final String ACTION_WAKEFUL_LOAD = NetworkIntentService.class.getSimpleName() + ".action.wakefulLoad";
 
     //extras in intent
@@ -54,7 +55,7 @@ public class NetworkIntentService
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action and extras
-        intent.setAction(ACTION_LOAD);
+        intent.setAction(ACTION_MULTI_CITY_LOAD);
 
         context.startService(intent);
     }
@@ -69,22 +70,52 @@ public class NetworkIntentService
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
-        intent.setAction(ACTION_LOAD);
+        intent.setAction(ACTION_MULTI_CITY_LOAD);
 
         return intent;
     }
 
     /**
-     * Builds an intent to load data for a single city. Pass this intent to
+     * Builds an intent to load data for a favorite city (found via search). Pass this intent to
      * context.startService().
      * @param context
+     * @param cityName
+     * @param latitude
+     * @param longitude
+     * @param userFavorite
      * @return
      */
-    public static Intent buildIntentForSingleCityLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
+    public static Intent buildIntentForFavoriteCityLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
-        intent.setAction(ACTION_SINGLE_LOAD);
+        intent.setAction(ACTION_FAVORITE_CITY_LOAD);
+        //set extras
+        if (cityName != null) {
+            intent.putExtra(EXTRA_CITY_NAME, cityName);
+        }
+        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
+        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
+        intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);
+
+        return intent;
+    }
+
+    /**
+     * Builds an intent to load data for a current location city (not favorited by the user). Pass this intent to
+     * context.startService().
+     * @param context
+     * @param cityName
+     * @param latitude
+     * @param longitude
+     * @param userFavorite
+     * @return
+     */
+    public static Intent buildIntentForCurrentLocationLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
+        Intent intent = new Intent(context, NetworkIntentService.class);
+
+        //set action
+        intent.setAction(ACTION_CURRENT_LOCATION_LOAD);
         //set extras
         if (cityName != null) {
             intent.putExtra(EXTRA_CITY_NAME, cityName);
@@ -126,22 +157,29 @@ public class NetworkIntentService
 
         final String action = intent.getAction();
 
-        if (ACTION_LOAD.equals(action)) {
-            //app is in the foreground, user is interacting
-            //loads data for all cities
+        if (ACTION_MULTI_CITY_LOAD.equals(action)) {
+            //loads data for all cities while app is in the foreground
             FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
         }
-        else if (ACTION_SINGLE_LOAD.equals(action)) {
-            //loads data for a single city
-            FetchDataHelper.handleActionSingleLoad(
+        else if (ACTION_FAVORITE_CITY_LOAD.equals(action)) {
+            //loads data for a favorite city
+            FetchDataHelper.handleActionFavoriteCityLoad(
                     this.getApplicationContext(),
                     intent.getStringExtra(EXTRA_CITY_NAME),
                     intent.getDoubleExtra(EXTRA_CITY_LATITUDE, 0),
                     intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0),
-                    intent.getBooleanExtra(EXTRA_USER_FAVORITE, false));
+                    intent.getBooleanExtra(EXTRA_USER_FAVORITE, true));
+        }
+        else if (ACTION_CURRENT_LOCATION_LOAD.equals(action)) {
+            //loads data for current location
+            FetchDataHelper.handleActionCurrentLocationLoad(
+                    this.getApplicationContext(),
+                    intent.getStringExtra(EXTRA_CITY_NAME),
+                    intent.getDoubleExtra(EXTRA_CITY_LATITUDE, 0),
+                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0));
         }
         else if (ACTION_WAKEFUL_LOAD.equals(action)) {
-            //called by alarm service
+            //called by alarm service while app is in the background
             try {
                 FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
             }

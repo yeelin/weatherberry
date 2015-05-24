@@ -214,13 +214,13 @@ public class SearchFragment
                         Log.d(TAG, String.format("onResult: Found place. Name:%s LatLng:%f, %f PlaceTypes:%s",
                                 foundPlace.getName().toString(), foundPlace.getLatLng().latitude, foundPlace.getLatLng().longitude, foundPlace.getPlaceTypes().toString()));
 
-                        Intent singleCityLoadIntent = NetworkIntentService.buildIntentForSingleCityLoad(
+                        Intent favCityLoadIntent = NetworkIntentService.buildIntentForFavoriteCityLoad(
                                 getActivity(),
                                 foundPlace.getName().toString(),
                                 foundPlace.getLatLng().latitude,
                                 foundPlace.getLatLng().longitude,
                                 true); //true since this is a user favorite
-                        getActivity().startService(singleCityLoadIntent);
+                        getActivity().startService(favCityLoadIntent);
 
                         //notify the listener
                         searchListener.onPlaceSelected(
