@@ -404,15 +404,15 @@ public class FetchDataHelper {
             case GROUP_CURRENT_WEATHER:
             case CURRENT_WEATHER:
                 augmentData(weatherDataType, valuesArray, userFavorite);
-                persistData(context, weatherDataType, valuesArray);
+                CurrentWeatherDataHelper.persistData(context, valuesArray);
                 break;
 
             case DAILY_FORECAST:
-                persistData(context, weatherDataType, valuesArray);
+                DailyForecastDataHelper.persistData(context, valuesArray);
                 break;
 
             case TRIHOUR_FORECAST:
-                persistData(context, weatherDataType, valuesArray);
+                TriHourForecastDataHelper.persistData(context, valuesArray);
                 break;
         }
 
@@ -460,31 +460,6 @@ public class FetchDataHelper {
                 break;
 
             case TRIHOUR_FORECAST:
-                break;
-        }
-    }
-
-
-    /**
-     * Inserts the data into the database.
-     * @param valuesArray
-     * @param weatherDataType
-     */
-    private static void persistData(Context context, @NonNull WeatherDataType weatherDataType, @NonNull ContentValues[] valuesArray) {
-        //Log.d(TAG, "persistData: weatherDataType: " + weatherDataType);
-        //insert
-        switch (weatherDataType) {
-            case GROUP_CURRENT_WEATHER:
-            case CURRENT_WEATHER:
-                context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
-                break;
-
-            case DAILY_FORECAST:
-                context.getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
-                break;
-
-            case TRIHOUR_FORECAST:
-                context.getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
                 break;
         }
     }
