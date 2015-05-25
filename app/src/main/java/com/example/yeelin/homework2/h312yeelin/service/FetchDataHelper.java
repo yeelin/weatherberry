@@ -219,7 +219,7 @@ public class FetchDataHelper {
             }
 
             //delete previous entry for current location
-            purgeOldData(context, WeatherDataType.CURRENT_WEATHER);
+            CurrentWeatherDataHelper.purgeOldData(context);
 
             //get current weather, daily forecast, and tri hour for city id
             ContentValues[] currentWeatherValues = getData(context, WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, false);
@@ -279,8 +279,8 @@ public class FetchDataHelper {
             }
 
             //purge anything that is too old i.e. anything earlier than today at 12:00 AM
-            purgeOldData(context, WeatherDataType.DAILY_FORECAST);
-            purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
+            DailyForecastDataHelper.purgeOldData(context);
+            TriHourForecastDataHelper.purgeOldData(context);
 
             //fetch weather icons to pre-warm the cache
             ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(context));
@@ -582,78 +582,6 @@ public class FetchDataHelper {
             default:
                 Log.d(TAG, "buildContentValues: Unknown weatherDataType: " + weatherDataType);
                 return null;
-        }
-    }
-
-    /**
-     * Helper method to purge old data from the database.
-     * Needed for the daily forecast and tri hour forecast tables because the unique keys are based on both city id and forecast time.
-     * Because of the combined city id and forecast time index, some rows are never replaced because the time has passed and the service
-     * no longer returns forecast for those times.
-     *
-     * This is not a problem for the current weather table because the unique key is the city id which means the row is always replaced.
-     * However, current weather table needs to be have non user favorites cleaned out every time a new current location is added.
-     *
-     * Current weather table: Purge all data that is not a user favorite
-     * Daily forecast table:  Purge all data that is earlier than 12:01 AM today.
-     * Tri hour forecast table: Purge all data earlier than current time.
-     */
-    private static void purgeOldData(Context context, WeatherDataType weatherDataType) {
-        Log.d(TAG, "purgeOldData: weatherDataType: " + weatherDataType);
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mm ZZZZ"); //EEEE is Day of week in long form, e.g. Monday, Tuesday, etc.
-        simpleDateFormat.setTimeZone(TimeZone.getDefault());
-
-        switch (weatherDataType) {
-            case GROUP_CURRENT_WEATHER:
-                //nothing to purge
-                break;
-            case CURRENT_WEATHER:
-                //purge old non user favorites from current weather table
-                context.getContentResolver().delete(
-                        CurrentWeatherContract.URI,
-                        BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
-                        BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
-                break;
-
-            case DAILY_FORECAST:
-                //calculate what is 12:01 AM today
-                TimeZone timeZone = TimeZone.getDefault();
-                Calendar calendar = Calendar.getInstance(timeZone);
-                calendar.setTimeInMillis(System.currentTimeMillis());
-                calendar.set(Calendar.HOUR_OF_DAY, 0);
-                calendar.set(Calendar.MINUTE, 0);
-                calendar.set(Calendar.SECOND, 0);
-                calendar.set(Calendar.MILLISECOND, 1);
-                long purgeMillis = calendar.getTimeInMillis();
-
-                //for debugging purposes only
-                String purgeTimeString = simpleDateFormat.format(new Date(purgeMillis));
-                Log.d(TAG, String.format("purgeOldData: Purge Time String:%s:", purgeTimeString));
-
-                //purge old data from daily forecast table
-                context.getContentResolver().delete(
-                        DailyForecastContract.URI,
-                        BaseWeatherContract.whereClauseLessThan(DailyForecastContract.Columns.FORECAST_DATETIME),
-                        BaseWeatherContract.whereArgs(purgeMillis));
-                break;
-
-            case TRIHOUR_FORECAST:
-                //purge old data from tri hour forecast table
-                long currentMillis = System.currentTimeMillis();
-
-                //for debugging purposes only
-                String currentTimeString = simpleDateFormat.format(new Date(currentMillis));
-                Log.d(TAG, String.format("purgeOldData: Current Time String:%s:", currentTimeString));
-
-                context.getContentResolver().delete(
-                        TriHourForecastContract.URI,
-                        BaseWeatherContract.whereClauseLessThan(TriHourForecastContract.Columns.FORECAST_DATETIME),
-                        BaseWeatherContract.whereArgs(currentMillis));
-                break;
-
-            default:
-                Log.d(TAG, "purgeOldData: Unknown weatherDataType: " + weatherDataType);
         }
     }
 }

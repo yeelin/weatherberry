@@ -5,11 +5,16 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
+import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
+import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by ninjakiki on 5/24/15.
@@ -58,5 +63,27 @@ public class CurrentWeatherDataHelper {
     public static void persistData(Context context, @NonNull ContentValues[] valuesArray) {
         Log.d(TAG, "persistData");
         context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
+    }
+
+    /**
+     * Helper method to purge old data from the current_weather table.
+     * Purge is needed for the current_weather table because the unique index is based on both city_id and user_favorite.
+     * Because of this combined index, a non-favorite will not be purged when the user changes current location.
+     * Current weather table needs to be have non user favorites cleaned out every time a new current location is added.
+     *
+     * Notes:
+     * Current weather table: Purge all data that is not a user favorite
+     * Daily forecast table:  Purge all data that is earlier than 12:01 AM today.
+     * Tri hour forecast table: Purge all data earlier than current time.
+     * @param context
+     */
+    public static void purgeOldData(Context context) {
+        Log.d(TAG, "purgeOldData");
+
+        //purge old non user favorites from current weather table
+        context.getContentResolver().delete(
+                CurrentWeatherContract.URI,
+                BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
+                BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
     }
 }
