@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URL;
 
 /**
  * Created by ninjakiki on 5/24/15.
@@ -17,6 +18,16 @@ import java.net.HttpURLConnection;
 public class FetchDataUtils {
     private static final String TAG = FetchDataUtils.class.getCanonicalName();
 
+    //http connection related
+    private static final String HTTP_REQUEST_METHOD = "GET";
+    private static final int HTTP_CONNECT_TIMEOUT_MILLIS = 15000;
+    private static final int HTTP_READ_TIMEOUT_MILLIS = 15000;
+
+    /**
+     * Performs the necessary pre-network checks and returns true if we are ok to go, or false otherwise.
+     * @param context
+     * @return
+     */
     public static boolean isPreNetworkCheckSuccessful(Context context) {
         //check if we have the latest SSL, and if this fails, exit
         if (!PlayServicesUtils.ensureLatestSSL(context)) {
@@ -31,6 +42,40 @@ public class FetchDataUtils {
         return true;
     }
 
+    /**
+     * Calls the weather API given the url and returns the http url connection or null.
+     *
+     * @param url
+     * @return
+     * @throws java.io.IOException
+     */
+    @Nullable
+    public static HttpURLConnection performGet(URL url) throws IOException {
+        Log.d(TAG, "performGet");
+
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        try {
+            urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
+            urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
+            urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
+            urlConnection.connect();
+
+            //check the response code and process accordingly
+            int httpStatus = urlConnection.getResponseCode();
+            Log.d(TAG, "performGet: HTTP status:" + httpStatus);
+            if (httpStatus == HttpURLConnection.HTTP_OK) {
+                return urlConnection;
+            }
+
+            //if we reached this, it means we have an error
+            FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
+            return null;
+        }
+        finally {
+            //always disconnect regardless of success or failure
+            urlConnection.disconnect();
+        }
+    }
 
 
     /**

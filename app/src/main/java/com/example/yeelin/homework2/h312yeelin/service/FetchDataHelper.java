@@ -175,9 +175,11 @@ public class FetchDataHelper {
         ContentValues[] valuesArray;
         try {
             URL url = buildUrl(WeatherDataType.CURRENT_WEATHER, WeatherQueryType.CITY_LATLNG, null, latLng);
-            valuesArray = performGet(url, WeatherDataType.CURRENT_WEATHER);
+            //valuesArray = performGet(url, WeatherDataType.CURRENT_WEATHER);
+            HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
+            valuesArray = CurrentWeatherDataHelper.buildContentValues(urlConnection);
 
-            if (valuesArray != null) {
+            if (valuesArray != null && valuesArray.length > 0) {
                 ContentValues values = valuesArray[0];
                 return values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
             }
@@ -384,36 +386,57 @@ public class FetchDataHelper {
         Log.d(TAG, "getData: " + weatherDataType + ", " + weatherQueryType);
 
         ContentValues[] valuesArray = null;
+        HttpURLConnection urlConnection = null;
+
         //get data
         try {
             URL url = buildUrl(weatherDataType, weatherQueryType, cityIds, latLng);
-            valuesArray = performGet(url, weatherDataType);
-        } catch (MalformedURLException e) {
-            Log.d(TAG, "getData: Unexpected error:", e);
-        } catch (IOException e) {
+            //valuesArray = performGet(url, weatherDataType);
+            urlConnection = FetchDataUtils.performGet(url);
+            if (urlConnection == null) {
+                Log.d(TAG, "getData: URL connection is null");
+                return null;
+            }
+
+            //persist data
+            switch (weatherDataType) {
+                case GROUP_CURRENT_WEATHER:
+                    valuesArray = GroupCurrentWeatherDataHelper.buildContentValues(urlConnection);
+                    if (valuesArray != null && valuesArray.length > 0) {
+                        GroupCurrentWeatherDataHelper.augmentData(valuesArray, userFavorite);
+                        GroupCurrentWeatherDataHelper.persistData(context, valuesArray);
+                    }
+                    break;
+
+                case CURRENT_WEATHER:
+                    valuesArray = CurrentWeatherDataHelper.buildContentValues(urlConnection);
+                    if (valuesArray != null && valuesArray.length > 0) {
+                        CurrentWeatherDataHelper.augmentData(valuesArray, userFavorite);
+                        CurrentWeatherDataHelper.persistData(context, valuesArray);
+                    }
+                    break;
+
+                case DAILY_FORECAST:
+                    valuesArray = DailyForecastDataHelper.buildContentValues(urlConnection);
+                    if (valuesArray != null && valuesArray.length > 0) {
+                        DailyForecastDataHelper.persistData(context, valuesArray);
+                    }
+                    break;
+
+                case TRIHOUR_FORECAST:
+                    valuesArray = TriHourForecastDataHelper.buildContentValues(urlConnection);
+                    if (valuesArray != null && valuesArray.length > 0) {
+                        TriHourForecastDataHelper.persistData(context, valuesArray);
+                    }
+                    break;
+            }
+
+        }
+        catch (MalformedURLException e) {
             Log.d(TAG, "getData: Unexpected error:", e);
         }
-
-        if (valuesArray == null || valuesArray.length == 0) {
-            Log.d(TAG, "getData: ValuesArray is null or empty so not persisting");
-            return null;
-        }
-
-        //persist data
-        switch (weatherDataType) {
-            case GROUP_CURRENT_WEATHER:
-            case CURRENT_WEATHER:
-                CurrentWeatherDataHelper.augmentData(valuesArray, userFavorite);
-                CurrentWeatherDataHelper.persistData(context, valuesArray);
-                break;
-
-            case DAILY_FORECAST:
-                DailyForecastDataHelper.persistData(context, valuesArray);
-                break;
-
-            case TRIHOUR_FORECAST:
-                TriHourForecastDataHelper.persistData(context, valuesArray);
-                break;
+        catch (IOException e) {
+            Log.d(TAG, "getData: Unexpected error:", e);
         }
 
         return valuesArray;
@@ -507,77 +530,5 @@ public class FetchDataHelper {
         Log.d(TAG, "buildUrl: " + uri.toString());
 
         return new URL(uri.toString());
-    }
-
-    /**
-     * Calls the weather API, and processes the response into content values.
-     *
-     * @param url
-     * @return
-     * @throws IOException
-     */
-    @Nullable
-    private static ContentValues[] performGet(URL url, WeatherDataType weatherDataType) throws IOException {
-        Log.d(TAG, "performGet: weatherDataType: " + weatherDataType);
-
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        try {
-            urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
-            urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
-            urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
-            urlConnection.connect();
-
-            //check the response code and process accordingly
-            int httpStatus = urlConnection.getResponseCode();
-            Log.d(TAG, "performGet: HTTP status:" + httpStatus);
-            if (httpStatus == HttpURLConnection.HTTP_OK) {
-                String encoding = FetchDataUtils.getEncodingFromHeader(urlConnection);
-
-                return buildContentValues(
-                        urlConnection.getInputStream(),
-                        encoding,
-                        weatherDataType);
-            }
-
-            //if we reached this, it means we have an error
-            FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
-            return null;
-        }
-        finally {
-            //always disconnect regardless of success or failure
-            urlConnection.disconnect();
-        }
-    }
-
-    /**
-     * Processes the response from the API into content values.
-     * @param stream
-     * @param encoding
-     * @param weatherDataType
-     * @return
-     * @throws IOException
-     */
-    private static ContentValues[] buildContentValues(InputStream stream,
-                                               String encoding,
-                                               WeatherDataType weatherDataType) throws IOException {
-        //Log.d(TAG, "buildContentValues: weatherDataType:" + weatherDataType);
-
-        switch (weatherDataType) {
-            case GROUP_CURRENT_WEATHER:
-                return GroupCurrentWeatherDataHelper.buildContentValues(stream, encoding);
-
-            case CURRENT_WEATHER:
-                return CurrentWeatherDataHelper.buildContentValues(stream, encoding);
-
-            case DAILY_FORECAST:
-                return DailyForecastDataHelper.buildContentValues(stream, encoding);
-
-            case TRIHOUR_FORECAST:
-                return TriHourForecastDataHelper.buildContentValues(stream, encoding);
-
-            default:
-                Log.d(TAG, "buildContentValues: Unknown weatherDataType: " + weatherDataType);
-                return null;
-        }
     }
 }

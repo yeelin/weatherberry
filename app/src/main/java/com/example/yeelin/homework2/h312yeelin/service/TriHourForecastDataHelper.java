@@ -6,11 +6,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -23,15 +25,15 @@ public class TriHourForecastDataHelper {
 
     /**
      * Processes the response from the API into content values for insertion into tri_hour_forecast table.
-     * @param stream
-     * @param encoding
+     * @param urlConnection
      * @return
      * @throws java.io.IOException
      */
-    public static ContentValues[] buildContentValues(InputStream stream,
-                                                     String encoding) throws IOException {
+    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
-        TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(stream, encoding);
+        TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(
+                urlConnection.getInputStream(), //input stream
+                FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
         return triHourForecastJsonReader.process();
     }
 

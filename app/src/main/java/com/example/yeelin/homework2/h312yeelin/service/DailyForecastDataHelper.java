@@ -6,11 +6,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.DailyForecastJsonReader;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -24,15 +26,15 @@ public class DailyForecastDataHelper {
 
     /**
      * Processes the response from the API into content values for insertion into daily_forecast table.
-     * @param stream
-     * @param encoding
+     * @param urlConnection
      * @return
      * @throws IOException
      */
-    public static ContentValues[] buildContentValues(InputStream stream,
-                                                     String encoding) throws IOException {
+    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
-        DailyForecastJsonReader dailyForecastJsonReader = new DailyForecastJsonReader(stream, encoding);
+        DailyForecastJsonReader dailyForecastJsonReader = new DailyForecastJsonReader(
+                urlConnection.getInputStream(), //input stream
+                FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
         return dailyForecastJsonReader.process();
     }
 

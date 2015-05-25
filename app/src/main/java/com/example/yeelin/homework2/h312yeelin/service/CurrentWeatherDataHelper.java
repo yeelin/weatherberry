@@ -6,11 +6,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -23,15 +25,15 @@ public class CurrentWeatherDataHelper {
 
     /**
      * Processes the response from the API into content values for insertion into current_weather table.
-     * @param stream
-     * @param encoding
+     * @param urlConnection
      * @return
      * @throws IOException
      */
-    public static ContentValues[] buildContentValues(InputStream stream,
-                                                     String encoding) throws IOException {
+    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
-        CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(stream, encoding);
+        CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(
+                urlConnection.getInputStream(), //input stream
+                FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
         return currentWeatherJsonReader.process();
     }
 
