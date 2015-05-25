@@ -15,6 +15,7 @@ import com.example.yeelin.homework2.h312yeelin.json.GroupCurrentWeatherJsonReade
 import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.CacheUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ConnectivityUtils;
+import com.example.yeelin.homework2.h312yeelin.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.PlayServicesUtils;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
@@ -138,7 +139,7 @@ public class FetchDataHelper {
                                                     boolean userFavorite) {
 
         Log.d(TAG, "handleActionFavoriteCityLoad");
-        if(!isPreNetworkCheckSuccessful(context)) return;
+        if(!FetchDataUtils.isPreNetworkCheckSuccessful(context)) return;
         //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
@@ -154,7 +155,7 @@ public class FetchDataHelper {
             ContentValues[] dailyForecastValues = getData(context, WeatherDataType.DAILY_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, userFavorite);
             ContentValues[] triHourForecastValues = getData(context, WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, userFavorite);
 
-            ImageUtils.getImages(context, getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
+            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionFavoriteCityLoad: Unexpected error", e);
@@ -205,7 +206,7 @@ public class FetchDataHelper {
                                                        double latitude,
                                                        double longitude) {
         Log.d(TAG, "handleActionCurrentLocationLoad");
-        if(!isPreNetworkCheckSuccessful(context)) return;
+        if(!FetchDataUtils.isPreNetworkCheckSuccessful(context)) return;
         //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
@@ -226,26 +227,12 @@ public class FetchDataHelper {
             ContentValues[] triHourForecastValues = getData(context, WeatherDataType.TRIHOUR_FORECAST, WeatherQueryType.CITY_ID, new Long[] {cityId}, null, false);
 
             //get images
-            ImageUtils.getImages(context, getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
+            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionFavoriteCityLoad: Unexpected error", e);
         }
         CacheUtils.logCache();
-    }
-
-    private static boolean isPreNetworkCheckSuccessful (Context context) {
-        //check if we have the latest SSL, and if this fails, exit
-        if (!PlayServicesUtils.ensureLatestSSL(context)) {
-            return false;
-        }
-
-        //no network, so do nothing and return
-        if (ConnectivityUtils.isNotConnected(context)) {
-            Log.d(TAG, "isPreNetworkCheckSuccessful: Not connected to network");
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -258,7 +245,7 @@ public class FetchDataHelper {
      */
     public static void handleActionLoad(Context context, FetchDataHelperCallback helperCallback) {
         Log.d(TAG, "handleActionLoad");
-        if(!isPreNetworkCheckSuccessful(context)) return;
+        if(!FetchDataUtils.isPreNetworkCheckSuccessful(context)) return;
         //initialize the cache. if already exists, then the existing one is used
         CacheUtils.initializeCache(context);
 
@@ -296,7 +283,7 @@ public class FetchDataHelper {
             purgeOldData(context, WeatherDataType.TRIHOUR_FORECAST);
 
             //fetch weather icons to pre-warm the cache
-            ImageUtils.getImages(context, getUniqueIconNames(context));
+            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(context));
         }
         catch (Exception e) {
             Log.d(TAG, "handleActionLoad: Unexpected error", e);
@@ -378,90 +365,6 @@ public class FetchDataHelper {
         Log.d(TAG, "getCityIds: CityIds: " + cityIdsList);
         Long[] cityIdsArray = new Long[cityIdsList.size()];
         return cityIdsList.toArray(cityIdsArray);
-    }
-
-    /**
-     * Gets unique icon names from all the tables.
-     * TODO: I don't like how I'm using a hashmap to get the unique names.  Need to find a way to return distinct rows.
-     * @param context
-     * @return
-     */
-    @NonNull
-    private static Collection<String> getUniqueIconNames(Context context) {
-        HashMap<String, String> iconNameMap = new HashMap<>();
-
-        //retrieve all icons from all the tables
-        Cursor currentWeatherIconCursor = context.getContentResolver().query(CurrentWeatherContract.URI, ICON_PROJECTION, null, null, null);
-        Cursor dailyForecastIconCursor = context.getContentResolver().query(DailyForecastContract.URI, ICON_PROJECTION, null, null, null);
-        Cursor triHourForecastIconCursor = context.getContentResolver().query(TriHourForecastContract.URI, ICON_PROJECTION, null, null, null);
-
-        getUniqueIconNamesHelper(currentWeatherIconCursor, iconNameMap);
-        getUniqueIconNamesHelper(dailyForecastIconCursor, iconNameMap);
-        getUniqueIconNamesHelper(triHourForecastIconCursor, iconNameMap);
-
-        return iconNameMap.values();
-    }
-
-    private static void getUniqueIconNamesHelper(@Nullable Cursor cursor, @NonNull HashMap<String, String> iconNameMap) {
-        if (cursor == null || cursor.getCount() == 0) return;
-
-        try {
-            while (cursor.moveToNext()) {
-                String iconName = cursor.getString(0);
-                iconNameMap.put(iconName, iconName);
-            }
-        } finally {
-            cursor.close();
-        }
-    }
-
-    /**
-     * Loops over all the values inserted into the database and retrieves the unique icons
-     * that need to be fetched.
-     * @param currentWeatherValues
-     * @param dailyForecastValues
-     * @param triHourForecastValues
-     * @return
-     */
-    @NonNull
-    private static Collection<String> getUniqueIconNames(@Nullable ContentValues[] currentWeatherValues,
-                                                         @Nullable ContentValues[] dailyForecastValues,
-                                                         @Nullable ContentValues[] triHourForecastValues) {
-        HashMap<String, String> iconNameMap = new HashMap<>();
-
-        //get unique icon names
-        if (currentWeatherValues != null) {
-            for (ContentValues values : currentWeatherValues) {
-                String iconName = (String) values.get(CurrentWeatherContract.Columns.ICON);
-                if (!iconNameMap.containsKey(iconName)) {
-                    //Log.d(TAG, "Adding to iconmap:" + iconName);
-                    iconNameMap.put(iconName, iconName);
-                }
-            }
-        }
-
-        if (dailyForecastValues != null) {
-            for (ContentValues values : dailyForecastValues) {
-                String iconName = (String) values.get(DailyForecastContract.Columns.ICON);
-                if (!iconNameMap.containsKey(iconName)) {
-                    //Log.d(TAG, "Adding to iconmap:" + iconName);
-                    iconNameMap.put(iconName, iconName);
-                }
-            }
-        }
-
-        if (triHourForecastValues != null) {
-            for (ContentValues values : triHourForecastValues) {
-                String iconName = (String) values.get(TriHourForecastContract.Columns.ICON);
-                if (!iconNameMap.containsKey(iconName)) {
-                    //Log.d(TAG, "Adding to iconmap:" + iconName);
-                    iconNameMap.put(iconName, iconName);
-                }
-            }
-        }
-
-        Log.d(TAG, String.format("getUniqueIconNamesToFetch: Count:%d, Contents:%s", iconNameMap.size(), iconNameMap.toString()));
-        return iconNameMap.values();
     }
 
     /**
@@ -698,7 +601,7 @@ public class FetchDataHelper {
             int httpStatus = urlConnection.getResponseCode();
             Log.d(TAG, "performGet: HTTP status:" + httpStatus);
             if (httpStatus == HttpURLConnection.HTTP_OK) {
-                String encoding = getEncodingFromHeader(urlConnection);
+                String encoding = FetchDataUtils.getEncodingFromHeader(urlConnection);
 
                 return buildContentValues(
                         urlConnection.getInputStream(),
@@ -707,49 +610,13 @@ public class FetchDataHelper {
             }
 
             //if we reached this, it means we have an error
-            logErrorStream(urlConnection.getErrorStream());
+            FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
             return null;
         }
         finally {
             //always disconnect regardless of success or failure
             urlConnection.disconnect();
         }
-    }
-
-    /**
-     * Helper method that tries to get the content encoding from the response header
-     * @param urlConnection
-     * @return
-     */
-    @Nullable
-    private static String getEncodingFromHeader(HttpURLConnection urlConnection) {
-        String encoding = null;
-
-        //first try to get it from content encoding
-        encoding = urlConnection.getContentEncoding();
-        if (encoding != null) {
-            return encoding;
-        }
-
-        //next try to get it from content type
-        String contentType = urlConnection.getContentType();
-        if (contentType == null) {
-            return null;
-        }
-
-        //parse content type
-        //content type is likely of the form: application/json; charset=utf-8
-        String[] values = contentType.split(";");
-
-        for (String value : values) {
-            value = value.trim();
-            if (value.toLowerCase().startsWith("charset=")) {
-                encoding = value.substring("charset=".length());
-            }
-        }
-
-        //Log.d(TAG, "getEncodingFromContentTypeHeader: Encoding:" + encoding);
-        return (encoding == null || encoding.equals("")) ? null : encoding;
     }
 
     /**
@@ -858,45 +725,5 @@ public class FetchDataHelper {
             default:
                 Log.d(TAG, "purgeOldData: Unknown weatherDataType: " + weatherDataType);
         }
-    }
-
-    /**
-     * Helper method that just logs the values in the valuesArray.
-     * @param valuesArray
-     * @param weatherDataType
-     */
-    private static void logContentValuesArray(@Nullable ContentValues[] valuesArray, WeatherDataType weatherDataType) {
-        Log.d(TAG, "logContentValuesArray: weatherDataType:" + weatherDataType);
-        if (valuesArray != null) {
-            for (ContentValues values : valuesArray) {
-                Log.d(TAG, "Values:" + values);
-            }
-        }
-        Log.d(TAG, "logContentValuesArray: Done");
-    }
-
-    /**
-     * Log the error stream when something goes wrong with the http connection.
-     * @param errorStream
-     * @throws IOException
-     */
-    private static void logErrorStream(@Nullable InputStream errorStream) throws IOException {
-        if (errorStream == null) {
-            return;
-        }
-
-        StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
-        try {
-            String result;
-            while ((result = reader.readLine()) != null) {
-                builder.append(result);
-            }
-        }
-        finally {
-            reader.close();
-        }
-
-        Log.w(TAG, builder.toString());
     }
 }
