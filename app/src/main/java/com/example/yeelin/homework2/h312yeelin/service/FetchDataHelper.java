@@ -564,20 +564,16 @@ public class FetchDataHelper {
 
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
-                GroupCurrentWeatherJsonReader groupCurrentWeatherJsonReader = new GroupCurrentWeatherJsonReader(stream, encoding);
-                return groupCurrentWeatherJsonReader.process();
+                return GroupCurrentWeatherDataHelper.buildContentValues(stream, encoding);
 
             case CURRENT_WEATHER:
-                CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(stream, encoding);
-                return currentWeatherJsonReader.process();
+                return CurrentWeatherDataHelper.buildContentValues(stream, encoding);
 
             case DAILY_FORECAST:
-                DailyForecastJsonReader dailyForecastJsonReader = new DailyForecastJsonReader(stream, encoding);
-                return dailyForecastJsonReader.process();
+                return DailyForecastDataHelper.buildContentValues(stream, encoding);
 
             case TRIHOUR_FORECAST:
-                TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(stream, encoding);
-                return triHourForecastJsonReader.process();
+                return TriHourForecastDataHelper.buildContentValues(stream, encoding);
 
             default:
                 Log.d(TAG, "buildContentValues: Unknown weatherDataType: " + weatherDataType);

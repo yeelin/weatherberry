@@ -5,9 +5,12 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -17,6 +20,20 @@ import java.util.TimeZone;
  */
 public class TriHourForecastDataHelper {
     private static final String TAG = TriHourForecastDataHelper.class.getCanonicalName();
+
+    /**
+     * Processes the response from the API into content values for insertion into tri_hour_forecast table.
+     * @param stream
+     * @param encoding
+     * @return
+     * @throws java.io.IOException
+     */
+    public static ContentValues[] buildContentValues(InputStream stream,
+                                                     String encoding) throws IOException {
+        Log.d(TAG, "buildContentValues");
+        TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(stream, encoding);
+        return triHourForecastJsonReader.process();
+    }
 
     /**
      * Inserts data into tri_hour_forecast table.
@@ -29,7 +46,7 @@ public class TriHourForecastDataHelper {
     }
 
     /**
-     * Helper method to purge old data from the database.
+     * Helper method to purge old data from the tri_hour_forecast table.
      * Purge is needed for the tri hour forecast table because the unique index is based on both city id and forecast time.
      * Because of the combined city id and forecast time index, some rows are never replaced because the time has passed and the service
      * no longer returns forecast for those times.

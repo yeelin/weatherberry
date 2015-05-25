@@ -5,22 +5,35 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
-import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
-import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Created by ninjakiki on 5/24/15.
  */
 public class CurrentWeatherDataHelper {
     private static final String TAG = CurrentWeatherDataHelper.class.getCanonicalName();
+
+    /**
+     * Processes the response from the API into content values for insertion into current_weather table.
+     * @param stream
+     * @param encoding
+     * @return
+     * @throws IOException
+     */
+    public static ContentValues[] buildContentValues(InputStream stream,
+                                                     String encoding) throws IOException {
+        Log.d(TAG, "buildContentValues");
+        CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(stream, encoding);
+        return currentWeatherJsonReader.process();
+    }
 
     /**
      * Augments data before inserting into the current_weather table.

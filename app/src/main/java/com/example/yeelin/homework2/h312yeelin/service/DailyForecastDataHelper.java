@@ -5,9 +5,12 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.example.yeelin.homework2.h312yeelin.json.DailyForecastJsonReader;
 import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -18,6 +21,20 @@ import java.util.TimeZone;
  */
 public class DailyForecastDataHelper {
     private static final String TAG = DailyForecastDataHelper.class.getCanonicalName();
+
+    /**
+     * Processes the response from the API into content values for insertion into daily_forecast table.
+     * @param stream
+     * @param encoding
+     * @return
+     * @throws IOException
+     */
+    public static ContentValues[] buildContentValues(InputStream stream,
+                                                     String encoding) throws IOException {
+        Log.d(TAG, "buildContentValues");
+        DailyForecastJsonReader dailyForecastJsonReader = new DailyForecastJsonReader(stream, encoding);
+        return dailyForecastJsonReader.process();
+    }
 
     /**
      * Inserts data into the daily_forecast table.
