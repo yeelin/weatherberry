@@ -403,7 +403,7 @@ public class FetchDataHelper {
         switch (weatherDataType) {
             case GROUP_CURRENT_WEATHER:
             case CURRENT_WEATHER:
-                augmentData(weatherDataType, valuesArray, userFavorite);
+                CurrentWeatherDataHelper.augmentData(valuesArray, userFavorite);
                 CurrentWeatherDataHelper.persistData(context, valuesArray);
                 break;
 
@@ -417,51 +417,6 @@ public class FetchDataHelper {
         }
 
         return valuesArray;
-    }
-
-    /**
-     * Augments the data before inserting into the database
-     * @param weatherDataType
-     * @param valuesArray
-     * @param userFavorite
-     */
-    private static void augmentData(@NonNull WeatherDataType weatherDataType,
-                                    @NonNull ContentValues[] valuesArray,
-                                    boolean userFavorite) {
-        //Log.d(TAG, "augmentData");
-        switch (weatherDataType) {
-            case GROUP_CURRENT_WEATHER:
-            case CURRENT_WEATHER:
-                //add unit and current timestamp
-                for (ContentValues values : valuesArray) {
-                    //TODO: have to fix this when we have current location
-                    //add user_favorite value
-                    values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
-                            userFavorite ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
-
-                    //TODO: add setting for user to choose unit type
-                    //add unit as imperial
-                    values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
-
-                    //inspect feed timestamp
-                    //note: we are only inspecting. not using this as the insertion timestamp.
-                    long feedTimeMillis = values.getAsLong(CurrentWeatherContract.Columns.TIMESTAMP);
-                    long currentTimeMillis = new Date().getTime();
-                    SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
-                    Log.d(TAG, String.format("Feed timestamp:" + feedTimeMillis + " Formatted:" + formatter.format(new Date(feedTimeMillis))));
-                    Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
-
-                    //add current timestamp as the insertion timestamp by overwriting feed timestamp
-                    values.put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
-                }
-                break;
-
-            case DAILY_FORECAST:
-                break;
-
-            case TRIHOUR_FORECAST:
-                break;
-        }
     }
 
     /**
