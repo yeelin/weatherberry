@@ -2,7 +2,9 @@ package com.example.yeelin.homework2.h312yeelin.service;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.TriHourForecastJsonReader;
@@ -13,6 +15,8 @@ import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -23,6 +27,85 @@ import java.util.TimeZone;
 public class TriHourForecastDataHelper {
     private static final String TAG = TriHourForecastDataHelper.class.getCanonicalName();
 
+    //middle uri parts
+    private static final String PATH_FORECAST = "forecast";
+    private static final String QUERY_CITY_ID = "id";
+
+    /**
+     * Retrieves data from the API by first building the url, calling the API, and then
+     * processing the response into content values, and persisting them.
+     * @param context
+     * @param cityId
+     * @param userFavorite
+     * @return
+     */
+    @Nullable
+    public static ContentValues[] getDataForCityId(Context context,
+                                                    long cityId,
+                                                    boolean userFavorite) {
+        Log.d(TAG, "getDataForCityId:" + cityId);
+        ContentValues[] valuesArray = null;
+        try {
+            URL url = buildUrl(cityId);
+            HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
+            if (urlConnection == null) {
+                return null;
+            }
+
+            valuesArray = buildContentValues(urlConnection);
+            if (valuesArray != null && valuesArray.length > 0) {
+                persistData(context, valuesArray);
+            }
+        }
+        catch (MalformedURLException e) {
+            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+        }
+        catch (IOException e) {
+            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+        }
+        return valuesArray;
+    }
+
+    /**
+     * Builds a url for querying the forecast daily api by city id
+     * Format: Trihour forecast by city id:
+     * http://api.openweathermap.org/data/2.5/forecast?id=5809844&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     * http://api.openweathermap.org/data/2.5/forecast/daily?id=5809844&cnt=5&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     *
+     * @param cityId
+     * @return
+     * @throws java.net.MalformedURLException
+     */
+    @NonNull
+    public static URL buildUrl(long cityId) throws MalformedURLException {
+        Log.d(TAG, "buildUrl: CityId:" + cityId);
+
+        //header
+        Uri.Builder uriBuilder = FetchDataUtils.getHeaderForUriBuilder();
+
+        //middle
+        appendMiddleToUriBuilder(uriBuilder, cityId);
+
+        //footer
+        uriBuilder = FetchDataUtils.appendFooterToUriBuilder(uriBuilder);
+
+        //convert uri builder into a URL
+        return FetchDataUtils.buildUrl(uriBuilder);
+    }
+
+    /**
+     * Appends the middle part to the given uri builder and returns it
+     * @param uriBuilder
+     * @param cityId
+     * @return
+     */
+    @NonNull
+    private static Uri.Builder appendMiddleToUriBuilder(@NonNull Uri.Builder uriBuilder, long cityId) {
+        uriBuilder.appendPath(PATH_FORECAST)
+                .appendQueryParameter(QUERY_CITY_ID, Long.toString(cityId));
+        return uriBuilder;
+    }
+
     /**
      * Processes the response from the API into content values for insertion into tri_hour_forecast table.
      * @param urlConnection
@@ -31,10 +114,15 @@ public class TriHourForecastDataHelper {
      */
     public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
-        TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(
-                urlConnection.getInputStream(), //input stream
-                FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
-        return triHourForecastJsonReader.process();
+        try {
+            TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(
+                    urlConnection.getInputStream(), //input stream
+                    FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
+            return triHourForecastJsonReader.process();
+        }
+        finally {
+            urlConnection.disconnect();
+        }
     }
 
     /**

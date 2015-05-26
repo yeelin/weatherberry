@@ -2,7 +2,9 @@ package com.example.yeelin.homework2.h312yeelin.service;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.json.CurrentWeatherJsonReader;
@@ -11,8 +13,9 @@ import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -23,6 +26,129 @@ import java.util.Locale;
 public class CurrentWeatherDataHelper {
     private static final String TAG = CurrentWeatherDataHelper.class.getCanonicalName();
 
+    //middle uri parts
+    private static final String PATH_CURRENT_WEATHER = "weather";
+    private static final String QUERY_CITY_ID = "id";
+    private static final String QUERY_CITY_LATITUDE = "lat";
+    private static final String QUERY_CITY_LONGITUDE = "lon";
+
+    /**
+     * Retrieves data from the API by first building the url, calling the API, and then
+     * processing the response into content values, and persisting them.
+     * @param context
+     * @param cityId
+     * @param userFavorite
+     * @return
+     */
+    @Nullable
+    public static ContentValues[] getDataForCityId(Context context,
+                                                    long cityId,
+                                                    boolean userFavorite) {
+        Log.d(TAG, "getDataForCityId:" + cityId);
+        ContentValues[] valuesArray = null;
+        try {
+            URL url = buildUrl(cityId);
+            HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
+            if (urlConnection == null) {
+                return null;
+            }
+
+            valuesArray = buildContentValues(urlConnection);
+            if (valuesArray != null && valuesArray.length > 0) {
+                augmentData(valuesArray, userFavorite);
+                persistData(context, valuesArray);
+            }
+        }
+        catch (MalformedURLException e) {
+            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+        }
+        catch (IOException e) {
+            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+        }
+        return valuesArray;
+    }
+
+    /**
+     * Builds a url for querying the weather api by city id
+     * Format: Current weather by City Id:
+     * http://api.openweathermap.org/data/2.5/weather?id=5128638&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     *
+     * @param cityId
+     * @return
+     * @throws MalformedURLException
+     */
+    @NonNull
+    public static URL buildUrl(long cityId) throws MalformedURLException {
+        Log.d(TAG, "buildUrl: CityId:" + cityId);
+
+        //header
+        Uri.Builder uriBuilder = FetchDataUtils.getHeaderForUriBuilder();
+
+        //middle
+        appendMiddleToUriBuilder(uriBuilder, cityId);
+
+        //footer
+        uriBuilder = FetchDataUtils.appendFooterToUriBuilder(uriBuilder);
+
+        //convert uri builder into a URL
+        return FetchDataUtils.buildUrl(uriBuilder);
+    }
+
+    /**
+     * Builds a url for querying the weather api by lat/long.
+     * Format: Current weather by Lat Long:
+     * http://api.openweathermap.org/data/2.5/weather?lat=47.610377&lon=-122.2006786&units=imperial&APPID=3284992e5bfef187c44863ce0f31ad30
+     *
+     * @param latitude
+     * @param longitude
+     * @return
+     * @throws MalformedURLException
+     */
+    @NonNull
+    public static URL buildUrl(double latitude, double longitude) throws MalformedURLException {
+        Log.d(TAG, "buildUrl: LatLong: " + latitude + ", " + longitude);
+
+        //header
+        Uri.Builder uriBuilder = FetchDataUtils.getHeaderForUriBuilder();
+
+        //middle
+        appendMiddleToUriBuilder(uriBuilder, latitude, longitude);
+
+        //footer
+        uriBuilder = FetchDataUtils.appendFooterToUriBuilder(uriBuilder);
+
+        //convert uri builder into a URL
+        return FetchDataUtils.buildUrl(uriBuilder);
+    }
+
+    /**
+     * Appends the middle part to the given uri builder and returns it
+     * @param uriBuilder
+     * @param cityId
+     * @return
+     */
+    @NonNull
+    private static Uri.Builder appendMiddleToUriBuilder(@NonNull Uri.Builder uriBuilder, long cityId) {
+        uriBuilder.appendPath(PATH_CURRENT_WEATHER);
+        uriBuilder.appendQueryParameter(QUERY_CITY_ID, Long.toString(cityId));
+        return uriBuilder;
+    }
+
+    /**
+     * Appends the middle part to the given uri builder and returns it
+     * @param uriBuilder
+     * @param latitude
+     * @param longitude
+     * @return
+     */
+    @NonNull
+    private static Uri.Builder appendMiddleToUriBuilder(@NonNull Uri.Builder uriBuilder, double latitude, double longitude) {
+        uriBuilder.appendPath(PATH_CURRENT_WEATHER);
+        uriBuilder.appendQueryParameter(QUERY_CITY_LATITUDE, Double.toString(latitude));
+        uriBuilder.appendQueryParameter(QUERY_CITY_LONGITUDE, Double.toString(longitude));
+        return uriBuilder;
+    }
+
     /**
      * Processes the response from the API into content values for insertion into current_weather table.
      * @param urlConnection
@@ -31,10 +157,15 @@ public class CurrentWeatherDataHelper {
      */
     public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
-        CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(
-                urlConnection.getInputStream(), //input stream
-                FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
-        return currentWeatherJsonReader.process();
+        try {
+            CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(
+                    urlConnection.getInputStream(), //input stream
+                    FetchDataUtils.getEncodingFromHeader(urlConnection)); //encoding
+            return currentWeatherJsonReader.process();
+        }
+        finally {
+            urlConnection.disconnect();
+        }
     }
 
     /**

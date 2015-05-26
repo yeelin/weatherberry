@@ -2,6 +2,8 @@ package com.example.yeelin.homework2.h312yeelin.networkUtils;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -22,6 +25,18 @@ public class FetchDataUtils {
     private static final String HTTP_REQUEST_METHOD = "GET";
     private static final int HTTP_CONNECT_TIMEOUT_MILLIS = 15000;
     private static final int HTTP_READ_TIMEOUT_MILLIS = 15000;
+
+    //uri header
+    private static final String SCHEME = "http";
+    private static final String AUTHORITY = "api.openweathermap.org";
+    private static final String DATA = "data";
+    private static final String API_VERSION = "2.5";
+
+    //uri footer
+    private static final String QUERY_UNIT = "units";
+    private static final String QUERY_APP_ID = "APPID";
+    private static final String UNIT_IMPERIAL = "imperial";
+    private static final String APP_ID = "3284992e5bfef187c44863ce0f31ad30";
 
     /**
      * Performs the necessary pre-network checks and returns true if we are ok to go, or false otherwise.
@@ -43,6 +58,46 @@ public class FetchDataUtils {
     }
 
     /**
+     * Builds the header part of the uri and returns the uri builder.
+     * @return
+     */
+    @NonNull
+    public static Uri.Builder getHeaderForUriBuilder() {
+        Log.d(TAG, "buildUrlHeader");
+
+        Uri.Builder uriBuilder = new Uri.Builder()
+                .scheme(SCHEME)
+                .authority(AUTHORITY)
+                .appendPath(DATA)
+                .appendPath(API_VERSION);
+        return uriBuilder;
+    }
+
+    /**
+     * Appends the footer part to the given uri builder and returns it
+     * @param uriBuilder
+     * @return
+     */
+    public static Uri.Builder appendFooterToUriBuilder(@NonNull Uri.Builder uriBuilder) {
+        uriBuilder.appendQueryParameter(QUERY_UNIT, UNIT_IMPERIAL)
+                .appendQueryParameter(QUERY_APP_ID, APP_ID);
+        return uriBuilder;
+    }
+
+    /**
+     * Converts the uri builder into a URL.
+     * @param uriBuilder
+     * @return
+     * @throws MalformedURLException
+     */
+    @NonNull
+    public static URL buildUrl(@NonNull Uri.Builder uriBuilder) throws MalformedURLException {
+        Uri uri = uriBuilder.build();
+        Log.d(TAG, "buildUrl: " + uri.toString());
+        return new URL(uri.toString());
+    }
+
+    /**
      * Calls the weather API given the url and returns the http url connection or null.
      *
      * @param url
@@ -54,27 +109,28 @@ public class FetchDataUtils {
         Log.d(TAG, "performGet");
 
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        try {
-            urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
-            urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
-            urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
-            urlConnection.connect();
+//        try {
+        urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
+        urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
+        urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
+        urlConnection.connect();
 
-            //check the response code and process accordingly
-            int httpStatus = urlConnection.getResponseCode();
-            Log.d(TAG, "performGet: HTTP status:" + httpStatus);
-            if (httpStatus == HttpURLConnection.HTTP_OK) {
-                return urlConnection;
-            }
+        //check the response code and process accordingly
+        int httpStatus = urlConnection.getResponseCode();
+        Log.d(TAG, "performGet: HTTP status:" + httpStatus);
+        if (httpStatus == HttpURLConnection.HTTP_OK) {
+            return urlConnection;
+        }
 
-            //if we reached this, it means we have an error
-            FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
-            return null;
-        }
-        finally {
-            //always disconnect regardless of success or failure
-            urlConnection.disconnect();
-        }
+        //if we reached this, it means we have an error
+        FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
+        urlConnection.disconnect();
+        return null;
+//        }
+//        finally {
+//            //always disconnect regardless of success or failure
+//            urlConnection.disconnect();
+//        }
     }
 
 
