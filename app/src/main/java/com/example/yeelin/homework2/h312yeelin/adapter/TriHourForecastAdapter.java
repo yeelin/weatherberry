@@ -102,10 +102,6 @@ public class TriHourForecastAdapter extends CursorAdapter {
 
         //load the image using picasso
         ImageUtils.loadImage(context, iconName, viewHolder.icon);
-//        Picasso.with(context)
-//                .load(ImageUtils.buildIconUri(iconName))
-//                .into(viewHolder.icon);
-
     }
 
     /**

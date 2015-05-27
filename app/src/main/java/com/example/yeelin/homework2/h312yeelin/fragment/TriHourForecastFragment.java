@@ -145,28 +145,20 @@ public class TriHourForecastFragment
             return;
         }
 
-        switch (loaderId) {
-            case TRIHOUR_FORECAST_LOADER:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor swapped", loaderId));
-                TriHourForecastAdapter triHourForecastAdapter = (TriHourForecastAdapter) viewHolder.triHourForecastListView.getAdapter();
-                triHourForecastAdapter.swapCursor(cursor);
+        if(loaderId == LoaderIds.TRIHOUR_FORECAST_LOADER) {
+            Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor swapped", loaderId));
+            TriHourForecastAdapter triHourForecastAdapter = (TriHourForecastAdapter) viewHolder.triHourForecastListView.getAdapter();
+            triHourForecastAdapter.swapCursor(cursor);
 
-                //show the list container and hide the progress bar
-                if (viewHolder.triHourForecastListContainer.getVisibility() != View.VISIBLE) {
-                    AnimationUtils.crossFadeViews(getActivity(),
-                            viewHolder.triHourForecastListContainer,
-                            viewHolder.triHourForecastProgressBar);
-                }
-                break;
-
-            case CURRENT_WEATHER_LOADER:
-            case DAILY_FORECAST_LOADER:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Loader with this id should not be used here", loaderId));
-                break;
-
-            default:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
-                return;
+            //show the list container and hide the progress bar
+            if (viewHolder.triHourForecastListContainer.getVisibility() != View.VISIBLE) {
+                AnimationUtils.crossFadeViews(getActivity(),
+                        viewHolder.triHourForecastListContainer,
+                        viewHolder.triHourForecastProgressBar);
+            }
+        }
+        else {
+            Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
         }
     }
 
