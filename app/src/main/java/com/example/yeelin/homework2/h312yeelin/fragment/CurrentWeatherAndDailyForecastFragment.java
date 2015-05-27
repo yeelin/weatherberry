@@ -92,7 +92,6 @@ public class CurrentWeatherAndDailyForecastFragment
     private String iconName;
     private long lastUpdateMillis;
 
-
     //listener member variable
     private CurrentWeatherAndDailyForecastFragmentListener listener;
 
@@ -377,7 +376,7 @@ public class CurrentWeatherAndDailyForecastFragment
      * @param viewHolder
      */
     private void updateCurrentWeatherView(@NonNull ViewHolder viewHolder) {
-                                          //) {
+
         //read values from the cursor
 //        String description = cursor.getString(CurrentWeatherCursorPosition.DESCRIPTION_POS.getValue());
 //        double temp = cursor.getDouble(CurrentWeatherCursorPosition.TEMP_POS.getValue());
@@ -394,14 +393,10 @@ public class CurrentWeatherAndDailyForecastFragment
         viewHolder.currentTemp.setText(String.valueOf(Math.round(temp)));
         viewHolder.currentHumidity.setText(String.valueOf(Math.round(humidity)) + " " + getString(R.string.humidity_unit));
         viewHolder.currentWindSpeed.setText(getString(R.string.current_windspeed_value, String.valueOf(Math.round(windSpeed))));
-        viewHolder.lastUpdate.setText(getString(R.string.last_update_value, lastUpdateInUserFormat));
+        viewHolder.currentLastUpdate.setText(getString(R.string.last_update_value, lastUpdateInUserFormat));
 
         //load the image using picasso
         ImageUtils.loadImage(getActivity(), iconName, viewHolder.currentIcon);
-//        Picasso.with(getActivity())
-//                .load(ImageUtils.buildIconUri(iconName))
-//                .into(viewHolder.currentIcon);
-//        CacheUtils.logCache();
 
         Log.i(TAG, String.format("onLoadComplete: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
                 cityName, description, temp, humidity, windSpeed, lastUpdateInUserFormat));
@@ -429,7 +424,7 @@ public class CurrentWeatherAndDailyForecastFragment
         final ImageView currentIcon;
 
         final ListView dailyForecastListView;
-        final TextView lastUpdate;
+        final TextView currentLastUpdate;
 
         final View dailyForecastListContainer;
         final View dailyForecastProgressBar;
@@ -446,7 +441,7 @@ public class CurrentWeatherAndDailyForecastFragment
             dailyForecastListContainer = view.findViewById(R.id.daily_forecast_listContainer);
             dailyForecastProgressBar = view.findViewById(R.id.daily_forecast_progressBar);
 
-            lastUpdate = (TextView) view.findViewById(R.id.last_update);
+            currentLastUpdate = (TextView) view.findViewById(R.id.current_last_update);
         }
     }
 }
