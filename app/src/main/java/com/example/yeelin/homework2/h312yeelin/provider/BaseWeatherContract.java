@@ -49,6 +49,9 @@ public final class BaseWeatherContract {
     public static String whereClauseEquals(String columnName) {
         return columnName + "=?";
     }
+    public static String whereClauseEquals(String column1, String column2) {
+        return column1 + "=?" + " AND " + column2 + "=?";
+    }
 
     public static String whereClauseLessThan(String columnName) {
         return columnName + "<?";
@@ -70,7 +73,7 @@ public final class BaseWeatherContract {
      * Content Provider related
      */
     //Uri definition: scheme://authority/
-    static final String AUTHORITY = WeatherContentProvider.class.getCanonicalName();
+    public static final String AUTHORITY = WeatherContentProvider.class.getCanonicalName();
     public static final Uri URI = new Uri.Builder()
             .scheme(ContentResolver.SCHEME_CONTENT)
             .authority(BaseWeatherContract.AUTHORITY)

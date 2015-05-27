@@ -20,7 +20,9 @@ import com.example.yeelin.homework2.h312yeelin.adapter.FavoritesAdapter;
 import com.example.yeelin.homework2.h312yeelin.fragmentUtils.AnimationUtils;
 import com.example.yeelin.homework2.h312yeelin.loader.FavoritesLoaderCallbacks;
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
+import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -145,6 +147,10 @@ public class FavoritesFragment
             case R.id.action_delete:
                 if (selectedItemPositionsToCityIdsMap != null && selectedItemPositionsToCityIdsMap.size() > 0){
                     Log.d(TAG, "onOptionsItemSelected: Favorites to be deleted: " + selectedItemPositionsToCityIdsMap);
+
+                    getActivity().startService(NetworkIntentService.buildIntentForFavoriteCitiesPurge(
+                            getActivity(),
+                            new ArrayList<>(selectedItemPositionsToCityIdsMap.values())));
                 }
                 return true;
             default:
