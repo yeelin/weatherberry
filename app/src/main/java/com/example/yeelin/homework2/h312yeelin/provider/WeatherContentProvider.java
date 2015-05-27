@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,39 +32,8 @@ public class WeatherContentProvider extends ContentProvider {
     private static final int ROW_BY_ID = 1;
     private static final int ROW_BY_CITYID = 2;
 
-    /*
-    public enum UriMatchCodes {
-        CITY(0), CITY_ID(1), CITY_NAME(2);
-
-        private int value;
-        private UriMatchCodes(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return this.value;
-        }
-
-        public static UriMatchCodes getCodeForInt(int i) {
-            for(UriMatchCodes code : values()) {
-                if (code.getValue() == i) {
-                    return code;
-                }
-            }
-            return null;
-        }
-    }
-    */
-
     //UriMatcher:possible match patterns
     static {
-//        uriMatcher.addURI(WeatherCurrentContract.AUTHORITY, null, UriMatchCodes.CITY.getValue());
-//        uriMatcher.addURI(WeatherCurrentContract.AUTHORITY, "#", UriMatchCodes.CITY_ID.getValue());
-//        uriMatcher.addURI(WeatherCurrentContract.AUTHORITY, "*", UriMatchCodes.CITY_NAME.getValue());
-
-//        uriMatcher.addURI(BaseWeatherContract.AUTHORITY, null, ALL_ROWS); //select all
-//        uriMatcher.addURI(BaseWeatherContract.AUTHORITY, "#", ROW_BY_ID); //select city_id or row_id
-
         uriMatcher.addURI(BaseWeatherContract.AUTHORITY, BaseWeatherContract.PATH_TABLE, ALL_ROWS); //select all from a table
         uriMatcher.addURI(BaseWeatherContract.AUTHORITY, BaseWeatherContract.PATH_TABLE_ROWID, ROW_BY_ID); //select by rowId
         uriMatcher.addURI(BaseWeatherContract.AUTHORITY, BaseWeatherContract.PATH_TABLE_CITYID, ROW_BY_CITYID); //select by cityId
@@ -136,7 +106,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     private String getContentType(String lastPathSegment) {
-        Log.i(TAG, "getContentType");
+        //Log.d(TAG, "getContentType");
         switch (lastPathSegment) {
             case CurrentWeatherContract.TABLE:
                 return CurrentWeatherContract.CONTENT_TYPE;
@@ -155,7 +125,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     private String getContentItemType(String pathSegment) {
-        Log.i(TAG, "getContentItemType");
+        //Log.d(TAG, "getContentItemType");
         switch (pathSegment) {
             case CurrentWeatherContract.TABLE:
                 return CurrentWeatherContract.CONTENT_ITEM_TYPE;
@@ -189,7 +159,7 @@ public class WeatherContentProvider extends ContentProvider {
                         String selection,
                         String[] selectionArgs,
                         String sortOrder) {
-        Log.i(TAG, "query");
+        Log.d(TAG, String.format("query: Uri:%s, Projection:%s, Selection:%s, SelectionArgs:%s, Sort:%s", uri.toString(), Arrays.toString(projection), selection, Arrays.toString(selectionArgs), sortOrder));
         //get a readable db
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         //validate uri
@@ -250,6 +220,7 @@ public class WeatherContentProvider extends ContentProvider {
                 sortOrder);
 
         //register cursor to watch uri for changes so that caller will know if the data changes later
+        Log.d(TAG, "query: setNotificationUri:" + uri.toString());
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
         //return cursor
         return cursor;
@@ -264,7 +235,7 @@ public class WeatherContentProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri,
                       ContentValues values) {
-        Log.i(TAG, "insert");
+        Log.d(TAG, String.format("insert: Uri:%s", uri.toString()));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         //validate uri
@@ -307,6 +278,7 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
+        Log.d(TAG, "insert: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return uri with appended row id
         Log.d(TAG, "insert: Row inserted:" + id);
@@ -324,7 +296,7 @@ public class WeatherContentProvider extends ContentProvider {
     public int delete(Uri uri,
                       String selection,
                       String[] selectionArgs) {
-        Log.i(TAG, "delete");
+        Log.d(TAG, String.format("delete: Uri: %s, Selection:%s, SelectionArgs:%s", uri.toString(), selection, Arrays.toString(selectionArgs)));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         //validate uri
@@ -379,6 +351,7 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
+        Log.d(TAG, "delete: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows deleted
         Log.d(TAG, "delete: Rows deleted:" + rowsDeleted);
@@ -398,7 +371,7 @@ public class WeatherContentProvider extends ContentProvider {
                       ContentValues values,
                       String selection,
                       String[] selectionArgs) {
-        Log.i(TAG, "update");
+        Log.d(TAG, String.format("update: Uri:%s Selection:%s SelectionArgs:%s", uri.toString(), selection, Arrays.toString(selectionArgs)));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         //validate uri
@@ -455,6 +428,7 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
+        Log.d(TAG, "update: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows updated
         Log.d(TAG, "update: Rows updated:" + rowsUpdated);
@@ -470,7 +444,7 @@ public class WeatherContentProvider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri,
                           ContentValues[] valuesArray) {
-        //Log.d(TAG, "bulkInsert");
+        Log.d(TAG, String.format("bulkInsert: Uri:%s", uri.toString()));
         //get writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         //validate uri
@@ -514,6 +488,7 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
+        Log.d(TAG, "bulkInsert: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows inserted
         Log.d(TAG, "bulkInsert: Rows inserted:" + rowsInserted);
@@ -521,7 +496,7 @@ public class WeatherContentProvider extends ContentProvider {
     }
 
     /**
-     *
+     * Helper method to merge two selection args string arrays together.
      * @param firstSelectionArgs
      * @param secondSelectionArgs
      * @return
