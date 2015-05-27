@@ -26,7 +26,8 @@ public class CurrentWeatherStatePagerAdapter
             CurrentWeatherContract.Columns.HUMIDITY,
             CurrentWeatherContract.Columns.WIND_SPEED,
             CurrentWeatherContract.Columns.ICON,
-            CurrentWeatherContract.Columns.TIMESTAMP
+            CurrentWeatherContract.Columns.TIMESTAMP,
+            CurrentWeatherContract.Columns.USER_FAVORITE
     };
 
     //for retrieving data from cursor
@@ -38,7 +39,8 @@ public class CurrentWeatherStatePagerAdapter
         HUMIDITY_POS(4),
         WINDSPEED_POS(5),
         ICON_POS(6),
-        TIMESTAMP_POS(7);
+        TIMESTAMP_POS(7),
+        USER_FAVORITE(8);
 
         private int value;
         private CurrentWeatherCursorPosition(int value) {

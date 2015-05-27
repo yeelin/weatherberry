@@ -23,6 +23,7 @@ import com.example.yeelin.homework2.h312yeelin.loader.CurrentWeatherLoaderCallba
 import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.AlarmUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.JobUtils;
+import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
 import java.util.Date;
@@ -259,8 +260,12 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
         cursor.moveToPosition(position);
         String cityName = cursor.getString(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
+        int userFavorite = cursor.getInt(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.USER_FAVORITE.getValue());
         if (cityName != null) {
-            getSupportActionBar().setTitle(cityName);
+            if (userFavorite == CurrentWeatherContract.USER_FAVORITE_NO)
+                getSupportActionBar().setTitle(getString(R.string.current_weather_toolbar_title, cityName));
+            else
+                getSupportActionBar().setTitle(cityName);
         }
         else {
             getSupportActionBar().setTitle(getString(R.string.no_city_name));

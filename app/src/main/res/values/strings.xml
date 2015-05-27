@@ -11,6 +11,7 @@
     <string name="action_search">Search</string>
 
     <!-- toolbar strings -->
+    <string name="current_weather_toolbar_title">%1$s - Current location</string>
     <string name="current_weather_toolbar_subtitle">Today, %1$s %2$s</string>
     <string name="tri_hour_forecast_toolbar_subtitle">%1$s, %2$s</string>
     <string name="search_query_hint">Enter city name</string>
