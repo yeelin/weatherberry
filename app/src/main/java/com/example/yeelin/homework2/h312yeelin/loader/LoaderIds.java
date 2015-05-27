@@ -8,7 +8,8 @@ package com.example.yeelin.homework2.h312yeelin.loader;
 public enum LoaderIds {
     CURRENT_WEATHER_LOADER(100),
     DAILY_FORECAST_LOADER(200),
-    TRIHOUR_FORECAST_LOADER(300);
+    TRIHOUR_FORECAST_LOADER(300),
+    FAVORITES_LOADER(400);
 
     private int value;
     private LoaderIds(int value) {

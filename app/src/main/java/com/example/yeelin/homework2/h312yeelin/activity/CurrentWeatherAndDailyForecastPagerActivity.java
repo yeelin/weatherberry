@@ -116,15 +116,17 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        final int id = item.getItemId();
         switch (id) {
             case R.id.action_add:
                 startActivity(SearchActivity.buildIntent(this));
                 return true;
-
-            case R.id.action_settings:
+            case R.id.action_remove:
+                startActivity(FavoritesActivity.buildIntent(this));
                 return true;
-
+            case R.id.action_settings:
+                Log.d(TAG, "onOptionsItemSelected: Settings have not been implemented yet");
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
