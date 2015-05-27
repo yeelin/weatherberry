@@ -117,6 +117,28 @@ public class CurrentWeatherStatePagerAdapter
     }
 
     /**
+     * This method is called after notifyDataSetChanged.
+     * Once you call notifyDataSetChanged method what you’ll normally see is that screens that were previously visited still
+     * have the old Fragment instances but screens being visited for the first time have the new Fragment instances.
+     * If you have a large number of screens and scroll back and forth between them you may see some of the older screens
+     * eventually show a new Fragment instance.
+     *
+     * What’s happening is that FragmentStatePagerAdapter is trying to be efficient and only create new Fragment instances
+     * when necessary. To determine when to request new Fragment instances after a call to the notifyDataSetChanged method,
+     * FragmentStatePagerAdapter calls its getItemPosition method to see if an existing Fragment can be used in its current
+     * or possibly a different position without having to recreate it. What we have to do is tell the FragmentStatePagerAdapter
+     * instance that we don’t want to use the existing Fragment instance.
+     * Solution from: https://hedgehogjim.wordpress.com/2013/10/03/android-updatable-swipe-navigation-with-fragmentstatepageradapter/
+     *
+     * @param object
+     * @return
+     */
+    @Override
+    public int getItemPosition(Object object) {
+        return POSITION_NONE;
+    }
+
+    /**
      * Swaps the current cursor with the new one and notifies listeners that data have changed.
      * Causes the view to be refreshed.
      * @param newCursor

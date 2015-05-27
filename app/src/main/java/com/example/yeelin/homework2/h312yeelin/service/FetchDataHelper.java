@@ -9,12 +9,9 @@ import android.util.Log;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.CacheUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework2.h312yeelin.networkUtils.ImageUtils;
+import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,11 +26,10 @@ public class FetchDataHelper {
     private static final String TAG = FetchDataHelper.class.getCanonicalName();
 
     //constants
-    private static final long CITY_ID_NOT_FOUND = -1;
     private static final int TEN_MINUTES_MILLIS = 10 * 60 * 1000; //minimum interval between multi-city fetches
 
     //projections
-    private static final String[] PROJECTION_MAX_TIMESTAMP = new String[] {"max(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"};
+    private static final String[] PROJECTION_MIN_TIMESTAMP = new String[] {"min(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"};
 
     public interface FetchDataHelperCallback {
         public boolean shouldCancelFetch();
@@ -63,8 +59,8 @@ public class FetchDataHelper {
 
         try {
             //fetch city id corresponding to city name and coordinates
-            final long cityId = findCityId(cityName, latitude, longitude);
-            if (cityId == CITY_ID_NOT_FOUND) return;
+            final long cityId = FindCityDataHelper.findCityId(cityName, latitude, longitude);
+            if (cityId == BaseWeatherContract.NO_ID) return;
 
             //fetch current weather, daily forecast, and tri hour for city id
             final ArrayList<ContentValues> currentWeatherValues = CurrentWeatherDataHelper.getDataForCityId(context, cityId, true);
@@ -103,8 +99,8 @@ public class FetchDataHelper {
 
         try {
             //fetch city id corresponding to city name and coordinates
-            final long cityId = findCityId(cityName, latitude, longitude);
-            if (cityId == CITY_ID_NOT_FOUND) return;
+            final long cityId = FindCityDataHelper.findCityId(cityName, latitude, longitude);
+            if (cityId == BaseWeatherContract.NO_ID) return;
 
             //delete previous entry for current location
             CurrentWeatherDataHelper.purgeOldData(context);
@@ -214,8 +210,8 @@ public class FetchDataHelper {
      * @return
      */
     private static long determineLastFetch(Context context) {
-        //retrieve the timestamp from the current_weather table
-        Cursor cursor = context.getContentResolver().query(CurrentWeatherContract.URI, PROJECTION_MAX_TIMESTAMP, null, null, null);
+        //retrieve the minimum timestamp from the current_weather table
+        Cursor cursor = context.getContentResolver().query(CurrentWeatherContract.URI, PROJECTION_MIN_TIMESTAMP, null, null, null);
         long lastFetchMillis = 0;
         try {
             if (cursor.moveToFirst() && !cursor.isNull(0)) {
@@ -228,41 +224,5 @@ public class FetchDataHelper {
 
         //return the timestamp
         return lastFetchMillis;
-    }
-
-    /**
-     * Uses the given lat/long to query open weather's find api.  The cityName is used to match against the
-     * city name in the response to get a more accurate city.
-     * @param cityName
-     * @param latitude
-     * @param longitude
-     * @return cityId
-     */
-    private static long findCityId(@Nullable String cityName, double latitude, double longitude) {
-        try {
-            final URL url = FindCurrentWeatherDataHelper.buildUrl(latitude, longitude);
-            final HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
-            final ArrayList<ContentValues> valuesArrayList = FindCurrentWeatherDataHelper.buildContentValues(urlConnection);
-
-            if (valuesArrayList != null && valuesArrayList.size() > 0) {
-                //check each ContentValues map to see if there's a match for city name
-                for (ContentValues values : valuesArrayList) {
-                    final String candidateCityName = values.getAsString(CurrentWeatherContract.Columns.CITY_NAME);
-                    if (cityName.equalsIgnoreCase(candidateCityName)) {
-                        //we found a match
-                        Log.d(TAG, "findCityId: We found a match for cityName:" + candidateCityName);
-                        return values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
-                    }
-                }
-            }
-        }
-        catch (MalformedURLException e) {
-            Log.e(TAG, "findCityId: Unexpected error:", e);
-        }
-        catch (IOException e) {
-            Log.e(TAG, "findCityId: Unexpected error:", e);
-        }
-        Log.d(TAG, String.format("findCityId: Could not find cityId for cityName:%s (%f, %f)", cityName, latitude, longitude));
-        return CITY_ID_NOT_FOUND;
     }
 }

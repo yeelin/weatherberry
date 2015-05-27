@@ -160,7 +160,6 @@ public class CurrentWeatherAndDailyForecastPagerActivity
                     viewPagerPosition, hasScheduledPeriodicBgFetch));
 
             viewPager.setCurrentItem(viewPagerPosition);
-
         }
     }
 
@@ -246,6 +245,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
 
     /**
      * Method implementation for ViewPager.OnPageChangeListener interface
+     * This is the callback when a page in the viewpager is selected.
      * @param position
      */
     @Override
