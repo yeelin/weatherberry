@@ -51,7 +51,8 @@ public abstract class BaseWeatherJsonReader {
     }
 
     @NonNull
-    public abstract ContentValues[] process() throws IOException;
+    //public abstract ContentValues[] process() throws IOException;
+    public abstract ArrayList<ContentValues> process() throws IOException;
 
     /**
      * ProcessCityObject is used by daily and trihour json readers.

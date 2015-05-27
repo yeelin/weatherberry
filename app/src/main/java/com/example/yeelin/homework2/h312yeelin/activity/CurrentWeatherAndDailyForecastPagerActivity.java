@@ -90,7 +90,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         viewPager.setCurrentItem(viewPagerPosition);
 
         //fetch fresh data from the network
-        startService(NetworkIntentService.buildIntent(this));
+        startService(NetworkIntentService.buildIntentForMultiCityLoad(this));
 
         //initialize the current weather loader to load data from the database
         Log.d(TAG, "onCreate: Init current weather loader");

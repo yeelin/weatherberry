@@ -89,7 +89,7 @@ public class NetworkJobService extends JobService {
         protected Void doInBackground(Void... params) {
             Log.d(TAG, "doInBackground");
 
-            FetchDataHelper.handleActionLoad(applicationContext, this);
+            FetchDataHelper.handleActionMultiCityLoad(applicationContext, this);
             Log.d(TAG, "doInBackground: Done");
 
             return null;

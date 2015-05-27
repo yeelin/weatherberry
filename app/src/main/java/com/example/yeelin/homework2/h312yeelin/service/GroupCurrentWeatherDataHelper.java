@@ -2,6 +2,7 @@ package com.example.yeelin.homework2.h312yeelin.service;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,9 +16,10 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Locale;
+import java.util.HashMap;
 
 /**
  * Created by ninjakiki on 5/25/15.
@@ -30,21 +32,87 @@ public class GroupCurrentWeatherDataHelper {
     private static final String QUERY_CITY_ID = "id";
     private static final String QUERY_CITY_ID_SEPARATOR = ",";
 
+    //projection
+    private static final String[] PROJECTION_CITY_ID_AND_FAVORITES = new String[]{
+            CurrentWeatherContract.Columns.CITY_ID,
+            CurrentWeatherContract.Columns.USER_FAVORITE
+    };
+
+    //enums
+    private enum CityIdAndFavoritesCursorPosition {
+        CITY_ID_POS(0),
+        USER_FAV_POS(1);
+        private int value;
+        private CityIdAndFavoritesCursorPosition(int value) {
+            this.value = value;
+        }
+        public int getValue() {
+            return value;
+        }
+    }
+
+    /**
+     * Gets all the city ids and favorites from the current_weather table.
+     * Note: A city id may map to two favorite values (yes and no) hence the long to arraylist hashmap.
+     *
+     * @param context
+     * @return
+     */
+    @Nullable
+    public static HashMap<Long, ArrayList<Integer>> getCityIdsAndFavorites(Context context) {
+        //retrieve all the city ids and favorites from the current_weather table
+        Cursor cursor = context.getContentResolver().query(
+                CurrentWeatherContract.URI,
+                PROJECTION_CITY_ID_AND_FAVORITES,
+                null,
+                null,
+                CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc");
+        if (cursor == null || cursor.getCount() == 0) {
+            Log.d(TAG, "getCityIdsAndFavorites: No cities in the db");
+            return null;
+        }
+
+        //create a map of city ids to favorites
+        HashMap<Long, ArrayList<Integer>> cityIdsToFavoritesMap = new HashMap<>(cursor.getCount());
+        try {
+            while (cursor.moveToNext()) {
+                long cityId = cursor.getLong(CityIdAndFavoritesCursorPosition.CITY_ID_POS.getValue());
+                int userFavorite = cursor.getInt(CityIdAndFavoritesCursorPosition.USER_FAV_POS.getValue());
+
+                if (cityIdsToFavoritesMap.containsKey(cityId)) {
+                    //map already contains the city id, so just add to the favorites arraylist
+                    ArrayList<Integer> userFavoritesArrayList = cityIdsToFavoritesMap.get(cityId);
+                    userFavoritesArrayList.add(userFavorite);
+                }
+                else {
+                    //map doesn't contain the city id, so allocate a new arraylist and add to it
+                    ArrayList<Integer> userFavoritesArrayList = new ArrayList<>(2);
+                    userFavoritesArrayList.add(userFavorite);
+                    cityIdsToFavoritesMap.put(cityId, userFavoritesArrayList);
+                }
+            }
+        }
+        finally {
+            cursor.close();
+        }
+        Log.d(TAG, "getCityIdsAndFavorites:" + cityIdsToFavoritesMap);
+        return cityIdsToFavoritesMap;
+    }
 
     /**
      * Retrieves multi-city data from the API by first building the url, calling the API, and then
      * processing the response into content values, and persisting them.
      * @param context
      * @param cityIds
-     * @param userFavorite
+     * @param cityIdsToFavoritesMap
      * @return
      */
     @Nullable
-    public static ContentValues[] getDataForMultipleCityIds(Context context,
+    public static ArrayList<ContentValues> getDataForMultipleCityIds(Context context,
                                                              Long[] cityIds,
-                                                             boolean userFavorite) {
-        Log.d(TAG, "getDataForMultipleCityIds:" + cityIds);
-        ContentValues[] valuesArray = null;
+                                                             HashMap<Long, ArrayList<Integer>> cityIdsToFavoritesMap) {
+        Log.d(TAG, "getDataForMultipleCityIds:" + Arrays.toString(cityIds));
+        ArrayList<ContentValues> valuesArrayList = null;
         try {
             URL url = buildUrl(cityIds);
             HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
@@ -52,10 +120,10 @@ public class GroupCurrentWeatherDataHelper {
                 return null;
             }
 
-            valuesArray = buildContentValues(urlConnection);
-            if (valuesArray != null && valuesArray.length > 0) {
-                augmentData(valuesArray, userFavorite);
-                persistData(context, valuesArray);
+            valuesArrayList = buildContentValues(urlConnection);
+            if (valuesArrayList != null && valuesArrayList.size() > 0) {
+                augmentData(valuesArrayList, cityIdsToFavoritesMap);
+                persistData(context, valuesArrayList);
             }
         }
         catch (MalformedURLException e) {
@@ -64,7 +132,7 @@ public class GroupCurrentWeatherDataHelper {
         catch (IOException e) {
             Log.d(TAG, "getDataForMultipleCityIds: Unexpected error:", e);
         }
-        return valuesArray;
+        return valuesArrayList;
     }
 
     /**
@@ -75,7 +143,7 @@ public class GroupCurrentWeatherDataHelper {
      * @return
      */
     @Nullable
-    public static ContentValues[] getDataForCityId(Context context, long cityId, boolean userFavorite) {
+    public static ArrayList<ContentValues> getDataForCityId(Context context, long cityId, boolean userFavorite) {
         return null;
     }
 
@@ -90,7 +158,7 @@ public class GroupCurrentWeatherDataHelper {
      */
     @NonNull
     public static URL buildUrl(@NonNull Long[] cityIds) throws MalformedURLException {
-        Log.d(TAG, "buildUrl: CityIds:" + cityIds);
+        Log.d(TAG, "buildUrl: CityIds:" + Arrays.toString(cityIds));
 
         //header
         Uri.Builder uriBuilder = FetchDataUtils.getHeaderForUriBuilder();
@@ -132,7 +200,7 @@ public class GroupCurrentWeatherDataHelper {
      * @return
      * @throws java.io.IOException
      */
-    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
+   public static ArrayList<ContentValues> buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
         try {
             GroupCurrentWeatherJsonReader groupCurrentWeatherJsonReader = new GroupCurrentWeatherJsonReader(
@@ -146,45 +214,67 @@ public class GroupCurrentWeatherDataHelper {
     }
 
     /**
-     * Augments data before inserting into the current_weather table.
-     * @param valuesArray
-     * @param userFavorite
+     * Augments multi-city data before inserting into the current_weather table.
+     * @param valuesArrayList
+     * @param cityIdsToFavoritesMap
      */
-    public static void augmentData(@NonNull ContentValues[] valuesArray,
-                                   boolean userFavorite) {
-        Log.d(TAG, "augmentData");
+    public static void augmentData(@NonNull ArrayList<ContentValues> valuesArrayList,
+                                   HashMap<Long, ArrayList<Integer>> cityIdsToFavoritesMap) {
+        Log.d(TAG, "augmentData: cityIdsToFavoritesMap:" + cityIdsToFavoritesMap);
+        ContentValues duplicateValues = null;
 
-        //add unit and current timestamp
-        for (ContentValues values : valuesArray) {
-            //TODO: have to fix this when we have current location
+        for (ContentValues values : valuesArrayList) {
             //add user_favorite value
-            values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
-                    userFavorite ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+            final long cityId = values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
 
-            //TODO: add setting for user to choose unit type
+            ArrayList<Integer> userFavoritesArrayList = cityIdsToFavoritesMap.get(cityId);
+            int userFavorite = userFavoritesArrayList.remove(0);
+            values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
+                    (userFavorite == 1) ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+
             //add unit as imperial
             values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
 
-            //inspect feed timestamp
-            //note: we are only inspecting. not using this as the insertion timestamp.
-            long feedTimeMillis = values.getAsLong(CurrentWeatherContract.Columns.TIMESTAMP);
-            long currentTimeMillis = new Date().getTime();
-            SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
-            Log.d(TAG, String.format("Feed timestamp:" + feedTimeMillis + " Formatted:" + formatter.format(new Date(feedTimeMillis))));
-            Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
-
-            //add current timestamp as the insertion timestamp by overwriting feed timestamp
+            //add current timestamp as the db insertion timestamp by overwriting feed timestamp
+            final long currentTimeMillis = new Date().getTime();
             values.put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
+
+            //if userFavoritesArrayList.size is greater than 0, it means that we have a case where a city is both
+            //a current location and a favorite. Duplicate the row with a different userFavorite value.
+            if (userFavoritesArrayList.size() > 0) {
+                duplicateValues = new ContentValues(values);
+                userFavorite = userFavoritesArrayList.remove(0);
+                duplicateValues.put(CurrentWeatherContract.Columns.USER_FAVORITE,
+                        (userFavorite == 1) ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+            }
         }
+
+        //add the duplicated row if it's not null to the valuesArrayList
+        if (duplicateValues != null) {
+            valuesArrayList.add(duplicateValues);
+        }
+    }
+
+    /**
+     * Augments single city data before inserting into the current_weather table. Not implemented
+     * @param valuesArrayList
+     * @param userFavorite
+     */
+    public static void augmentData(@NonNull ArrayList<ContentValues> valuesArrayList,
+                                   boolean userFavorite) {
+        Log.d(TAG, "augmentData: Not implemented");
+        return;
     }
 
     /**
      * Inserts data into current_weather table.
      * @param context
-     * @param valuesArray
+     * @param valuesArrayList
      */
-    public static void persistData(Context context, @NonNull ContentValues[] valuesArray) {
+    public static void persistData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
         Log.d(TAG, "persistData");
-        context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
+        context.getContentResolver().bulkInsert(
+                CurrentWeatherContract.URI,
+                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
     }
 }

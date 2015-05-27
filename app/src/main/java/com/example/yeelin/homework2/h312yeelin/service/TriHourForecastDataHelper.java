@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -40,11 +41,11 @@ public class TriHourForecastDataHelper {
      * @return
      */
     @Nullable
-    public static ContentValues[] getDataForCityId(Context context,
+    public static ArrayList<ContentValues> getDataForCityId(Context context,
                                                     long cityId,
                                                     boolean userFavorite) {
         Log.d(TAG, "getDataForCityId:" + cityId);
-        ContentValues[] valuesArray = null;
+        ArrayList<ContentValues> valuesArrayList = null;
         try {
             URL url = buildUrl(cityId);
             HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
@@ -52,9 +53,9 @@ public class TriHourForecastDataHelper {
                 return null;
             }
 
-            valuesArray = buildContentValues(urlConnection);
-            if (valuesArray != null && valuesArray.length > 0) {
-                persistData(context, valuesArray);
+            valuesArrayList = buildContentValues(urlConnection);
+            if (valuesArrayList != null && valuesArrayList.size() > 0) {
+                persistData(context, valuesArrayList);
             }
         }
         catch (MalformedURLException e) {
@@ -63,7 +64,7 @@ public class TriHourForecastDataHelper {
         catch (IOException e) {
             Log.d(TAG, "getDataForCityId: Unexpected error:", e);
         }
-        return valuesArray;
+        return valuesArrayList;
     }
 
     /**
@@ -112,7 +113,7 @@ public class TriHourForecastDataHelper {
      * @return
      * @throws java.io.IOException
      */
-    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
+    public static ArrayList<ContentValues> buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
         try {
             TriHourForecastJsonReader triHourForecastJsonReader = new TriHourForecastJsonReader(
@@ -128,11 +129,13 @@ public class TriHourForecastDataHelper {
     /**
      * Inserts data into tri_hour_forecast table.
      * @param context
-     * @param valuesArray
+     * @param valuesArrayList
      */
-    public static void persistData(Context context, @NonNull ContentValues[] valuesArray) {
+    public static void persistData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
         Log.d(TAG, "persistData");
-        context.getContentResolver().bulkInsert(TriHourForecastContract.URI, valuesArray);
+        context.getContentResolver().bulkInsert(
+                TriHourForecastContract.URI,
+                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
     }
 
     /**

@@ -26,11 +26,14 @@ public class FetchDataUtils {
     private static final int HTTP_CONNECT_TIMEOUT_MILLIS = 15000;
     private static final int HTTP_READ_TIMEOUT_MILLIS = 15000;
 
+    //http response
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
     //uri header
     private static final String SCHEME = "http";
     private static final String AUTHORITY = "api.openweathermap.org";
-    private static final String DATA = "data";
-    private static final String API_VERSION = "2.5";
+    private static final String PATH_DATA = "data";
+    private static final String PATH_API_VERSION = "2.5";
 
     //uri footer
     private static final String QUERY_UNIT = "units";
@@ -63,13 +66,11 @@ public class FetchDataUtils {
      */
     @NonNull
     public static Uri.Builder getHeaderForUriBuilder() {
-        Log.d(TAG, "buildUrlHeader");
-
         Uri.Builder uriBuilder = new Uri.Builder()
                 .scheme(SCHEME)
                 .authority(AUTHORITY)
-                .appendPath(DATA)
-                .appendPath(API_VERSION);
+                .appendPath(PATH_DATA)
+                .appendPath(PATH_API_VERSION);
         return uriBuilder;
     }
 
@@ -106,7 +107,7 @@ public class FetchDataUtils {
      */
     @Nullable
     public static HttpURLConnection performGet(URL url) throws IOException {
-        Log.d(TAG, "performGet");
+        //Log.d(TAG, "performGet");
 
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 //        try {
@@ -181,7 +182,7 @@ public class FetchDataUtils {
         }
 
         StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream, DEFAULT_ENCODING));
         try {
             String result;
             while ((result = reader.readLine()) != null) {

@@ -276,7 +276,7 @@ public class LocationFragment
 
     /**
      * Requests the last location from the fused API, checks to see if it's better than the current best location,
-     * and returns the better of the two.
+     * and updates the location data for the location it deems the best.
      */
     private void requestLastKnownLocation() {
         Log.d(TAG, "requestLastKnownLocation");
@@ -288,9 +288,9 @@ public class LocationFragment
             updateLocation(candidateLocation);
         }
         else {
-            //candidate is not better, do nothing
+            //candidate is not better, so use current best
             Log.d(TAG, "requestLastKnownLocation: Using current best location:" + currentBestLocation);
-            //updateLocation(currentBestLocation);
+            updateLocation(currentBestLocation);
         }
     }
 
@@ -357,8 +357,7 @@ public class LocationFragment
                 getActivity(),
                 currentBestLocationName,
                 currentBestLocation.getLatitude(),
-                currentBestLocation.getLongitude(),
-                false); //false since this is not a user favorite
+                currentBestLocation.getLongitude());
         getActivity().startService(currentLocationLoadIntent);
 
         //notify listener about the new location with city name

@@ -17,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
@@ -41,11 +42,11 @@ public class CurrentWeatherDataHelper {
      * @return
      */
     @Nullable
-    public static ContentValues[] getDataForCityId(Context context,
+    public static ArrayList<ContentValues> getDataForCityId(Context context,
                                                     long cityId,
                                                     boolean userFavorite) {
         Log.d(TAG, "getDataForCityId:" + cityId);
-        ContentValues[] valuesArray = null;
+        ArrayList<ContentValues> valuesArrayList = null;
         try {
             URL url = buildUrl(cityId);
             HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
@@ -53,10 +54,10 @@ public class CurrentWeatherDataHelper {
                 return null;
             }
 
-            valuesArray = buildContentValues(urlConnection);
-            if (valuesArray != null && valuesArray.length > 0) {
-                augmentData(valuesArray, userFavorite);
-                persistData(context, valuesArray);
+            valuesArrayList = buildContentValues(urlConnection);
+            if (valuesArrayList != null && valuesArrayList.size() > 0) {
+                augmentData(valuesArrayList, userFavorite);
+                persistData(context, valuesArrayList);
             }
         }
         catch (MalformedURLException e) {
@@ -65,7 +66,7 @@ public class CurrentWeatherDataHelper {
         catch (IOException e) {
             Log.d(TAG, "getDataForCityId: Unexpected error:", e);
         }
-        return valuesArray;
+        return valuesArrayList;
     }
 
     /**
@@ -129,8 +130,8 @@ public class CurrentWeatherDataHelper {
      */
     @NonNull
     private static Uri.Builder appendMiddleToUriBuilder(@NonNull Uri.Builder uriBuilder, long cityId) {
-        uriBuilder.appendPath(PATH_CURRENT_WEATHER);
-        uriBuilder.appendQueryParameter(QUERY_CITY_ID, Long.toString(cityId));
+        uriBuilder.appendPath(PATH_CURRENT_WEATHER)
+                .appendQueryParameter(QUERY_CITY_ID, Long.toString(cityId));
         return uriBuilder;
     }
 
@@ -143,9 +144,9 @@ public class CurrentWeatherDataHelper {
      */
     @NonNull
     private static Uri.Builder appendMiddleToUriBuilder(@NonNull Uri.Builder uriBuilder, double latitude, double longitude) {
-        uriBuilder.appendPath(PATH_CURRENT_WEATHER);
-        uriBuilder.appendQueryParameter(QUERY_CITY_LATITUDE, Double.toString(latitude));
-        uriBuilder.appendQueryParameter(QUERY_CITY_LONGITUDE, Double.toString(longitude));
+        uriBuilder.appendPath(PATH_CURRENT_WEATHER)
+                .appendQueryParameter(QUERY_CITY_LATITUDE, Double.toString(latitude))
+                .appendQueryParameter(QUERY_CITY_LONGITUDE, Double.toString(longitude));
         return uriBuilder;
     }
 
@@ -155,7 +156,7 @@ public class CurrentWeatherDataHelper {
      * @return
      * @throws IOException
      */
-    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
+    public static ArrayList<ContentValues> buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
         try {
             CurrentWeatherJsonReader currentWeatherJsonReader = new CurrentWeatherJsonReader(
@@ -170,33 +171,22 @@ public class CurrentWeatherDataHelper {
 
     /**
      * Augments data before inserting into the current_weather table.
-     * @param valuesArray
+     * @param valuesArrayList
      * @param userFavorite
      */
-    public static void augmentData(@NonNull ContentValues[] valuesArray,
+    public static void augmentData(@NonNull ArrayList<ContentValues> valuesArrayList,
                                     boolean userFavorite) {
-        Log.d(TAG, "augmentData");
-
-        //add unit and current timestamp
-        for (ContentValues values : valuesArray) {
-            //TODO: have to fix this when we have current location
+        Log.d(TAG, "augmentData: userFavorite:" + userFavorite);
+        for (ContentValues values : valuesArrayList) {
             //add user_favorite value
             values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
                     userFavorite ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
 
-            //TODO: add setting for user to choose unit type
             //add unit as imperial
             values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
 
-            //inspect feed timestamp
-            //note: we are only inspecting. not using this as the insertion timestamp.
-            long feedTimeMillis = values.getAsLong(CurrentWeatherContract.Columns.TIMESTAMP);
+            //add current timestamp as the db insertion timestamp by overwriting feed timestamp
             long currentTimeMillis = new Date().getTime();
-            SimpleDateFormat formatter = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mmZ", Locale.US);
-            Log.d(TAG, String.format("Feed timestamp:" + feedTimeMillis + " Formatted:" + formatter.format(new Date(feedTimeMillis))));
-            Log.d(TAG, String.format("Curr timestamp:" + currentTimeMillis + " Formatted:" + formatter.format(new Date(currentTimeMillis))));
-
-            //add current timestamp as the insertion timestamp by overwriting feed timestamp
             values.put(CurrentWeatherContract.Columns.TIMESTAMP, currentTimeMillis);
         }
     }
@@ -204,11 +194,13 @@ public class CurrentWeatherDataHelper {
     /**
      * Inserts data into current_weather table.
      * @param context
-     * @param valuesArray
+     * @param valuesArrayList
      */
-    public static void persistData(Context context, @NonNull ContentValues[] valuesArray) {
+    public static void persistData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
         Log.d(TAG, "persistData");
-        context.getContentResolver().bulkInsert(CurrentWeatherContract.URI, valuesArray);
+        context.getContentResolver().bulkInsert(
+                CurrentWeatherContract.URI,
+                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
     }
 
     /**

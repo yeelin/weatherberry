@@ -38,12 +38,12 @@ public class LocationUtils {
     public static boolean isBetterLocation(@Nullable Location candidateLocation, @Nullable Location currentBestLocation) {
         //if the candidate is null, it cannot be better
         if (candidateLocation == null) {
-            Log.d(TAG, "isBetterLocation: Candidate is null");
+            Log.d(TAG, "isBetterLocation: Candidate is null, so current best is better");
             return false;
         }
         //if current best is null, then anything is better than nothing
         if (currentBestLocation == null) {
-            Log.d(TAG, "isBetterLocation: Current best is null, so candidate is fine");
+            Log.d(TAG, "isBetterLocation: Current best is null, so candidate is better");
             return true;
         }
 
@@ -82,23 +82,23 @@ public class LocationUtils {
 
         //now for the final verdict...
         if (isMoreAccurate) {
-            Log.d(TAG, "isBetterLocation: Candidate is newer and more accurate");
+            Log.d(TAG, String.format("isBetterLocation: Candidate %s is newer and more accurate than %s", candidateLocation.toString(), currentBestLocation.toString()));
             return true;
         }
         else if (isNewer && !isLessAccurate) { //i.e. accuracyDelta was 0
-            Log.d(TAG, "isBetterLocation: Candidate is newer and not less accurate");
+            Log.d(TAG, String.format("isBetterLocation: Candidate %s is newer and not less accurate than %s", candidateLocation.toString(), currentBestLocation.toString()));
             return true;
         }
         else if (isNewer && isSignificantlyMoved) {
-            Log.d(TAG, "isBetterLocation: Candidate is newer and has significantly moved");
+            Log.d(TAG, String.format("isBetterLocation: Candidate %s is newer and has significantly moved compared to %s", candidateLocation.toString(), currentBestLocation.toString()));
             return true;
         }
         else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
-            Log.d(TAG, "isBetterLocation: Candidate is newer, not significantly less accurate, and from the same provider");
+            Log.d(TAG, String.format("isBetterLocation: Candidate %s is newer, not significantly less accurate, and from the same provider compared to %s", candidateLocation.toString(), currentBestLocation.toString()));
             return true;
         }
 
-        Log.d(TAG, "isBetterLocation: Candidate is not better");
+        Log.d(TAG, String.format("isBetterLocation: Candidate %s is not better than %s", candidateLocation.toString(), currentBestLocation.toString()));
         return false;
     }
 

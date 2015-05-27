@@ -82,9 +82,9 @@ public class ImageUtils {
      */
     public static void loadImage(Context context, String iconName, ImageView imageView) {
         //Log.d(TAG, "loadImage: Loading icon:" + iconName);
-        if (BuildConfig.DEBUG) {
-            Picasso.with(context).setIndicatorsEnabled(true);
-        }
+//        if (BuildConfig.DEBUG) {
+//            Picasso.with(context).setIndicatorsEnabled(true);
+//        }
 
         Picasso.with(context)
                 .load(ImageUtils.buildIconUri(iconName))

@@ -23,11 +23,9 @@ public class NetworkIntentService
     private static final String ACTION_WAKEFUL_LOAD = NetworkIntentService.class.getSimpleName() + ".action.wakefulLoad";
 
     //extras in intent
-    private static final String EXTRA_CITY_ID = NetworkIntentService.class.getSimpleName() + ".cityId";
     private static final String EXTRA_CITY_NAME = NetworkIntentService.class.getSimpleName() + ".cityName";
     private static final String EXTRA_CITY_LATITUDE = NetworkIntentService.class.getSimpleName() + ".cityLatitude";
     private static final String EXTRA_CITY_LONGITUDE = NetworkIntentService.class.getSimpleName() + ".cityLongitude";
-    private static final String EXTRA_USER_FAVORITE = NetworkIntentService.class.getSimpleName() + ".isFavorite";
 
     /**
      * Required by the manifest.
@@ -46,32 +44,16 @@ public class NetworkIntentService
     }
 
     /**
-     * Start this service. Deprecated. Instead of this method, use buildIntent and call context.startService()
-     * on the intent.
-     * @deprecated
-     * @param context
-     */
-    public static void startService(Context context) {
-        Intent intent = new Intent(context, NetworkIntentService.class);
-
-        //set action and extras
-        intent.setAction(ACTION_MULTI_CITY_LOAD);
-
-        context.startService(intent);
-    }
-
-    /**
      * Builds a regular intent to start this service. Pass this intent to
      * context.startService(). This is the regular counterpart to buildWakefulIntent.
      * @param context
      * @return
      */
-    public static Intent buildIntent(Context context) {
+    public static Intent buildIntentForMultiCityLoad(Context context) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
         intent.setAction(ACTION_MULTI_CITY_LOAD);
-
         return intent;
     }
 
@@ -82,22 +64,19 @@ public class NetworkIntentService
      * @param cityName
      * @param latitude
      * @param longitude
-     * @param userFavorite
      * @return
      */
-    public static Intent buildIntentForFavoriteCityLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
+    public static Intent buildIntentForFavoriteCityLoad(Context context, @Nullable String cityName, double latitude, double longitude) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
         intent.setAction(ACTION_FAVORITE_CITY_LOAD);
         //set extras
+        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
+        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
         if (cityName != null) {
             intent.putExtra(EXTRA_CITY_NAME, cityName);
         }
-        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
-        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
-        intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);
-
         return intent;
     }
 
@@ -108,22 +87,19 @@ public class NetworkIntentService
      * @param cityName
      * @param latitude
      * @param longitude
-     * @param userFavorite
      * @return
      */
-    public static Intent buildIntentForCurrentLocationLoad(Context context, @Nullable String cityName, double latitude, double longitude, boolean userFavorite) {
+    public static Intent buildIntentForCurrentLocationLoad(Context context, @Nullable String cityName, double latitude, double longitude) {
         Intent intent = new Intent(context, NetworkIntentService.class);
 
         //set action
         intent.setAction(ACTION_CURRENT_LOCATION_LOAD);
         //set extras
+        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
+        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
         if (cityName != null) {
             intent.putExtra(EXTRA_CITY_NAME, cityName);
         }
-        intent.putExtra(EXTRA_CITY_LATITUDE, latitude);
-        intent.putExtra(EXTRA_CITY_LONGITUDE, longitude);
-        intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);
-
         return intent;
     }
 
@@ -159,7 +135,7 @@ public class NetworkIntentService
 
         if (ACTION_MULTI_CITY_LOAD.equals(action)) {
             //loads data for all cities while app is in the foreground
-            FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
+            FetchDataHelper.handleActionMultiCityLoad(this.getApplicationContext(), this);
         }
         else if (ACTION_FAVORITE_CITY_LOAD.equals(action)) {
             //loads data for a favorite city
@@ -167,8 +143,7 @@ public class NetworkIntentService
                     this.getApplicationContext(),
                     intent.getStringExtra(EXTRA_CITY_NAME),
                     intent.getDoubleExtra(EXTRA_CITY_LATITUDE, 0),
-                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0),
-                    intent.getBooleanExtra(EXTRA_USER_FAVORITE, true));
+                    intent.getDoubleExtra(EXTRA_CITY_LONGITUDE, 0));
         }
         else if (ACTION_CURRENT_LOCATION_LOAD.equals(action)) {
             //loads data for current location
@@ -181,7 +156,7 @@ public class NetworkIntentService
         else if (ACTION_WAKEFUL_LOAD.equals(action)) {
             //called by alarm service while app is in the background
             try {
-                FetchDataHelper.handleActionLoad(this.getApplicationContext(), this);
+                FetchDataHelper.handleActionMultiCityLoad(this.getApplicationContext(), this);
             }
             finally {
                 //always release the wakeful log regardless

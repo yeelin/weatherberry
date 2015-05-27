@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -44,11 +45,11 @@ public class DailyForecastDataHelper {
      * @return
      */
     @Nullable
-    public static ContentValues[] getDataForCityId(Context context,
+    public static ArrayList<ContentValues> getDataForCityId(Context context,
                                                     long cityId,
                                                     boolean userFavorite) {
         Log.d(TAG, "getDataForCityId:" + cityId);
-        ContentValues[] valuesArray = null;
+        ArrayList<ContentValues> valuesArrayList = null;
         try {
             URL url = buildUrl(cityId);
             HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
@@ -56,9 +57,9 @@ public class DailyForecastDataHelper {
                 return null;
             }
 
-            valuesArray = buildContentValues(urlConnection);
-            if (valuesArray != null && valuesArray.length > 0) {
-                persistData(context, valuesArray);
+            valuesArrayList = buildContentValues(urlConnection);
+            if (valuesArrayList != null && valuesArrayList.size() > 0) {
+                persistData(context, valuesArrayList);
             }
         }
         catch (MalformedURLException e) {
@@ -67,7 +68,7 @@ public class DailyForecastDataHelper {
         catch (IOException e) {
             Log.d(TAG, "getDataForCityId: Unexpected error:", e);
         }
-        return valuesArray;
+        return valuesArrayList;
     }
 
     /**
@@ -118,7 +119,7 @@ public class DailyForecastDataHelper {
      * @return
      * @throws IOException
      */
-    public static ContentValues[] buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
+    public static ArrayList<ContentValues> buildContentValues(@NonNull HttpURLConnection urlConnection) throws IOException {
         Log.d(TAG, "buildContentValues");
         try {
             DailyForecastJsonReader dailyForecastJsonReader = new DailyForecastJsonReader(
@@ -134,11 +135,13 @@ public class DailyForecastDataHelper {
     /**
      * Inserts data into the daily_forecast table.
      * @param context
-     * @param valuesArray
+     * @param valuesArrayList
      */
-    public static void persistData(Context context, @NonNull ContentValues[] valuesArray) {
+    public static void persistData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
         Log.d(TAG, "persistData");
-        context.getContentResolver().bulkInsert(DailyForecastContract.URI, valuesArray);
+        context.getContentResolver().bulkInsert(
+                DailyForecastContract.URI,
+                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
     }
 
     /**

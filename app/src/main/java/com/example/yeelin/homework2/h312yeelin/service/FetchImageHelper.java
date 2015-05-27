@@ -12,6 +12,7 @@ import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -68,9 +69,9 @@ public class FetchImageHelper {
      * @return
      */
     @NonNull
-    public static Collection<String> getUniqueIconNames(@Nullable ContentValues[] currentWeatherValues,
-                                                         @Nullable ContentValues[] dailyForecastValues,
-                                                         @Nullable ContentValues[] triHourForecastValues) {
+    public static Collection<String> getUniqueIconNames(@Nullable ArrayList<ContentValues> currentWeatherValues,
+                                                        @Nullable ArrayList<ContentValues> dailyForecastValues,
+                                                        @Nullable ArrayList<ContentValues> triHourForecastValues) {
         HashMap<String, String> iconNameMap = new HashMap<>();
 
         //get unique icon names

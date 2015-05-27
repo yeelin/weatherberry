@@ -219,8 +219,7 @@ public class SearchFragment
                                 getActivity(),
                                 foundPlace.getName().toString(),
                                 foundPlace.getLatLng().latitude,
-                                foundPlace.getLatLng().longitude,
-                                true); //true since this is a user favorite
+                                foundPlace.getLatLng().longitude);
                         getActivity().startService(favCityLoadIntent);
 
                         //notify the listener

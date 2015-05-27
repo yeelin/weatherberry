@@ -44,7 +44,8 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
 
     @Override
     @NonNull
-    public ContentValues[] process() throws IOException {
+    //public ContentValues[] process() throws IOException {
+    public ArrayList<ContentValues> process() throws IOException {
         //Log.d(TAG, "process");
         ArrayList<ContentValues> valuesArrayList = new ArrayList<>();
         long cityId = 0;
@@ -82,8 +83,9 @@ public class DailyForecastJsonReader extends BaseWeatherJsonReader {
             jsonReader.close();
         }
 
-        ContentValues[] valuesArray = new ContentValues[valuesArrayList.size()];
-        return valuesArrayList.toArray(valuesArray);
+        //ContentValues[] valuesArray = new ContentValues[valuesArrayList.size()];
+        //return valuesArrayList.toArray(valuesArray);
+        return valuesArrayList;
     }
 
     @Override

@@ -41,7 +41,7 @@ public class CurrentWeatherAndDailyForecastActivity
         }
 
         //NetworkIntentService.startService(this);
-        startService(NetworkIntentService.buildIntent(this));
+        startService(NetworkIntentService.buildIntentForMultiCityLoad(this));
     }
 
     /**

@@ -93,7 +93,7 @@ public class WeatherContentProvider extends ContentProvider {
      */
     @Override
     public String getType(Uri uri) {
-        Log.d(TAG, "getType");
+        //Log.d(TAG, "getType");
         int match = uriMatcher.match(uri);
         String table;
         //UriMatchCodes code = UriMatchCodes.values()[match];
@@ -470,7 +470,7 @@ public class WeatherContentProvider extends ContentProvider {
     @Override
     public int bulkInsert(Uri uri,
                           ContentValues[] valuesArray) {
-        Log.i(TAG, "bulkInsert");
+        //Log.d(TAG, "bulkInsert");
         //get writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         //validate uri
