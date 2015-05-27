@@ -7,7 +7,6 @@
     <string name="title_favorites_activity">Remove favorites</string>
 
     <!-- menu options -->
-    <string name="action_settings">Settings</string>
     <string name="action_search">Search</string>
     <string name="action_add">Add favorite</string>
     <string name="action_remove">Remove favorites</string>

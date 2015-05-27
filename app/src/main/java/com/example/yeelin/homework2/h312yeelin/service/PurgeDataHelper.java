@@ -1,6 +1,5 @@
 package com.example.yeelin.homework2.h312yeelin.service;
 
-import android.content.ContentProvider;
 import android.content.ContentProviderOperation;
 import android.content.Context;
 import android.content.OperationApplicationException;

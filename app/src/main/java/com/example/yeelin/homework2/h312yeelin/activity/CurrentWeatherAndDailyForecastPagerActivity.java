@@ -124,9 +124,6 @@ public class CurrentWeatherAndDailyForecastPagerActivity
             case R.id.action_remove:
                 startActivity(FavoritesActivity.buildIntent(this));
                 return true;
-            case R.id.action_settings:
-                Log.d(TAG, "onOptionsItemSelected: Settings have not been implemented yet");
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

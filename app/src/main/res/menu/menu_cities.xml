@@ -18,10 +18,4 @@
         android:icon="@drawable/ic_action_remove"
         app:showAsAction="never"/>
 
-    <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="103"
-        android:title="@string/action_settings"
-        app:showAsAction="never"/>
-
 </menu>
