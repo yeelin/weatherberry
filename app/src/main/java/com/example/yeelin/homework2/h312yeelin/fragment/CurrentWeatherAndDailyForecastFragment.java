@@ -51,37 +51,6 @@ public class CurrentWeatherAndDailyForecastFragment
     private static final String ARG_ICON = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".icon";
     private static final String ARG_TIMESTAMP = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".timestamp";
 
-    //for loader initialization
-//    private final String[] PROJECTION_CURRENT_WEATHER = new String[] {
-//        CurrentWeatherContract.Columns.CITY_ID,
-//        CurrentWeatherContract.Columns.CITY_NAME,
-//        CurrentWeatherContract.Columns.DESCRIPTION,
-//        CurrentWeatherContract.Columns.TEMPERATURE,
-//        CurrentWeatherContract.Columns.HUMIDITY,
-//        CurrentWeatherContract.Columns.WIND_SPEED,
-//        CurrentWeatherContract.Columns.TIMESTAMP
-//    };
-//
-//    //for retrieving data from cursor
-//    private enum CurrentWeatherCursorPosition {
-//        CITY_ID_POS(0),
-//        CITY_NAME_POS(1),
-//        DESCRIPTION_POS(2),
-//        TEMP_POS(3),
-//        HUMIDITY_POS(4),
-//        WINDSPEED_POS(5),
-//        TIMESTAMP_POS(6);
-//
-//        private int value;
-//        private CurrentWeatherCursorPosition(int value) {
-//            this.value = value;
-//        }
-//
-//        public int getValue() {
-//            return value;
-//        }
-//    }
-
     //member variables
     private long cityId = BaseWeatherContract.NO_ID;
     private String cityName;
@@ -289,9 +258,8 @@ public class CurrentWeatherAndDailyForecastFragment
             return;
         }
 
-        switch (loaderId) {
-            case CURRENT_WEATHER_LOADER:
-                Log.d(TAG, "This should not happen");
+//        if (loaderId == LoaderIds.CURRENT_WEATHER_LOADER) {
+//            Log.d(TAG, "This should not happen");
 //                if (cursor == null) {
 //                    Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor is null. ", loaderId));
 //                    //loader is resetting
@@ -313,28 +281,23 @@ public class CurrentWeatherAndDailyForecastFragment
 //                    Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. View is not null but cursor is empty", loaderId));
 //                    //resetCurrentWeatherView(viewHolder);
 //                }
-                break;
+//        }
 
-            case DAILY_FORECAST_LOADER:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor swapped", loaderId));
-                DailyForecastAdapter dailyForecastAdapter = (DailyForecastAdapter) viewHolder.dailyForecastListView.getAdapter();
-                dailyForecastAdapter.swapCursor(cursor);
+        if (loaderId == LoaderIds.DAILY_FORECAST_LOADER) {
+            Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor swapped", loaderId));
+            DailyForecastAdapter dailyForecastAdapter = (DailyForecastAdapter) viewHolder.dailyForecastListView.getAdapter();
+            dailyForecastAdapter.swapCursor(cursor);
 
-                //show the list container and hide the progress bar
-                if (viewHolder.dailyForecastListContainer.getVisibility() != View.VISIBLE) {
-                    AnimationUtils.crossFadeViews(getActivity(),
-                            viewHolder.dailyForecastListContainer,
-                            viewHolder.dailyForecastProgressBar);
-                }
-                break;
+            //show the list container and hide the progress bar
+            if (viewHolder.dailyForecastListContainer.getVisibility() != View.VISIBLE) {
+                AnimationUtils.crossFadeViews(getActivity(),
+                        viewHolder.dailyForecastListContainer,
+                        viewHolder.dailyForecastProgressBar);
+            }
+        }
+        else {
+            Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
 
-            case TRIHOUR_FORECAST_LOADER:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Loader with this id should not be used here", loaderId));
-                break;
-
-            default:
-                Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
-                return;
         }
     }
 
