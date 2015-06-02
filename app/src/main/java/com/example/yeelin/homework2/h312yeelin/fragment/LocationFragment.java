@@ -55,6 +55,7 @@ public class LocationFragment
     private Location currentBestLocation;
     private String currentBestLocationName;
     private LocationRequest locationRequest;
+    private boolean hasRequestedLocationUpdates = false;
 
     //listener member variable
     private LocationFragmentListener locationListener;
@@ -154,8 +155,10 @@ public class LocationFragment
      */
     @Override
     public void onStop() {
-        //unsubscribe from location updates
-        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        //check if we have asked for location updates, and then unsubscribe
+        if (hasRequestedLocationUpdates) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        }
         super.onStop();
     }
 
@@ -272,6 +275,8 @@ public class LocationFragment
                 googleApiClient,
                 locationRequest,
                 this);
+
+        hasRequestedLocationUpdates = true;
     }
 
     /**
