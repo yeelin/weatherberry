@@ -47,7 +47,8 @@ public class FetchImageHelper {
     }
 
     private static void getUniqueIconNamesHelper(@Nullable Cursor cursor, @NonNull HashMap<String, String> iconNameMap) {
-        if (cursor == null || cursor.getCount() == 0) return;
+        //if (cursor == null || cursor.getCount() == 0) return;
+        if (cursor == null) return;
 
         try {
             while (cursor.moveToNext()) {

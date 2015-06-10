@@ -67,8 +67,14 @@ public class GroupCurrentWeatherDataHelper {
                 null,
                 null,
                 CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc");
-        if (cursor == null || cursor.getCount() == 0) {
-            Log.d(TAG, "getCityIdsAndFavorites: No cities in the db");
+
+        if (cursor == null) {
+            Log.d(TAG, "getCityIdsAndFavorites: Cursor is null");
+            return null;
+        }
+        if (cursor.getCount() == 0) {
+            Log.d(TAG, "getCityIdsAndFavorites: 0 cities in the db");
+            cursor.close();
             return null;
         }
 

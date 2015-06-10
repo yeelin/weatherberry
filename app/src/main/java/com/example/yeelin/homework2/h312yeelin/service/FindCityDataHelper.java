@@ -41,8 +41,11 @@ public class FindCityDataHelper {
         try {
             final URL url = buildUrl(latitude, longitude);
             final HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
-            final ArrayList<ContentValues> valuesArrayList = buildContentValues(urlConnection);
+            if (urlConnection == null) {
+                return BaseWeatherContract.NO_ID;
+            }
 
+            final ArrayList<ContentValues> valuesArrayList = buildContentValues(urlConnection);
             if (valuesArrayList != null && valuesArrayList.size() > 0) {
 
                 if (cityName == null) {

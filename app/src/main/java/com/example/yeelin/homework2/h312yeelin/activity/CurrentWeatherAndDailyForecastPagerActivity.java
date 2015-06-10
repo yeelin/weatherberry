@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -15,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.example.yeelin.homework2.h312yeelin.BuildConfig;
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.adapter.CurrentWeatherStatePagerAdapter;
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
@@ -57,6 +59,14 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
+
+        //turn on strict mode in debug builds
+        //enable the recommended StrictMode defaults, with violations just being logged.
+        //This catches disk and network access on the main thread, as well as leaked SQLite cursors and unclosed resources.
+        if (BuildConfig.DEBUG) {
+            StrictMode.enableDefaults();
+        }
+
         setContentView(R.layout.activity_pager_current_weather_and_daily_forecast);
 
         //setupToolbar

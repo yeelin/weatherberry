@@ -99,7 +99,9 @@ public class FetchDataUtils {
     }
 
     /**
-     * Calls the weather API given the url and returns the http url connection or null.
+     * Calls the weather API given the url.
+     * Returns the http url connection if http status is 200.
+     * Otherwise, disconnects and returns null.  Callers should check for null.
      *
      * @param url
      * @return
@@ -193,7 +195,7 @@ public class FetchDataUtils {
             reader.close();
         }
 
-        Log.w(TAG, builder.toString());
+        Log.w(TAG, String.format("logErrorStream: %s", builder.toString()));
     }
 
     /**
