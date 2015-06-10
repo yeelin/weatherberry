@@ -44,12 +44,25 @@ public class FindCityDataHelper {
             final ArrayList<ContentValues> valuesArrayList = buildContentValues(urlConnection);
 
             if (valuesArrayList != null && valuesArrayList.size() > 0) {
-                //check each ContentValues map to see if there's a match for city name
+
+                if (cityName == null) {
+                    //cityName is null so just pick the first one and go with it
+                    final ContentValues values = valuesArrayList.get(0);
+                    Log.d(TAG, "findCityId: CityName is null so returning the first city:" + values.getAsString(CurrentWeatherContract.Columns.CITY_NAME));
+                    return values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
+                }
+
+                //cityName is not null, so check each ContentValues map to see if there's a match for city name
+                final String cityNameInLowercase = cityName.toLowerCase();
+
                 for (ContentValues values : valuesArrayList) {
-                    final String candidateCityName = values.getAsString(CurrentWeatherContract.Columns.CITY_NAME);
-                    if (cityName.equalsIgnoreCase(candidateCityName)) {
+                    final String candidateCityNameInLowercase = values.getAsString(CurrentWeatherContract.Columns.CITY_NAME).toLowerCase();
+
+                    if (cityNameInLowercase.equals(candidateCityNameInLowercase) ||
+                            cityNameInLowercase.contains(candidateCityNameInLowercase) ||
+                            candidateCityNameInLowercase.contains(cityNameInLowercase)) {
                         //we found a match
-                        Log.d(TAG, "findCityId: We found a match for cityName:" + candidateCityName);
+                        Log.d(TAG, String.format("findCityId: We found a match. cityName:%s, candidateCityName:%s", cityNameInLowercase, candidateCityNameInLowercase));
                         return values.getAsLong(CurrentWeatherContract.Columns.CITY_ID);
                     }
                 }
