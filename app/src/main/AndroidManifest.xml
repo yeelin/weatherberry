@@ -19,7 +19,7 @@
         <!-- activities -->
         <activity
             android:name=".activity.CurrentWeatherAndDailyForecastPagerActivity"
-            android:label="@string/title_current_weather_activity" >
+            android:label="@string/title_launcher" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
