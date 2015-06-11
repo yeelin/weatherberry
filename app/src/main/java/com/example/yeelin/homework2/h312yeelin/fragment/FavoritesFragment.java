@@ -107,6 +107,7 @@ public class FavoritesFragment
         //set up the listview adapter
         viewHolder.favoritesListView.setAdapter(new FavoritesAdapter(view.getContext()));
         viewHolder.favoritesListView.setOnItemClickListener(this);
+        viewHolder.favoritesListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
         //initially make the list container invisible and show the progress bar
         viewHolder.favoritesListContainer.setVisibility(View.GONE);
@@ -183,16 +184,15 @@ public class FavoritesFragment
         Cursor cursor = (Cursor) parent.getItemAtPosition(position);
         FavoritesAdapter.ViewHolder viewHolder = (FavoritesAdapter.ViewHolder) view.getTag();
 
+        //change the checked state of the view to the inverse of its current state
+        viewHolder.favoriteCity.toggle();
+
         if (selectedItemPositionsToCityIdsMap.containsKey(position)) {
-            //the checkbox was previously checked so uncheck it
-            viewHolder.checkBox.setChecked(false);
-            //remove it from map
+            //the checkbox was previously checked so remove it from map
             selectedItemPositionsToCityIdsMap.remove(position);
         }
         else {
-            //the checkbox was not previously checked, so check it
-            viewHolder.checkBox.setChecked(true);
-            //add it to map
+            //the checkbox was not previously checked, so add it to map
             long cityId = cursor.getLong(FavoritesAdapter.FavoritesCursorPosition.CITY_ID_POS.getValue());
             selectedItemPositionsToCityIdsMap.put(position, cityId);
         }
