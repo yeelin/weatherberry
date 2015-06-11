@@ -4,6 +4,7 @@ import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.net.http.HttpResponseCache;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.BuildConfig;
@@ -51,6 +52,7 @@ public class CacheUtils {
 
             if (BuildConfig.DEBUG) {
                 Log.d(TAG, "Cache flushed");
+                logCache();
             }
         }
     }
@@ -79,7 +81,8 @@ public class CacheUtils {
                 case ComponentCallbacks2.TRIM_MEMORY_BACKGROUND: //one of the apps that were most recently backgrounded, no danger of being killed
                 case ComponentCallbacks2.TRIM_MEMORY_MODERATE: //medium risk of being killed
                 case ComponentCallbacks2.TRIM_MEMORY_COMPLETE: //likely to be killed
-                    CacheUtils.flushCache();
+                    //run flushCache in background to avoid strict mode violation writing to disk
+                    new CacheFlushTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     break;
 
                 // See ComponentCallbacks2 for complete list of constants and what they mean.
@@ -98,6 +101,18 @@ public class CacheUtils {
         @Override
         public void onLowMemory() {
             // Do nothing
+        }
+    }
+
+    /**
+     * Async task for flushing http cache
+     */
+    static class CacheFlushTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d(TAG, "doInBackground: Flushing cache");
+            CacheUtils.flushCache();
+            return null;
         }
     }
 }
