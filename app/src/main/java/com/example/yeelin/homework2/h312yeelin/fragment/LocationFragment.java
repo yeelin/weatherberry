@@ -9,6 +9,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -40,7 +43,8 @@ import java.util.List;
  */
 public class LocationFragment
         extends BasePlayServicesFragment
-        implements LocationListener {
+        implements LocationListener,
+        Handler.Callback {
 
     //logcat
     private static final String TAG = LocationFragment.class.getCanonicalName();
@@ -51,14 +55,20 @@ public class LocationFragment
     private static final long THREE_MINUTES = 3 * ONE_MINUTE;
     private static final long THIRTY_SECONDS = 30 * 1000; //milliseconds
 
+    //handler message
+    private static final int MESSAGE_GET_SAVED_LOCATION = 100;
+
     //member variables
     private Location currentBestLocation;
     private String currentBestLocationName;
     private LocationRequest locationRequest;
-    private boolean hasRequestedLocationUpdates = false;
+    //private boolean hasRequestedLocationUpdates = false;
 
     //listener member variable
     private LocationFragmentListener locationListener;
+
+    //handler member variable for reading shared preferences
+    private Handler handler;
 
     /**
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
@@ -141,9 +151,12 @@ public class LocationFragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //read the current best location from shared preferences
-        currentBestLocation = LocationUtils.getSavedCurrentLocation(getActivity());
-        currentBestLocationName = LocationUtils.getSavedCurrentLocationName(getActivity());
+        //create a handler thread for the handler
+        HandlerThread handlerThread = new HandlerThread("SharedPreferencesThread");
+        handlerThread.start();
+        //create a handler using the provided looper and this class will handle the messages
+        handler = new Handler(handlerThread.getLooper(), this);
+        handler.sendMessage(handler.obtainMessage(MESSAGE_GET_SAVED_LOCATION));
 
         //create a location request, will be used in onConnected
         locationRequest = createLocationRequest();
@@ -156,10 +169,23 @@ public class LocationFragment
     @Override
     public void onStop() {
         //check if we have asked for location updates, and then unsubscribe
-        if (hasRequestedLocationUpdates) {
+        //if (hasRequestedLocationUpdates) {
+        if (googleApiClient.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
         }
         super.onStop();
+    }
+
+    /**
+     * Terminate the handler's looper without processing any more messages in the queue.
+     * Doing this in onDestroy since we created the handler in onCreate
+     */
+    @Override
+    public void onDestroy() {
+        handler.getLooper().quit();
+        handler = null;
+
+        super.onDestroy();
     }
 
     /**
@@ -169,6 +195,26 @@ public class LocationFragment
     public void onDetach() {
         locationListener = null;
         super.onDetach();
+    }
+
+    /**
+     * Handler.Callback implementation
+     * This callback happens when the handler receives a message.
+     * Read the current best location and the city name from shared preferences.  Doing this
+     * on a background thread to avoid strict mode violation.
+     * @param msg
+     * @return
+     */
+    @Override
+    public boolean handleMessage(Message msg) {
+        Log.d(TAG, "handleMessage");
+        if (msg.what == MESSAGE_GET_SAVED_LOCATION) {
+            currentBestLocation = LocationUtils.getSavedCurrentLocation(getActivity());
+            currentBestLocationName = LocationUtils.getSavedCurrentLocationName(getActivity());
+            //return true since we handled the message
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -251,6 +297,7 @@ public class LocationFragment
      * Creates a new LocationRequest object
      * @return
      */
+    @NonNull
     private LocationRequest createLocationRequest() {
         Log.d(TAG, "createLocationRequest");
         return LocationRequest.create()
@@ -276,7 +323,7 @@ public class LocationFragment
                 locationRequest,
                 this);
 
-        hasRequestedLocationUpdates = true;
+        //hasRequestedLocationUpdates = true;
     }
 
     /**
