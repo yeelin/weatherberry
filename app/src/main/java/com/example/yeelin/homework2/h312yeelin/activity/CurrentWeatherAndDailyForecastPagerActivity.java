@@ -261,35 +261,46 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     public void onPageSelected(int position) {
         Log.d(TAG, "onPageSelected: Position:" + position);
 
-        CurrentWeatherStatePagerAdapter currentWeatherStatePagerAdapter = (CurrentWeatherStatePagerAdapter) viewPager.getAdapter();
-        Cursor cursor = currentWeatherStatePagerAdapter.getCursor();
-        if (cursor == null || cursor.getCount() == 0) {
+        //update the current view pager position
+        viewPagerPosition = position;
+
+        if (getSupportActionBar() == null) {
+            Log.d(TAG, "onPageSelected: Toolbar is null so nothing to do");
             return;
         }
 
-        cursor.moveToPosition(position);
-        String cityName = cursor.getString(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
-        int userFavorite = cursor.getInt(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.USER_FAVORITE.getValue());
-        if (cityName != null) {
-            if (userFavorite == CurrentWeatherContract.USER_FAVORITE_NO)
-                getSupportActionBar().setTitle(getString(R.string.current_weather_toolbar_title, cityName));
-            else
-                getSupportActionBar().setTitle(cityName);
+        //set toolbar title
+        CurrentWeatherStatePagerAdapter currentWeatherStatePagerAdapter = (CurrentWeatherStatePagerAdapter) viewPager.getAdapter();
+        Cursor cursor = currentWeatherStatePagerAdapter.getCursor();
+        String title;
+        if (cursor == null || cursor.getCount() == 0) {
+            //cursor is null or empty, set title to default string
+            title = getString(R.string.title_current_weather_activity);
         }
         else {
-            getSupportActionBar().setTitle(getString(R.string.no_city_name));
+            //cursor is not empty
+            cursor.moveToPosition(position);
+            String cityName = cursor.getString(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
+            int userFavorite = cursor.getInt(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.USER_FAVORITE.getValue());
+            if (cityName != null) {
+                if (userFavorite == CurrentWeatherContract.USER_FAVORITE_NO)
+                    title = getString(R.string.current_weather_toolbar_title, cityName);
+                else
+                    title = cityName;
+            }
+            else {
+                title = getString(R.string.no_city_name);
+            }
         }
+        getSupportActionBar().setTitle(title);
 
-        //set subtitle to current time and date
+        //set toolbar subtitle to current time and date
         Date currentDate = new Date(System.currentTimeMillis());
         String subtitle = getString(
                 R.string.current_weather_toolbar_subtitle,
                 DateFormat.getMediumDateFormat(this).format(currentDate),
                 DateFormat.getTimeFormat(this).format(currentDate));
         getSupportActionBar().setSubtitle(subtitle);
-
-        //update the current view pager position
-        viewPagerPosition = position;
     }
 
     /**
