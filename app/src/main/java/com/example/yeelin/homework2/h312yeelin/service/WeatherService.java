@@ -49,7 +49,7 @@ public class WeatherService extends IntentService {
      */
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.i(TAG, "onHandleIntent");
+        Log.d(TAG, "onHandleIntent");
         if (intent != null) {
             final String action = intent.getAction();
 
@@ -81,7 +81,7 @@ public class WeatherService extends IntentService {
      * @param values
      */
     private void handleActionInsert(ContentValues values) {
-        Log.i(TAG, "handleActionInsert");
+        Log.d(TAG, "handleActionInsert");
         getContentResolver().insert(
                 CurrentWeatherContract.URI,
                 values);
@@ -99,7 +99,7 @@ public class WeatherService extends IntentService {
                                     ContentValues values,
                                     String selection,
                                     String[] selectionArgs) {
-        Log.i(TAG, "handleActionUpdate");
+        Log.d(TAG, "handleActionUpdate");
         getContentResolver().update(
                 uri,
                 values,
@@ -117,7 +117,7 @@ public class WeatherService extends IntentService {
     private void handleActionDelete(Uri uri,
                                     String selection,
                                     String[] selectionArgs) {
-        Log.i(TAG, "handleActionDelete");
+        Log.d(TAG, "handleActionDelete");
         getContentResolver().delete(
                 uri,
                 selection,

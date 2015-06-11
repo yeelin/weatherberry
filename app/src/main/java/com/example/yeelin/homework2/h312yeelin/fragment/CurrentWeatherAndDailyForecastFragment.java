@@ -361,7 +361,7 @@ public class CurrentWeatherAndDailyForecastFragment
         //load the image using picasso
         ImageUtils.loadImage(getActivity(), iconName, viewHolder.currentIcon);
 
-        Log.i(TAG, String.format("onLoadComplete: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
+        Log.d(TAG, String.format("onLoadComplete: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
                 cityName, description, temp, humidity, windSpeed, lastUpdateInUserFormat));
     }
 

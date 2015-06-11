@@ -52,7 +52,7 @@ public class FavoritesActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                Log.i(TAG, "Up button clicked");
+                Log.d(TAG, "Up button clicked");
                 navigateUpToParentActivity();
                 return true;
             default:
