@@ -182,6 +182,10 @@ public class LocationUtils {
         SharedPreferences sharedPreferences = context.getSharedPreferences(LOCATION_SHARED_PREFS, Context.MODE_PRIVATE);
 
         String locationName = sharedPreferences.getString(LOCATION_NAME, null);
+        if (locationName == null)
+                Log.d(TAG, "getSavedCurrentLocationName: Saved location name is null");
+        else
+            Log.d(TAG, "getSavedCurrentLocationName: Saved location name:" + locationName);
         return locationName;
     }
 }
