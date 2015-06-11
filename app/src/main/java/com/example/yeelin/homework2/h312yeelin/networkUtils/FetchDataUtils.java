@@ -100,40 +100,45 @@ public class FetchDataUtils {
 
     /**
      * Calls the weather API given the url.
-     * Returns the http url connection if http status is 200.
-     * Otherwise, disconnects and returns null.  Callers should check for null.
+     * If http status is 200, returns the http url connection.  Caller is responsible for disconnecting.
+     * Otherwise, for other status codes or exceptions, this method disconnects and returns null.  Callers should check for null.
      *
      * @param url
      * @return
-     * @throws java.io.IOException
      */
     @Nullable
-    public static HttpURLConnection performGet(URL url) throws IOException {
-        //Log.d(TAG, "performGet");
+    //public static HttpURLConnection performGet(URL url) throws IOException {
+    public static HttpURLConnection performGet(URL url) {
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
+            urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
+            urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
+            urlConnection.connect();
 
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-//        try {
-        urlConnection.setRequestMethod(HTTP_REQUEST_METHOD);
-        urlConnection.setConnectTimeout(HTTP_CONNECT_TIMEOUT_MILLIS);
-        urlConnection.setReadTimeout(HTTP_READ_TIMEOUT_MILLIS);
-        urlConnection.connect();
-
-        //check the response code and process accordingly
-        int httpStatus = urlConnection.getResponseCode();
-        Log.d(TAG, "performGet: HTTP status:" + httpStatus);
-        if (httpStatus == HttpURLConnection.HTTP_OK) {
-            return urlConnection;
+            //check the response code and process accordingly
+            int httpStatus = urlConnection.getResponseCode();
+            Log.d(TAG, "performGet: HTTP status:" + httpStatus);
+            if (httpStatus == HttpURLConnection.HTTP_OK) {
+                return urlConnection;
+            }
+            else {
+                FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
+            }
+        }
+        catch (IOException e) {
+            Log.e(TAG, "performGet: Unexpected IO exception:", e);
         }
 
-        //if we reached this, it means we have an error
-        FetchDataUtils.logErrorStream(urlConnection.getErrorStream());
-        urlConnection.disconnect();
+        //if we reached this, it means we had gotten something other than status 200
+        if (urlConnection != null) {
+            //previously we disconnected in a finally clause, but we can't anymore since we are returning the connection
+            //so disconnect here only on error.
+            Log.d(TAG, "performGet: Disconnecting urlConnection");
+            urlConnection.disconnect();
+        }
         return null;
-//        }
-//        finally {
-//            //always disconnect regardless of success or failure
-//            urlConnection.disconnect();
-//        }
     }
 
 

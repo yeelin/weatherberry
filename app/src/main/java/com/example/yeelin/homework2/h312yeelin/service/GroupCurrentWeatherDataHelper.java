@@ -115,13 +115,13 @@ public class GroupCurrentWeatherDataHelper {
      */
     @Nullable
     public static ArrayList<ContentValues> getDataForMultipleCityIds(Context context,
-                                                             Long[] cityIds,
-                                                             HashMap<Long, ArrayList<Integer>> cityIdsToFavoritesMap) {
+                                                                     Long[] cityIds,
+                                                                     HashMap<Long, ArrayList<Integer>> cityIdsToFavoritesMap) {
         Log.d(TAG, "getDataForMultipleCityIds:" + Arrays.toString(cityIds));
         ArrayList<ContentValues> valuesArrayList = null;
         try {
-            URL url = buildUrl(cityIds);
-            HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
+            final URL url = buildUrl(cityIds);
+            final HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
             if (urlConnection == null) {
                 return null;
             }

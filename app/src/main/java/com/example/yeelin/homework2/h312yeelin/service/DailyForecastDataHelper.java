@@ -46,13 +46,13 @@ public class DailyForecastDataHelper {
      */
     @Nullable
     public static ArrayList<ContentValues> getDataForCityId(Context context,
-                                                    long cityId,
-                                                    boolean userFavorite) {
+                                                            long cityId,
+                                                            boolean userFavorite) {
         Log.d(TAG, "getDataForCityId:" + cityId);
         ArrayList<ContentValues> valuesArrayList = null;
         try {
-            URL url = buildUrl(cityId);
-            HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
+            final URL url = buildUrl(cityId);
+            final HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
             if (urlConnection == null) {
                 return null;
             }
@@ -63,10 +63,10 @@ public class DailyForecastDataHelper {
             }
         }
         catch (MalformedURLException e) {
-            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
         }
         catch (IOException e) {
-            Log.d(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
         }
         return valuesArrayList;
     }
