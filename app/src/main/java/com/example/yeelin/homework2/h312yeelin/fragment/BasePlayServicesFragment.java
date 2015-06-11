@@ -145,6 +145,20 @@ public abstract class BasePlayServicesFragment
         super.onStop();
     }
 
+    /**
+     * Unregister callbacks
+     */
+    @Override
+    public void onDestroy() {
+        googleApiClient.unregisterConnectionCallbacks(this);
+        googleApiClient.unregisterConnectionFailedListener(this);
+        googleApiClient = null;
+        super.onDestroy();
+    }
+
+    /**
+     * Nullify the listener
+     */
     @Override
     public void onDetach() {
         baseListener = null;
