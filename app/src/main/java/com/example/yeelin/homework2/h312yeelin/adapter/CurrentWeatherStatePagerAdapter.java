@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
@@ -147,8 +148,17 @@ public class CurrentWeatherStatePagerAdapter
         if (cursor == newCursor) {
             return;
         }
-        this.cursor = newCursor;
-        notifyDataSetChanged();
+        cursor = newCursor;
+
+        if (cursor != null) {
+            Log.d(TAG, "swapCursor: Cursor is not null. Calling notifyDataSetChanged");
+            notifyDataSetChanged();
+        }
+        else {
+            //the only time cursor is null is when the loader is shutting down
+            //so no need to notify dataset changed as we don't want getItemPosition to be called
+            Log.d(TAG, "swapCursor: Cursor is null. Not calling notifyDataSetChanged");
+        }
     }
 
     public Cursor getCursor() {
