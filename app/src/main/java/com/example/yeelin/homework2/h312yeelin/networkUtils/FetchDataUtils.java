@@ -109,6 +109,7 @@ public class FetchDataUtils {
     @Nullable
     //public static HttpURLConnection performGet(URL url) throws IOException {
     public static HttpURLConnection performGet(URL url) {
+        Log.d(TAG, "performGet:");
         HttpURLConnection urlConnection = null;
         try {
             urlConnection = (HttpURLConnection) url.openConnection();
