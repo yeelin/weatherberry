@@ -8,8 +8,7 @@
     android:paddingBottom="@dimen/tri_hour_forecast_row_padding"
     android:alignmentMode="alignMargins"
     android:columnOrderPreserved="false"
-    android:columnCount="@integer/tri_hour_forecast_columnCount"
-    android:background="@drawable/activated_item_background">
+    android:columnCount="@integer/tri_hour_forecast_columnCount">
 
     <TextView
         android:id="@+id/tri_hour_forecast_time"

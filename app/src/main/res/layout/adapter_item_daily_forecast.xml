@@ -9,7 +9,7 @@
     android:alignmentMode="alignMargins"
     android:columnOrderPreserved="false"
     android:columnCount="@integer/daily_forecast_columnCount"
-    android:background="@drawable/activated_item_background">
+    android:background="@drawable/pressed_item_background">
 
     <TextView
         android:id="@+id/daily_forecast_dayOfWeek"
