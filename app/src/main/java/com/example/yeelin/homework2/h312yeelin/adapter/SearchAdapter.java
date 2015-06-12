@@ -20,6 +20,13 @@ public class SearchAdapter extends ArrayAdapter<SearchResultItem> {
         super(context, 0, items);
     }
 
+    /**
+     * Recycles view
+     * @param position
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View view = convertView;
@@ -30,5 +37,16 @@ public class SearchAdapter extends ArrayAdapter<SearchResultItem> {
         TextView searchTextView = (TextView) view.findViewById(R.id.search_result_item);
         searchTextView.setText(getItem(position).getDescription());
         return view;
+    }
+
+    /**
+     * Removes all items from the underlying array and then repopulates it with new items
+     * @param items
+     */
+    public void updateAllItems(List<SearchResultItem> items) {
+        //remove all items from the list
+        clear();
+        //add all items to the end of the array
+        addAll(items);
     }
 }

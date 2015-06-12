@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -51,6 +52,8 @@ public class SearchFragment
 
     //logcat
     private static final String TAG = SearchFragment.class.getCanonicalName();
+    //savedInstanceState
+    private static final String STATE_LAST_QUERY = SearchFragment.class.getSimpleName() + ".lastQuery";
 
     //other constants
     private static final int MINIMUM_QUERY_TEXT_LENGTH = 2;
@@ -61,6 +64,7 @@ public class SearchFragment
 
     //member variables
     private PendingResult<AutocompletePredictionBuffer> autocompletePendingResult;
+    private String lastQuery = "";
 
     //listener member variable
     private SearchFragmentListener searchListener;
@@ -120,6 +124,11 @@ public class SearchFragment
 
         //notify that we have an options menu so that we get the callback to create one later
         setHasOptionsMenu(true);
+
+        if (savedInstanceState != null) {
+            lastQuery = savedInstanceState.getString(STATE_LAST_QUERY, "");
+            Log.d(TAG, "onCreate: Last query restored:" + lastQuery);
+        }
     }
 
     /**
@@ -153,7 +162,7 @@ public class SearchFragment
     }
 
     /**
-     *
+     * Setup the search menu item and action view
      * @param menu
      * @param inflater
      */
@@ -163,14 +172,29 @@ public class SearchFragment
         inflater.inflate(R.menu.menu_search, menu);
 
         //get the search view and set the searchable configuration
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        MenuItem searchMenuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchMenuItem.getActionView();
         SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
         //reference to the dummy activity that will handle the search result
         ComponentName componentName = new ComponentName(getActivity(), DummyActivity.class);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName));
 
         searchView.setQueryHint(getString(R.string.search_query_hint));
+        //expand the search view to save users yet another tap
+        searchMenuItem.expandActionView();
+        //set the query - false means only update the contents of the text field, true submits an intent and results in DummyActivity being instantiated
+        searchView.setQuery(lastQuery, false);
         searchView.setOnQueryTextListener(this); //listen for user actions within the search view
+    }
+
+    /**
+     * Save out the last query so that we can reconstruct later
+     * @param outState
+     */
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_LAST_QUERY, lastQuery);
     }
 
     /**
@@ -180,6 +204,23 @@ public class SearchFragment
     public void onDetach() {
         searchListener = null;
         super.onDetach();
+    }
+
+    /**
+     * GoogleApiClient.ConnectionCallbacks implementation
+     * This callback happens when we are connected to Google Play Services.
+     * @param bundle
+     */
+    @Override
+    public void onConnected(Bundle bundle) {
+        super.onConnected(bundle);
+
+        //if we came from a configuration change, then lastQuery is not ""
+        if (lastQuery.length() > 0) {
+            Log.d(TAG, "onConnected: Last query:" + lastQuery);
+            //get the results for the last query to repopulate listview
+            onQueryTextChange(lastQuery);
+        }
     }
 
     /**
@@ -244,6 +285,7 @@ public class SearchFragment
      */
     @Override
     public boolean onQueryTextSubmit(String query) {
+        Log.d(TAG, "onQueryTextSubmit: Query:" + query);
         //do nothing
         return true;
     }
@@ -257,11 +299,13 @@ public class SearchFragment
      */
     @Override
     public boolean onQueryTextChange(String newText) {
+        Log.d(TAG, "onQueryTextChange: Query:" + newText);
+        lastQuery = newText;
+
         if (!googleApiClient.isConnected() || newText.length() < MINIMUM_QUERY_TEXT_LENGTH) {
+            Log.d(TAG, "onQueryTextChange: Not connected to Google Play Services or under minimum query length");
             return true;
         }
-
-        Log.d(TAG, "onQueryTextChange: Query:" + newText);
 
         //clear out any old pending results
         if (autocompletePendingResult != null) {
@@ -314,11 +358,19 @@ public class SearchFragment
         ArrayList<SearchResultItem> searchResultItems = SearchResultItem.buildSearchResultItems(autocompletePredictions);
         autocompletePredictions.release();
 
-        //set the adapter with the search results
-        SearchAdapter searchAdapter = new SearchAdapter(viewHolder.searchListView.getContext(), searchResultItems);
-        viewHolder.searchListView.setAdapter(searchAdapter);
-
-        Log.d(TAG, "onResult: Done");
+        //check if listview adapter exists
+        SearchAdapter searchAdapter = (SearchAdapter) viewHolder.searchListView.getAdapter();
+        if (searchAdapter == null) {
+            //create and set the adapter with the search results
+            Log.d(TAG, "onResult: Search adapter is null so creating one");
+            searchAdapter = new SearchAdapter(viewHolder.searchListView.getContext(), searchResultItems);
+            viewHolder.searchListView.setAdapter(searchAdapter);
+        }
+        else {
+            //update the adapter
+            Log.d(TAG, "onResult: Search adapter is not null so updating");
+            searchAdapter.updateAllItems(searchResultItems);
+        }
     }
 
     /**
