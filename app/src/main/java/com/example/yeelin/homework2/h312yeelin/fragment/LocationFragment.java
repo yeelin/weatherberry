@@ -53,6 +53,8 @@ public class LocationFragment
     private static final float ONE_KILOMETER = 1000f; //1000 meters
     private static final long ONE_MINUTE = 60 * 1000; //milliseconds
     private static final long THREE_MINUTES = 3 * ONE_MINUTE;
+    private static final long FIVE_MINUTES = 5 * ONE_MINUTE;
+    private static final long TEN_MINUTES = 10 * ONE_MINUTE;
     private static final long THIRTY_SECONDS = 30 * 1000; //milliseconds
 
     //handler message
@@ -303,9 +305,9 @@ public class LocationFragment
         return LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setSmallestDisplacement(ONE_KILOMETER)
-            .setInterval(ONE_MINUTE)
-            .setFastestInterval(THIRTY_SECONDS)
-            .setMaxWaitTime(THREE_MINUTES);
+            .setInterval(FIVE_MINUTES)
+            .setFastestInterval(THREE_MINUTES)
+            .setMaxWaitTime(TEN_MINUTES);
     }
 
     /**

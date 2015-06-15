@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.CursorAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.yeelin.homework2.h312yeelin.R;
@@ -60,6 +61,24 @@ public class FavoritesAdapter extends CursorAdapter {
     }
 
     /**
+     * Override to restore the state of the list view item if any
+     * @param position
+     * @param convertView
+     * @param parent
+     * @return
+     */
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View view = super.getView(position, convertView, parent);
+
+        //restore the checked state of the list view item if any
+        ViewHolder viewHolder = (ViewHolder) view.getTag();
+        ListView listview = (ListView) parent;
+        viewHolder.favoriteCity.setChecked(listview.isItemChecked(position));
+        return view;
+    }
+
+    /**
      * Called by getView in adapter when convert view is not null (i.e. we are recycling).
      * Bind view here. Cursor is already at the right position
      * @param view
@@ -71,7 +90,6 @@ public class FavoritesAdapter extends CursorAdapter {
         ViewHolder viewHolder = (ViewHolder) view.getTag();
         String cityName = cursor.getString(FavoritesCursorPosition.CITY_NAME_POS.getValue());
         viewHolder.favoriteCity.setText(cityName);
-        viewHolder.favoriteCity.setChecked(false);
     }
 
     /**

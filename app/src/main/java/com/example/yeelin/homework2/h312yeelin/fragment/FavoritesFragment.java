@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,7 +24,6 @@ import com.example.yeelin.homework2.h312yeelin.loader.LoaderIds;
 import com.example.yeelin.homework2.h312yeelin.service.NetworkIntentService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by ninjakiki on 5/27/15.
@@ -35,10 +35,11 @@ public class FavoritesFragment
     //logcat
     private static final String TAG = FavoritesFragment.class.getCanonicalName();
     //member variable
-    private HashMap<Integer, Long> selectedItemPositionsToCityIdsMap;
+    //private HashMap<Integer, Long> selectedItemPositionsToCityIdsMap;
 
     //listener member variable
     private FavoritesFragmentListener favoritesListener;
+    private SparseBooleanArray checkedItemPositions;
 
     /**
      * Listener interface to be implemented by whoever is interested in events from this fragment.
@@ -146,13 +147,52 @@ public class FavoritesFragment
         final int id = item.getItemId();
         switch (id) {
             case R.id.action_delete:
-                if (selectedItemPositionsToCityIdsMap != null && selectedItemPositionsToCityIdsMap.size() > 0){
-                    Log.d(TAG, "onOptionsItemSelected: Favorites to be deleted: " + selectedItemPositionsToCityIdsMap);
+//                if (selectedItemPositionsToCityIdsMap != null && selectedItemPositionsToCityIdsMap.size() > 0){
+//                    Log.d(TAG, "onOptionsItemSelected: Favorites to be deleted: " + selectedItemPositionsToCityIdsMap);
+//
+//                    getActivity().startService(NetworkIntentService.buildIntentForFavoriteCitiesPurge(
+//                            getActivity(),
+//                            new ArrayList<>(selectedItemPositionsToCityIdsMap.values())));
+//                }
 
-                    getActivity().startService(NetworkIntentService.buildIntentForFavoriteCitiesPurge(
-                            getActivity(),
-                            new ArrayList<>(selectedItemPositionsToCityIdsMap.values())));
+                ViewHolder viewHolder = getViewHolder();
+                SparseBooleanArray sparseBooleanArray = viewHolder.favoritesListView.getCheckedItemPositions();
+                if (sparseBooleanArray.size() == 0) {
+                    Log.d(TAG, "onOptionsItemSelected: sparse boolean array is empty, so nothing to do");
+                    return true;
                 }
+                Log.d(TAG, "onOptionsItemSelected: sparse boolean array size:" + sparseBooleanArray.size()); //size != number of currently selected rows
+
+                FavoritesAdapter favoritesAdapter = (FavoritesAdapter) viewHolder.favoritesListView.getAdapter();
+                ArrayList<Long> cityIdsArrayList = new ArrayList<>(sparseBooleanArray.size());
+                //sparse boolean array is map of key-value pairs
+                //key = row in the listview, value = true/false to indicate whether row is selected
+                //value would be false if the row was checked then unchecked
+                for (int i=0; i<sparseBooleanArray.size(); i++) {
+                    int key = sparseBooleanArray.keyAt(i);
+                    boolean value = sparseBooleanArray.valueAt(i);
+
+                    Log.d(TAG, String.format("onOptionsItemSelected: Index:%d, Key:%d, Value:%s", i, key, String.valueOf(value)));
+                    //check if value is true (true means row is currently selected)
+                    if (value) {
+                        Cursor cursor = (Cursor) favoritesAdapter.getItem(key);
+                        long cityId = cursor.getLong(FavoritesAdapter.FavoritesCursorPosition.CITY_ID_POS.getValue());
+                        String cityName = cursor.getString(FavoritesAdapter.FavoritesCursorPosition.CITY_NAME_POS.getValue());
+                        cityIdsArrayList.add(cityId);
+                        Log.d(TAG, String.format("onOptionsItemSelected: Index:%d, Key:%d, Value:%s, CityId:%d, CityName:%s", i, key, String.valueOf(value), cityId, cityName));
+                    }
+                }
+
+                if (cityIdsArrayList.size() == 0) {
+                    Log.d(TAG, "onOptionsItemSelected: CityIds size is 0, so nothing is currently selected.");
+                    return true;
+                }
+                Log.d(TAG, "onOptionsItemSelected: CityIds selected: " + cityIdsArrayList);
+
+                getActivity().startService(
+                        NetworkIntentService.buildIntentForFavoriteCitiesPurge(
+                        getActivity(),
+                        cityIdsArrayList));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -181,21 +221,21 @@ public class FavoritesFragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d(TAG, "onItemClick: Position clicked:" + position);
         //parent is the listview
-        Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+        //Cursor cursor = (Cursor) parent.getItemAtPosition(position);
         FavoritesAdapter.ViewHolder viewHolder = (FavoritesAdapter.ViewHolder) view.getTag();
 
         //change the checked state of the view to the inverse of its current state
         viewHolder.favoriteCity.toggle();
 
-        if (selectedItemPositionsToCityIdsMap.containsKey(position)) {
-            //the checkbox was previously checked so remove it from map
-            selectedItemPositionsToCityIdsMap.remove(position);
-        }
-        else {
-            //the checkbox was not previously checked, so add it to map
-            long cityId = cursor.getLong(FavoritesAdapter.FavoritesCursorPosition.CITY_ID_POS.getValue());
-            selectedItemPositionsToCityIdsMap.put(position, cityId);
-        }
+//        if (selectedItemPositionsToCityIdsMap.containsKey(position)) {
+//            //the checkbox was previously checked so remove it from map
+//            selectedItemPositionsToCityIdsMap.remove(position);
+//        }
+//        else {
+//            //the checkbox was not previously checked, so add it to map
+//            long cityId = cursor.getLong(FavoritesAdapter.FavoritesCursorPosition.CITY_ID_POS.getValue());
+//            selectedItemPositionsToCityIdsMap.put(position, cityId);
+//        }
     }
 
     /**
@@ -216,10 +256,10 @@ public class FavoritesFragment
             //swap the adapter's cursor
             FavoritesAdapter favoritesAdapter = (FavoritesAdapter) viewHolder.favoritesListView.getAdapter();
             favoritesAdapter.swapCursor(cursor);
+            //viewHolder.favoritesListView.clearChoices();
 
             //clear selected items map and checkboxes
-            selectedItemPositionsToCityIdsMap = new HashMap<>(cursor.getCount());
-            //TODO: clear checkboxes?
+            //selectedItemPositionsToCityIdsMap = new HashMap<>(cursor.getCount());
 
             //show the list container and hide the progress bar
             if (viewHolder.favoritesListContainer.getVisibility() != View.VISIBLE) {
