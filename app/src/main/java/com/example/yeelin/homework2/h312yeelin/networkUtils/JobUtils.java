@@ -23,8 +23,8 @@ public class JobUtils {
 
     //alarm intervals
     private static final long THREE_MINUTES_MILLIS = 3 * 60 * 1000; //TODO: use this for testing
-    private static final long THIRTY_MINUTES_MILLIS = 30 * 60 * 1000; //TODO: use this for shipping
-    private static final long JOB_INTERVAL = THREE_MINUTES_MILLIS;
+    private static final long ONE_HOUR_MILLIS = 60 * 60 * 1000; //TODO: use this for shipping
+    private static final long JOB_INTERVAL = ONE_HOUR_MILLIS;
 
     /**
      * Schedules a job (encapsulated in a JobInfo object) with the JobScheduler.
