@@ -17,6 +17,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:clipToPadding="false"
+            android:scrollbarStyle="outsideOverlay"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"/>
 
