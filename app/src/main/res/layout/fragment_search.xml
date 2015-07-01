@@ -24,8 +24,7 @@
         android:layout_alignParentTop="true"
         android:clipToPadding="false"
         android:scrollbarStyle="outsideOverlay"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp"/>
+        android:padding="8dp"/>
 
     <TextView
         android:id="@+id/search_empty"
@@ -34,5 +33,6 @@
         android:layout_above="@id/search_attribution"
         android:layout_alignParentTop="true"
         android:gravity="center"
-        android:text="@string/no_search_cities"/>
+        android:text="@string/no_search_cities"
+        android:visibility="gone"/>
 </RelativeLayout>
