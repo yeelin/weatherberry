@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    tools:context="com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        tools:context="com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,51 +97,53 @@
 
         </LinearLayout>
 
-        <ProgressBar
-            android:id="@+id/daily_forecast_progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            style="?android:attr/progressBarStyle"
-            android:visibility="gone"/>
-
         <FrameLayout
-            android:id="@+id/daily_forecast_listContainer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/daily_forecast_listview_height"
             android:layout_marginLeft="@dimen/current_weather_fragment_margin"
             android:layout_marginStart="@dimen/current_weather_fragment_margin"
             android:layout_marginRight="@dimen/current_weather_fragment_margin"
-            android:layout_marginEnd="@dimen/current_weather_fragment_margin"
-            android:layout_marginBottom="@dimen/current_weather_fragment_margin"
-            android:orientation="vertical">
+            android:layout_marginEnd="@dimen/current_weather_fragment_margin">
 
-            <ListView
-                android:id="@+id/daily_forecast_listview"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                tools:listitem="@layout/adapter_item_daily_forecast"/>
-
-            <TextView
-                android:id="@+id/daily_forecast_empty"
-                android:layout_width="match_parent"
+            <ProgressBar
+                android:id="@+id/daily_forecast_progressBar"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/no_daily_forecast"
+                android:layout_gravity="center"
+                style="?android:attr/progressBarStyle"
                 android:visibility="gone"/>
 
+            <FrameLayout
+                android:id="@+id/daily_forecast_listContainer"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/daily_forecast_listview_height">
+
+                <ListView
+                    android:id="@+id/daily_forecast_listview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:listitem="@layout/adapter_item_daily_forecast"/>
+
+                <TextView
+                    android:id="@+id/daily_forecast_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/no_daily_forecast"
+                    android:visibility="gone"/>
+
+            </FrameLayout>
         </FrameLayout>
 
         <TextView
             android:id="@+id/current_last_update"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/current_weather_fragment_margin"
-            android:layout_marginStart="@dimen/current_weather_fragment_margin"
-            android:layout_marginBottom="@dimen/current_weather_fragment_margin"
+            android:layout_margin="@dimen/current_weather_fragment_margin"
             android:textSize="@dimen/xsmall_textSize"
             android:textColor="@color/textColorSecondary"
             android:text="@string/current_last_update_default_value"
             tools:text="Last updated: Apr 23, 2015 11:15 PM"/>
 
     </LinearLayout>
+
 </android.support.v4.widget.NestedScrollView>

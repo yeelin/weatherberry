@@ -10,6 +10,9 @@
     <dimen name="tri_hour_forecast_image_desc_margin">8dp</dimen>
     <dimen name="tri_hour_forecast_desc_temp_margin">16dp</dimen>
 
+    <!-- listview dimens -->
+    <dimen name="daily_forecast_listview_height">200dp</dimen>
+
     <!-- elevations -->
     <dimen name="toolbar_elevation">8dp</dimen>
 
