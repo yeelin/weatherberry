@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="@dimen/tri_hour_forecast_fragment_margin"
     tools:context="com.example.yeelin.homework2.h312yeelin.fragment.TriHourForecastFragment">
 
     <FrameLayout
@@ -18,6 +17,9 @@
             android:layout_height="match_parent"
             android:listSelector="@android:color/transparent"
             android:cacheColorHint="@android:color/transparent"
+            android:padding="@dimen/tri_hour_forecast_fragment_margin"
+            android:clipToPadding="false"
+            android:scrollbarStyle="outsideOverlay"
             tools:listitem="@layout/adapter_item_tri_hour_forecast"/>
 
         <TextView
