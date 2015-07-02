@@ -30,8 +30,7 @@ public class SearchActivity
      * @return
      */
     public static Intent buildIntent(Context context) {
-        Intent intent = new Intent(context, SearchActivity.class);
-        return intent;
+        return new Intent(context, SearchActivity.class);
     }
 
     /**
@@ -125,6 +124,14 @@ public class SearchActivity
      */
     private void setupToolbar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        //check if action bar is null
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "setupToolbar: getSupportActionBar is null");
+            return;
+        }
+
+        //set elevation
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
 
         //enable the Up arrow

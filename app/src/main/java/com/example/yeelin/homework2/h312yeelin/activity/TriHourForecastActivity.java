@@ -82,6 +82,14 @@ public class TriHourForecastActivity
      */
     private void setupToolbar(@Nullable String cityName, long forecastMillis) {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        //check if action bar is null
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "setupToolbar: getSupportActionBar is null");
+            return;
+        }
+
+        //set elevation
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
 
         //enable the Up arrow

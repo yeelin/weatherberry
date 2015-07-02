@@ -50,13 +50,11 @@
     <string name="current_windspeed_value">%1$s mps</string>
     <string name="last_update_value">Last updated: %1$s</string>
 
-    <!-- common strings -->
+    <!-- content description for images -->
     <string name="weather_image_contentDescription">Weather image</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="search_image_contentDescription">Search powered by Google</string>
 
     <!-- Google play services -->
     <string name="play_services_error">Failed to resolve Google Play Services error. Restart app to try again</string>
-
-    <string name="hello_world">Hello world!</string>
 
 </resources>

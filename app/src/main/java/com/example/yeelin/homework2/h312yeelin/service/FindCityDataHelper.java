@@ -72,10 +72,10 @@ public class FindCityDataHelper {
             }
         }
         catch (MalformedURLException e) {
-            Log.e(TAG, "findCityId: Unexpected error:", e);
+            Log.e(TAG, "findCityId: Unexpected MalformedURLException:", e);
         }
         catch (IOException e) {
-            Log.e(TAG, "findCityId: Unexpected error:", e);
+            Log.e(TAG, "findCityId: Unexpected IOException:", e);
         }
         Log.d(TAG, String.format("findCityId: Could not find cityId for cityName:%s (%f, %f)", cityName, latitude, longitude));
         return BaseWeatherContract.NO_ID;

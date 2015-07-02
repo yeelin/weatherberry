@@ -5,11 +5,9 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.provider.CurrentWeatherContract;
@@ -34,7 +32,7 @@ public class FavoritesAdapter extends CursorAdapter {
         CITY_NAME_POS(2);
 
         private int value;
-        private FavoritesCursorPosition(int value) { this.value = value; }
+        FavoritesCursorPosition(int value) { this.value = value; }
         public int getValue() { return value; }
     }
 

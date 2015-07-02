@@ -44,7 +44,7 @@ public class DailyForecastAdapter extends CursorAdapter {
         ICON_POS(5);
 
         private int value;
-        private DailyForecastCursorPosition(int value) {
+        DailyForecastCursorPosition(int value) {
             this.value = value;
         }
 

@@ -9,11 +9,8 @@ import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 
 /**
  * Created by ninjakiki on 4/16/15.

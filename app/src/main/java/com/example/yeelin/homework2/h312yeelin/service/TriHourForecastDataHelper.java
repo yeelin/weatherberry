@@ -13,7 +13,6 @@ import com.example.yeelin.homework2.h312yeelin.provider.BaseWeatherContract;
 import com.example.yeelin.homework2.h312yeelin.provider.TriHourForecastContract;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,10 +58,10 @@ public class TriHourForecastDataHelper {
             }
         }
         catch (MalformedURLException e) {
-            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected MalformedURLException:", e);
         }
         catch (IOException e) {
-            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected IOException:", e);
         }
         return valuesArrayList;
     }

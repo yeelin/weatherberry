@@ -5,6 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.example.yeelin.homework2.h312yeelin.fragment.CurrentWeatherAndDailyForecastFragment;
@@ -49,6 +50,14 @@ public class CurrentWeatherAndDailyForecastActivity
      */
     private void setupToolbar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        //check if action bar is null
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "setupToolbar: getSupportActionBar is null");
+            return;
+        }
+
+        //set elevation
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
     }
 

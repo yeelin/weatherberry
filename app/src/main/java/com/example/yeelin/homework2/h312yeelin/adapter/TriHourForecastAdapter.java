@@ -44,7 +44,7 @@ public class TriHourForecastAdapter extends CursorAdapter {
         ICON_POS(5);
 
         private int value;
-        private TriHourForecastCursorPosition(int value) {
+        TriHourForecastCursorPosition(int value) {
             this.value = value;
         }
 

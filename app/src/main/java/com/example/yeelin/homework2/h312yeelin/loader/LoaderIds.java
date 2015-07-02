@@ -12,7 +12,7 @@ public enum LoaderIds {
     FAVORITES_LOADER(400);
 
     private int value;
-    private LoaderIds(int value) {
+    LoaderIds(int value) {
         this.value = value;
     }
 

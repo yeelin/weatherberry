@@ -14,6 +14,7 @@
         android:paddingBottom="8dp"
         android:paddingTop="8dp"
         android:background="#0F000000"
+        android:contentDescription="@string/search_image_contentDescription"
         android:src="@drawable/powered_by_google_light"/>
 
     <ListView

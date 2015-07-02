@@ -98,7 +98,7 @@ public class FavoritesLoaderCallbacks implements LoaderManager.LoaderCallbacks<C
      * @return
      */
     @Override
-    public Loader onCreateLoader(int id, Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Uri uri = args.getParcelable(ARG_URI);
         String[] projection = args.getStringArray(ARG_PROJECTION);
 
@@ -129,7 +129,7 @@ public class FavoritesLoaderCallbacks implements LoaderManager.LoaderCallbacks<C
      * @param loader
      */
     @Override
-    public void onLoaderReset(Loader loader) {
+    public void onLoaderReset(Loader<Cursor> loader) {
         //let the listener know
         onLoadFinished(loader, null);
     }

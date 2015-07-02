@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.example.yeelin.homework2.h312yeelin.BuildConfig;
 import com.example.yeelin.homework2.h312yeelin.R;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
@@ -105,7 +104,7 @@ public class ImageUtils {
     @NonNull
     private static Uri buildIconUri(@NonNull String iconName) {
 
-        Uri uri = new Uri.Builder()
+        return new Uri.Builder()
                 .scheme(SCHEME)
                 .authority(AUTHORITY)
                 .appendPath(IMG)
@@ -114,6 +113,5 @@ public class ImageUtils {
                 .build();
 
         //Log.d(TAG, "buildIconUri: Uri: " + uri.toString());
-        return uri;
     }
 }

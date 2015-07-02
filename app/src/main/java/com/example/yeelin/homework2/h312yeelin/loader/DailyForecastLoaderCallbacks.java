@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.provider.DailyForecastContract;
 

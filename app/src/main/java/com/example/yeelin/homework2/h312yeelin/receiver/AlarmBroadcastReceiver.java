@@ -33,23 +33,24 @@ public class AlarmBroadcastReceiver extends WakefulBroadcastReceiver {
         intent.setAction(ACTION_ALARM_TRIGGERED);
 
         //wrap the intent in a pending intent
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+        return PendingIntent.getBroadcast(
                 context,
                 ALARM_BROADCAST_REQUEST_CODE,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        return pendingIntent;
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive");
 
-        if (intent == null) {
-            Log.w(TAG, "onReceive: Intent was null");
+        if (intent == null || intent.getAction() == null) {
+            Log.w(TAG, "onReceive: Either the Intent or the action in the intent was null");
+            return;
         }
 
         final String action = intent.getAction();
+
         if(Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             //alarms are cleared on reboot, so rescheduling the alarm
             AlarmUtils.scheduleRecurringAlarm(context);

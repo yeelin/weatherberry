@@ -28,8 +28,7 @@ public class FavoritesActivity
      * @return
      */
     public static Intent buildIntent(Context context) {
-        Intent intent = new Intent(context, FavoritesActivity.class);
-        return intent;
+        return new Intent(context, FavoritesActivity.class);
     }
 
     /**
@@ -87,6 +86,14 @@ public class FavoritesActivity
      */
     private void setupToolbar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        //check if action bar is null
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "setupToolbar: getSupportActionBar is null");
+            return;
+        }
+
+        //set elevation
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
 
         //enable the Up arrow

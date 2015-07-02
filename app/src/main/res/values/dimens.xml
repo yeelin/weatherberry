@@ -7,8 +7,6 @@
     <dimen name="daily_forecast_row_padding">5dp</dimen>
 
     <dimen name="tri_hour_forecast_row_padding">8dp</dimen>
-    <dimen name="tri_hour_forecast_image_desc_margin">8dp</dimen>
-    <dimen name="tri_hour_forecast_desc_temp_margin">16dp</dimen>
 
     <!-- listview dimens -->
     <dimen name="daily_forecast_listview_height">200dp</dimen>
@@ -19,20 +17,7 @@
     <!-- image sizes -->
     <dimen name="weather_image_size">25dp</dimen>
 
-    <!-- column widths -->
-    <dimen name="daily_forecast_dayOfWeek_minWidth">135dp</dimen>
-    <dimen name="daily_forecast_image_maxWidth">25dp</dimen>
-    <dimen name="daily_forecast_tempHigh_minWidth">90dp</dimen>
-
-    <dimen name="tri_hour_forecast_time_minWidth">100dp</dimen>
-    <dimen name="tri_hour_forecast_image_maxWidth">25dp</dimen>
-    <dimen name="tri_hour_forecast_description_minWidth">100dp</dimen>
-    <dimen name="tri_hour_forecast_temp_minWidth">40dp</dimen>
-
     <!-- text sizes -->
     <dimen name="xlarge_textSize">72sp</dimen>
     <dimen name="xsmall_textSize">8sp</dimen>
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
 </resources>

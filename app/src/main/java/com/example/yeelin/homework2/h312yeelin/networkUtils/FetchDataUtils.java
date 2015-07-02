@@ -66,12 +66,11 @@ public class FetchDataUtils {
      */
     @NonNull
     public static Uri.Builder getHeaderForUriBuilder() {
-        Uri.Builder uriBuilder = new Uri.Builder()
+        return new Uri.Builder()
                 .scheme(SCHEME)
                 .authority(AUTHORITY)
                 .appendPath(PATH_DATA)
                 .appendPath(PATH_API_VERSION);
-        return uriBuilder;
     }
 
     /**
@@ -150,10 +149,8 @@ public class FetchDataUtils {
      */
     @Nullable
     public static String getEncodingFromHeader(HttpURLConnection urlConnection) {
-        String encoding = null;
-
         //first try to get it from content encoding
-        encoding = urlConnection.getContentEncoding();
+        String encoding = urlConnection.getContentEncoding();
         if (encoding != null) {
             return encoding;
         }

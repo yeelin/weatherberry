@@ -97,7 +97,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         //setup View Pager
         viewPager = (ViewPager) findViewById(R.id.currentWeatherAndDailyForecast_viewPager);
         viewPager.setAdapter(new CurrentWeatherStatePagerAdapter(getSupportFragmentManager(), null));
-        viewPager.setOnPageChangeListener(this);
+        viewPager.addOnPageChangeListener(this);
         viewPager.setCurrentItem(viewPagerPosition);
 
         //fetch fresh data from the network
@@ -173,10 +173,27 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     }
 
     /**
+     * Remove a listener that was previously added via addOnPageChangeListener(OnPageChangeListener)
+     */
+    @Override
+    protected void onDestroy() {
+        viewPager.removeOnPageChangeListener(this);
+        super.onDestroy();
+    }
+
+    /**
      * Helper method to setup toolbar
      */
     private void setupToolbar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+
+        //check if action bar is null
+        if (getSupportActionBar() == null) {
+            Log.e(TAG, "setupToolbar: getSupportActionBar is null");
+            return;
+        }
+
+        //set elevation
         getSupportActionBar().setElevation(getResources().getDimensionPixelSize(R.dimen.toolbar_elevation));
     }
 
@@ -398,7 +415,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         Log.d(TAG, "onNewLocation: Location Name: " + locationName + " Location : " + location);
 
         if (location != null) {
-            String msg = null;
+            String msg;
             if (locationName != null) {
                 msg = String.format("Current location is %s (%f, %f),", locationName, location.getLatitude(), location.getLongitude());
             }

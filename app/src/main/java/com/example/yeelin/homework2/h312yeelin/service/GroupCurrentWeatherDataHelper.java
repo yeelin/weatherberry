@@ -43,7 +43,7 @@ public class GroupCurrentWeatherDataHelper {
         CITY_ID_POS(0),
         USER_FAV_POS(1);
         private int value;
-        private CityIdAndFavoritesCursorPosition(int value) {
+        CityIdAndFavoritesCursorPosition(int value) {
             this.value = value;
         }
         public int getValue() {
@@ -133,10 +133,10 @@ public class GroupCurrentWeatherDataHelper {
             }
         }
         catch (MalformedURLException e) {
-            Log.d(TAG, "getDataForMultipleCityIds: Unexpected error:", e);
+            Log.d(TAG, "getDataForMultipleCityIds: Unexpected MalformedURLException:", e);
         }
         catch (IOException e) {
-            Log.d(TAG, "getDataForMultipleCityIds: Unexpected error:", e);
+            Log.d(TAG, "getDataForMultipleCityIds: Unexpected IOException:", e);
         }
         return valuesArrayList;
     }
@@ -269,7 +269,6 @@ public class GroupCurrentWeatherDataHelper {
     public static void augmentData(@NonNull ArrayList<ContentValues> valuesArrayList,
                                    boolean userFavorite) {
         Log.d(TAG, "augmentData: Not implemented");
-        return;
     }
 
     /**

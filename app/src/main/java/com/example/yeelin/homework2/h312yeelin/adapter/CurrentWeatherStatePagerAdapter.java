@@ -44,7 +44,7 @@ public class CurrentWeatherStatePagerAdapter
         USER_FAVORITE(8);
 
         private int value;
-        private CurrentWeatherCursorPosition(int value) {
+        CurrentWeatherCursorPosition(int value) {
             this.value = value;
         }
         public int getValue() {
@@ -91,7 +91,7 @@ public class CurrentWeatherStatePagerAdapter
         long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
 
         //instantiate a new fragment
-        CurrentWeatherAndDailyForecastFragment fragment = CurrentWeatherAndDailyForecastFragment.newInstance(
+        return CurrentWeatherAndDailyForecastFragment.newInstance(
                 cityId,
                 cityName,
                 description,
@@ -100,8 +100,6 @@ public class CurrentWeatherStatePagerAdapter
                 windSpeed,
                 iconName,
                 lastUpdateMillis);
-
-        return fragment;
     }
 
     /**

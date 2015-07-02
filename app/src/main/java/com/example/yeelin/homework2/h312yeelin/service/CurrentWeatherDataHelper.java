@@ -16,10 +16,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * Created by ninjakiki on 5/24/15.
@@ -61,10 +59,10 @@ public class CurrentWeatherDataHelper {
             }
         }
         catch (MalformedURLException e) {
-            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected MalformedURLException:", e);
         }
         catch (IOException e) {
-            Log.e(TAG, "getDataForCityId: Unexpected error:", e);
+            Log.e(TAG, "getDataForCityId: Unexpected IOException:", e);
         }
         return valuesArrayList;
     }

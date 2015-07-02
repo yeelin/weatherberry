@@ -65,10 +65,10 @@ public class PurgeDataHelper {
             Log.d(TAG, "handleActionFavoriteCityPurge: Done");
         }
         catch (RemoteException e) {
-            Log.e(TAG, "handleActionFavoriteCityPurge: Unexpected error: ", e);
+            Log.e(TAG, "handleActionFavoriteCityPurge: Unexpected RemoteException: ", e);
         }
         catch (OperationApplicationException e) {
-            Log.e(TAG, "handleActionFavoriteCityPurge: Unexpected error: ", e);
+            Log.e(TAG, "handleActionFavoriteCityPurge: Unexpected OperationApplicationException: ", e);
         }
     }
 }
