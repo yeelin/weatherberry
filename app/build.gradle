@@ -25,5 +25,5 @@ dependencies {
     compile 'com.android.support:gridlayout-v7:22.2.0'
     compile 'com.google.android.gms:play-services-base:7.5.0'
     compile 'com.google.android.gms:play-services-location:7.5.0'
-    compile files('libs/picasso-2.5.2.jar')
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }
