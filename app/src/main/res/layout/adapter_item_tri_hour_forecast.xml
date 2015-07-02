@@ -21,7 +21,7 @@
 
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="left"
+        android:gravity="start"
 
         app:layout_gravity="center_vertical"
         app:layout_columnWeight=".25"
@@ -51,7 +51,7 @@
 
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="left"
+        android:gravity="start"
 
         app:layout_gravity="center_vertical"
         app:layout_columnWeight=".4"
