@@ -153,6 +153,9 @@ public class LocationFragment
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //keep fragment alive across rotation
+        setRetainInstance(true);
+
         //create a handler thread for the handler
         HandlerThread handlerThread = new HandlerThread("SharedPreferencesThread");
         handlerThread.start();
@@ -415,7 +418,10 @@ public class LocationFragment
         getActivity().startService(currentLocationLoadIntent);
 
         //notify listener about the new location with city name
-        locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
+        //since we are retaining the fragment, the listener may not exist all the time so check for null
+        if (locationListener != null) {
+            locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
+        }
     }
 
     /**
