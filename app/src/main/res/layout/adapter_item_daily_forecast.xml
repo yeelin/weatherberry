@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:gravity="left"
 
-        app:layout_gravity="fill"
+        app:layout_gravity="center_vertical"
         app:layout_columnWeight=".35"
 
         android:textColor="@color/textColorPrimary"
@@ -39,7 +39,7 @@
         android:layout_width="@dimen/weather_image_size"
         android:layout_height="@dimen/weather_image_size"
 
-        app:layout_gravity="center_horizontal"
+        app:layout_gravity="center"
         app:layout_columnWeight=".25"
 
         android:contentDescription="@string/weather_image_contentDescription"
@@ -52,9 +52,9 @@
 
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="right"
+        android:gravity="end"
 
-        app:layout_gravity="fill"
+        app:layout_gravity="center_vertical"
         app:layout_columnWeight=".25"
 
         android:textColor="@color/textColorPrimary"
@@ -68,9 +68,9 @@
 
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="end"
 
-        app:layout_gravity="fill"
-        android:gravity="right"
+        app:layout_gravity="center_vertical"
         app:layout_columnWeight=".15"
 
         android:textColor="@color/textColorSecondary"
