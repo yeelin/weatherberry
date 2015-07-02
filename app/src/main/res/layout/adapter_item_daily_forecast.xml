@@ -1,55 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:useDefaultMargins="false"
     android:paddingTop="@dimen/daily_forecast_row_padding"
     android:paddingBottom="@dimen/daily_forecast_row_padding"
-    android:alignmentMode="alignMargins"
-    android:columnOrderPreserved="false"
-    android:columnCount="@integer/daily_forecast_columnCount"
+
+    app:useDefaultMargins="false"
+    app:alignmentMode="alignMargins"
+    app:columnOrderPreserved="false"
+    app:columnCount="@integer/daily_forecast_columnCount"
+    app:orientation="horizontal"
     android:background="@drawable/pressed_item_background">
 
     <TextView
         android:id="@+id/daily_forecast_dayOfWeek"
-        android:layout_row="0"
-        android:layout_column="0"
-        android:layout_gravity="center_vertical"
-        android:minWidth="@dimen/daily_forecast_dayOfWeek_minWidth"
+        app:layout_row="0"
+        app:layout_column="0"
+
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+
+        app:layout_gravity="fill"
+        app:layout_columnWeight=".35"
+
         android:textColor="@color/textColorPrimary"
         android:text="@string/daily_forecast_dayOfWeek_default_value"
         tools:text="Monday"/>
 
     <ImageView
         android:id="@+id/daily_forecast_image"
-        android:layout_row="0"
-        android:layout_column="1"
-        android:layout_gravity="center_vertical"
+        app:layout_row="0"
+        app:layout_column="1"
+
         android:layout_width="@dimen/weather_image_size"
         android:layout_height="@dimen/weather_image_size"
+
+        app:layout_gravity="center_horizontal"
+        app:layout_columnWeight=".25"
+
         android:contentDescription="@string/weather_image_contentDescription"
         android:src="@color/colorAccent"/>
 
     <TextView
         android:id="@+id/daily_forecast_tempHigh"
-        android:layout_row="0"
-        android:layout_column="2"
-        android:layout_gravity="center_vertical"
-        android:minWidth="@dimen/daily_forecast_tempHigh_minWidth"
-        android:gravity="end"
+        app:layout_row="0"
+        app:layout_column="2"
+
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+
+        app:layout_gravity="fill"
+        app:layout_columnWeight=".25"
+
         android:textColor="@color/textColorPrimary"
         android:text="@string/daily_forecast_tempHigh_default_value"
         tools:text="80"/>
 
     <TextView
         android:id="@+id/daily_forecast_tempLow"
-        android:layout_row="0"
-        android:layout_column="3"
-        android:layout_gravity="center_vertical|end"
-        android:gravity="end"
+        app:layout_row="0"
+        app:layout_column="3"
+
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        app:layout_gravity="fill"
+        android:gravity="right"
+        app:layout_columnWeight=".15"
+
         android:textColor="@color/textColorSecondary"
         android:text="@string/daily_forecast_tempLow_default_value"
         tools:text="50"/>
 
-</GridLayout>
+</android.support.v7.widget.GridLayout>
