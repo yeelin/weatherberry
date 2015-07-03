@@ -55,7 +55,14 @@ public class CurrentWeatherDataHelper {
             valuesArrayList = buildContentValues(urlConnection);
             if (valuesArrayList != null && valuesArrayList.size() > 0) {
                 augmentData(valuesArrayList, userFavorite);
-                persistData(context, valuesArrayList);
+                if (userFavorite) {
+                    //this is a user favorite, so use insert with replace on conflict
+                    persistData(context, valuesArrayList);
+                }
+                else {
+                    //this is current location, so use update except for the first time where we'll use insert
+                    updateData(context, valuesArrayList);
+                }
             }
         }
         catch (MalformedURLException e) {
@@ -196,9 +203,42 @@ public class CurrentWeatherDataHelper {
      */
     public static void persistData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
         Log.d(TAG, "persistData");
-        context.getContentResolver().bulkInsert(
+
+        //warn if size is > 1
+        if (valuesArrayList.size() > 1) {
+            Log.w(TAG, "persistData: There should not be more than 1 content values object");
+        }
+
+//        context.getContentResolver().bulkInsert(
+//                CurrentWeatherContract.URI,
+//                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
+        context.getContentResolver().insert(CurrentWeatherContract.URI, valuesArrayList.get(0));
+    }
+
+    /**
+     * Updates data in current_weather table.
+     * @param context
+     * @param valuesArrayList
+     */
+    public static void updateData(Context context, @NonNull ArrayList<ContentValues> valuesArrayList) {
+        Log.d(TAG, "updateData");
+
+        //warn if size is > 1
+        if (valuesArrayList.size() > 1) {
+            Log.w(TAG, "updateData: There should not be more than 1 content values object");
+        }
+
+        //update non-user favorite from current weather table
+        int rowsUpdated = context.getContentResolver().update(
                 CurrentWeatherContract.URI,
-                valuesArrayList.toArray(new ContentValues[valuesArrayList.size()]));
+                valuesArrayList.get(0),
+                BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
+                BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
+
+        if (rowsUpdated == 0) {
+            Log.d(TAG, "updateData: No rows updated, so trying to insert instead");
+            context.getContentResolver().insert(CurrentWeatherContract.URI, valuesArrayList.get(0));
+        }
     }
 
     /**

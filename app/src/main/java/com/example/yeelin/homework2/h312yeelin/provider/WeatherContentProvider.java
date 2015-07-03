@@ -234,8 +234,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     @Override
-    public Uri insert(Uri uri,
-                      ContentValues values) {
+    public Uri insert(Uri uri, ContentValues values) {
         Log.d(TAG, String.format("insert: Uri:%s", uri.toString()));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -294,9 +293,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     @Override
-    public int delete(Uri uri,
-                      String selection,
-                      String[] selectionArgs) {
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
         Log.d(TAG, String.format("delete: Uri: %s, Selection:%s, SelectionArgs:%s", uri.toString(), selection, Arrays.toString(selectionArgs)));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -368,10 +365,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     @Override
-    public int update(Uri uri,
-                      ContentValues values,
-                      String selection,
-                      String[] selectionArgs) {
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         Log.d(TAG, String.format("update: Uri:%s Selection:%s SelectionArgs:%s", uri.toString(), selection, Arrays.toString(selectionArgs)));
         //get a writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -384,7 +378,6 @@ public class WeatherContentProvider extends ContentProvider {
         switch (match) {
             case ALL_ROWS: //ends with "table"
                 table = uri.getLastPathSegment();
-
                 break;
 
             case ROW_BY_ID: //ends with "table/#"
@@ -443,8 +436,7 @@ public class WeatherContentProvider extends ContentProvider {
      * @return
      */
     @Override
-    public int bulkInsert(Uri uri,
-                          @NonNull ContentValues[] valuesArray) {
+    public int bulkInsert(Uri uri, @NonNull ContentValues[] valuesArray) {
         Log.d(TAG, String.format("bulkInsert: Uri:%s", uri.toString()));
         //get writable db
         SQLiteDatabase db = dbHelper.getWritableDatabase();

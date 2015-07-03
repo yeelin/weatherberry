@@ -103,7 +103,7 @@ public class FetchDataHelper {
             if (cityId == BaseWeatherContract.NO_ID) return;
 
             //delete previous entry for current location
-            CurrentWeatherDataHelper.purgeOldData(context);
+            //CurrentWeatherDataHelper.purgeOldData(context);
             //TODO: purge from daily forecast and tri hour forecast tables as well
 
             //fetch current weather, daily forecast, and tri hour for city id
