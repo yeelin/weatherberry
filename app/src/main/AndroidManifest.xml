@@ -73,11 +73,6 @@
             android:enabled="true"
             android:exported="false" />
 
-        <!-- Not used anymore-->
-        <service
-            android:name=".service.WeatherService"
-            android:exported="false" />
-
         <!-- Intent service to fetch and load data -->
         <service
             android:name=".service.NetworkIntentService"
