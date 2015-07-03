@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">H312 yeelin</string>
+    <string name="app_name">Weatherberry</string>
     <string name="title_launcher">Weatherberry</string>
     <string name="title_current_weather_activity">Current conditions</string>
     <string name="title_tri_hour_forecast_activity">Three hour forecast</string>

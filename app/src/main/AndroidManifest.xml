@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.yeelin.homework2.h312yeelin" >
+    package="com.example.yeelin.homework.weatherberry" >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -19,7 +19,7 @@
         android:theme="@style/AppTheme" >
         <!-- activities -->
         <activity
-            android:name=".activity.CurrentWeatherAndDailyForecastPagerActivity"
+            android:name="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity"
             android:label="@string/title_launcher" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,25 +28,25 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.TriHourForecastActivity"
+            android:name="com.example.yeelin.homework.weatherberry.activity.TriHourForecastActivity"
             android:label="@string/title_tri_hour_forecast_activity"
-            android:parentActivityName=".activity.CurrentWeatherAndDailyForecastPagerActivity" >
+            android:parentActivityName="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
+                android:value="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity" />
         </activity>
         <activity
-            android:name=".activity.SearchActivity"
+            android:name="com.example.yeelin.homework.weatherberry.activity.SearchActivity"
             android:label="@string/title_search_activity"
-            android:parentActivityName=".activity.CurrentWeatherAndDailyForecastPagerActivity">
+            android:parentActivityName="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
+                android:value="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity" />
         </activity>
         <activity
-            android:name=".activity.DummyActivity"
+            android:name="com.example.yeelin.homework.weatherberry.activity.DummyActivity"
             android:label="@string/title_dummy_activity"
-            android:parentActivityName=".activity.SearchActivity">
+            android:parentActivityName="com.example.yeelin.homework.weatherberry.activity.SearchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
@@ -55,39 +55,39 @@
                 android:resource="@xml/searchable"/>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.SearchActivity" />
+                android:value="com.example.yeelin.homework.weatherberry.activity.SearchActivity" />
         </activity>
         <activity
-            android:name=".activity.FavoritesActivity"
+            android:name="com.example.yeelin.homework.weatherberry.activity.FavoritesActivity"
             android:label="@string/title_favorites_activity"
-            android:parentActivityName=".activity.CurrentWeatherAndDailyForecastPagerActivity">
+            android:parentActivityName="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.CurrentWeatherAndDailyForecastPagerActivity" />
+                android:value="com.example.yeelin.homework.weatherberry.activity.CurrentWeatherAndDailyForecastPagerActivity" />
         </activity>
 
         <!-- content provider -->
         <provider
-            android:name=".provider.WeatherContentProvider"
-            android:authorities="com.example.yeelin.homework2.h312yeelin.provider.WeatherContentProvider"
+            android:name="com.example.yeelin.homework.weatherberry.provider.WeatherContentProvider"
+            android:authorities="com.example.yeelin.homework.weatherberry.provider.WeatherContentProvider"
             android:enabled="true"
             android:exported="false" />
 
         <!-- Intent service to fetch and load data -->
         <service
-            android:name=".service.NetworkIntentService"
+            android:name="com.example.yeelin.homework.weatherberry.service.NetworkIntentService"
             android:exported="false" />
 
         <!-- Job scheduler -->
         <service
-            android:name=".service.NetworkJobService"
+            android:name="com.example.yeelin.homework.weatherberry.service.NetworkJobService"
             android:enabled="@bool/use_job_service"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
 
         <!-- Broadcast receiver for alarms -->
         <receiver
-            android:name=".receiver.AlarmBroadcastReceiver"
+            android:name="com.example.yeelin.homework.weatherberry.receiver.AlarmBroadcastReceiver"
             android:enabled="@bool/use_alarm_service"
             android:exported="false">
             <intent-filter>

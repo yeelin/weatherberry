@@ -18,7 +18,7 @@
 
     <fragment
         android:id="@+id/favorites_fragment"
-        android:name="com.example.yeelin.homework2.h312yeelin.fragment.FavoritesFragment"
+        android:name="com.example.yeelin.homework.weatherberry.fragment.FavoritesFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

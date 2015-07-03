@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.yeelin.homework2.h312yeelin.activity.TriHourForecastActivity">
+    tools:context="com.example.yeelin.homework.weatherberry.activity.TriHourForecastActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"

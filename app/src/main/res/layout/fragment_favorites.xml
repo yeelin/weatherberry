@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.yeelin.homework2.h312yeelin.fragment.FavoritesFragment">
+    tools:context="com.example.yeelin.homework.weatherberry.fragment.FavoritesFragment">
 
     <RelativeLayout
         android:id="@+id/favorites_listContainer"
