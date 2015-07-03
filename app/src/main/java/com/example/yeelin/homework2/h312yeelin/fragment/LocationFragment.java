@@ -1,6 +1,5 @@
 package com.example.yeelin.homework2.h312yeelin.fragment;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -14,7 +13,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import com.example.yeelin.homework2.h312yeelin.fragmentUtils.LocationUtils;
@@ -67,7 +65,7 @@ public class LocationFragment
     //private boolean hasRequestedLocationUpdates = false;
 
     //listener member variable
-    private LocationFragmentListener locationListener;
+    //private LocationFragmentListener locationListener;
 
     //handler member variable for reading shared preferences
     private Handler handler;
@@ -75,9 +73,9 @@ public class LocationFragment
     /**
      * Listener interface. To be implemented by whoever is interested in events from this fragment.
      */
-    public interface LocationFragmentListener extends BasePlayServicesFragmentListener {
-        public void onNewLocation(@Nullable Location location, @Nullable String locationName);
-    }
+//    public interface LocationFragmentListener extends BasePlayServicesFragmentListener {
+//        public void onNewLocation(@Nullable Location location, @Nullable String locationName);
+//    }
 
     /**
      * Returns a new instance of the Location fragment. Use this instead of calling the constructor
@@ -126,24 +124,24 @@ public class LocationFragment
                 .addApi(LocationServices.API);
     }
 
-    /**
-     * Make sure the hosting activity or fragment implements the listener interface.
-     * @param activity
-     */
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        Fragment parent = getParentFragment();
-        Object objectToCast = parent != null ? parent : activity;
-        try {
-            locationListener = (LocationFragmentListener) objectToCast;
-        }
-        catch (ClassCastException e) {
-            throw new ClassCastException(objectToCast.getClass().getSimpleName()
-                    + " must implement LocationFragmentListener");
-        }
-    }
+//    /**
+//     * Make sure the hosting activity or fragment implements the listener interface.
+//     * @param activity
+//     */
+//    @Override
+//    public void onAttach(Activity activity) {
+//        super.onAttach(activity);
+//
+//        Fragment parent = getParentFragment();
+//        Object objectToCast = parent != null ? parent : activity;
+//        try {
+//            locationListener = (LocationFragmentListener) objectToCast;
+//        }
+//        catch (ClassCastException e) {
+//            throw new ClassCastException(objectToCast.getClass().getSimpleName()
+//                    + " must implement LocationFragmentListener");
+//        }
+//    }
 
     /**
      * Configure the fragment
@@ -152,9 +150,6 @@ public class LocationFragment
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //keep fragment alive across rotation
-        setRetainInstance(true);
 
         //create a handler thread for the handler
         HandlerThread handlerThread = new HandlerThread("SharedPreferencesThread");
@@ -198,7 +193,7 @@ public class LocationFragment
      */
     @Override
     public void onDetach() {
-        locationListener = null;
+//        locationListener = null;
         super.onDetach();
     }
 
@@ -418,10 +413,7 @@ public class LocationFragment
         getActivity().startService(currentLocationLoadIntent);
 
         //notify listener about the new location with city name
-        //since we are retaining the fragment, the listener may not exist all the time so check for null
-        if (locationListener != null) {
-            locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
-        }
+        //locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
     }
 
     /**

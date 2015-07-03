@@ -37,8 +37,8 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         extends BasePlayServicesActivity
         implements CurrentWeatherAndDailyForecastFragment.CurrentWeatherAndDailyForecastFragmentListener,
         CurrentWeatherLoaderCallbacks.CurrentWeatherLoaderListener,
-        ViewPager.OnPageChangeListener,
-        LocationFragment.LocationFragmentListener {
+        ViewPager.OnPageChangeListener {
+//        LocationFragment.LocationFragmentListener {
     //logcat
     private static final String TAG = CurrentWeatherAndDailyForecastPagerActivity.class.getCanonicalName();
 
@@ -402,27 +402,27 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         }
     }
 
-    /**
-     * Callback from LocationFragmentListener
-     * Presents a toast saying that current location has been fixed and geocoded. Open weather API has not been called yet.
-     * TODO: Should probably remove this in a real app
-     *
-     * @param location
-     * @param locationName
-     */
-    @Override
-    public void onNewLocation(@Nullable Location location, @Nullable String locationName) {
-        Log.d(TAG, "onNewLocation: Location Name: " + locationName + " Location : " + location);
-
-        if (location != null) {
-            String msg;
-            if (locationName != null) {
-                msg = String.format("Current location is %s (%f, %f),", locationName, location.getLatitude(), location.getLongitude());
-            }
-            else {
-                msg = String.format("Current location is (%f, %f),", location.getLatitude(), location.getLongitude());
-            }
-            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-        }
-    }
+//    /**
+//     * Callback from LocationFragmentListener
+//     * Presents a toast saying that current location has been fixed and geocoded. Open weather API has not been called yet.
+//     * TODO: Should probably remove this in a real app
+//     *
+//     * @param location
+//     * @param locationName
+//     */
+//    @Override
+//    public void onNewLocation(@Nullable Location location, @Nullable String locationName) {
+//        Log.d(TAG, "onNewLocation: Location Name: " + locationName + " Location : " + location);
+//
+//        if (location != null) {
+//            String msg;
+//            if (locationName != null) {
+//                msg = String.format("Current location is %s (%f, %f),", locationName, location.getLatitude(), location.getLongitude());
+//            }
+//            else {
+//                msg = String.format("Current location is (%f, %f),", location.getLatitude(), location.getLongitude());
+//            }
+//            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+//        }
+//    }
 }
