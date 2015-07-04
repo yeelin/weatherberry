@@ -42,7 +42,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     private static final String TAG = CurrentWeatherAndDailyForecastPagerActivity.class.getCanonicalName();
 
     //tag for location fragment
-    private static final String TAG_LOCATION_FRAGMENT = CurrentWeatherAndDailyForecastActivity.class.getSimpleName() + ".locationFragment";
+    private static final String TAG_LOCATION_FRAGMENT = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".locationFragment";
 
     //extras for savedInstanceState
     private static final String EXTRA_PAGER_POSITION = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".pagerPosition";
