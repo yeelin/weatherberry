@@ -1,6 +1,19 @@
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
+# Ignore gradle files
+.gradle/
+
+# Local configuration file, sdk path, etc
+local.properties
+
+# All intelliJ files
+.idea/
+
+# Mac OS X clutter
 .DS_Store
-/build
+
+# Build files
+build/
+app/build
+
+# Ignore iml files
+*.iml
+app/*.iml
