@@ -51,8 +51,8 @@ public class CacheUtils {
             cache.flush();
 
             if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Cache flushed");
-                logCache();
+                //Log.d(TAG, "Cache flushed");
+                //logCache();
             }
         }
     }
@@ -110,7 +110,7 @@ public class CacheUtils {
     static class CacheFlushTask extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d(TAG, "doInBackground: Flushing cache");
+            //Log.d(TAG, "doInBackground: Flushing cache");
             CacheUtils.flushCache();
             return null;
         }

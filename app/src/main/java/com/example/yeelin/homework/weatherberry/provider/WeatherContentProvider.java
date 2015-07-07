@@ -221,9 +221,8 @@ public class WeatherContentProvider extends ContentProvider {
                 sortOrder);
 
         //register cursor to watch uri for changes so that caller will know if the data changes later
-        Log.d(TAG, "query: setNotificationUri:" + uri.toString());
+        //Log.d(TAG, "query: setNotificationUri:" + uri.toString());
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        //return cursor
         return cursor;
     }
 
@@ -278,10 +277,10 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
-        Log.d(TAG, "insert: notifyChange:" + uri.toString());
+        //Log.d(TAG, "insert: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return uri with appended row id
-        Log.d(TAG, "insert: Row inserted:" + id);
+        //Log.d(TAG, "insert: Row inserted:" + id);
         return ContentUris.withAppendedId(uri, id);
     }
 
@@ -349,10 +348,10 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
-        Log.d(TAG, "delete: notifyChange:" + uri.toString());
+        //Log.d(TAG, "delete: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows deleted
-        Log.d(TAG, "delete: Rows deleted:" + rowsDeleted);
+        //Log.d(TAG, "delete: Rows deleted:" + rowsDeleted);
         return rowsDeleted;
     }
 
@@ -422,10 +421,10 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
-        Log.d(TAG, "update: notifyChange:" + uri.toString());
+        //Log.d(TAG, "update: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows updated
-        Log.d(TAG, "update: Rows updated:" + rowsUpdated);
+        //Log.d(TAG, "update: Rows updated:" + rowsUpdated);
         return rowsUpdated;
     }
 
@@ -481,10 +480,10 @@ public class WeatherContentProvider extends ContentProvider {
             db.endTransaction();
         }
         //notify users with active cursors to reload data
-        Log.d(TAG, "bulkInsert: notifyChange:" + uri.toString());
+        //Log.d(TAG, "bulkInsert: notifyChange:" + uri.toString());
         getContext().getContentResolver().notifyChange(uri, null, false);
         //return count of rows inserted
-        Log.d(TAG, "bulkInsert: Rows inserted:" + rowsInserted);
+        //Log.d(TAG, "bulkInsert: Rows inserted:" + rowsInserted);
         return rowsInserted;
     }
 

@@ -106,7 +106,7 @@ public class FetchImageHelper {
             }
         }
 
-        Log.d(TAG, String.format("getUniqueIconNamesToFetch: Count:%d, Contents:%s", iconNameMap.size(), iconNameMap.toString()));
+        //Log.d(TAG, String.format("getUniqueIconNamesToFetch: Count:%d, Contents:%s", iconNameMap.size(), iconNameMap.toString()));
         return iconNameMap.values();
     }
 }

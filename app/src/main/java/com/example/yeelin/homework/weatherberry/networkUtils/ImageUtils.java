@@ -46,7 +46,7 @@ public class ImageUtils {
      * @param iconNames
      */
     public static void getImages(Context context, @NonNull Collection<String> iconNames) {
-        Log.d(TAG, "getImages: Collection: " + iconNames);
+        //Log.d(TAG, "getImages: Collection: " + iconNames);
         for (final String iconName: iconNames) {
             //Log.d(TAG, "getImages: Fetching icon:" + iconName);
             Uri iconUri = buildIconUri(iconName);
