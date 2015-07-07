@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 
 import com.example.yeelin.homework.weatherberry.provider.DailyForecastContract;
 
@@ -154,7 +155,7 @@ public class DailyForecastLoaderCallbacks
      */
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        //Log.d(TAG, "onLoadFinished: Result is " + (cursor != null ? "not null" : "null"));
+        //Log.d(TAG, "onLoadFinished: Cursor with LoaderId:" +  LoaderIds.getLoaderIdForInt(loader.getId()) + " is " + (cursor != null ? "not null" : "null"));
 
         //let the listener know
         DailyForecastLoaderListener listener = listenerWeakReference.get();

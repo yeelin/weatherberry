@@ -78,28 +78,36 @@ public class CurrentWeatherStatePagerAdapter
             return null;
         }
 
-        cursor.moveToPosition(position);
+        Log.d(TAG, "getItem: Position:" + position);
+        if (cursor.moveToPosition(position)) {
 
-        //read values from the cursor
-        long cityId = cursor.getLong(CurrentWeatherCursorPosition.CITY_ID_POS.getValue());
-        String cityName = cursor.getString(CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
-        String description = cursor.getString(CurrentWeatherCursorPosition.DESCRIPTION_POS.getValue());
-        double temp = cursor.getDouble(CurrentWeatherCursorPosition.TEMP_POS.getValue());
-        double humidity = cursor.getDouble(CurrentWeatherCursorPosition.HUMIDITY_POS.getValue());
-        double windSpeed = cursor.getDouble(CurrentWeatherCursorPosition.WINDSPEED_POS.getValue());
-        String iconName = cursor.getString(CurrentWeatherCursorPosition.ICON_POS.getValue());
-        long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
+            //read values from the cursor
+            long cityId = cursor.getLong(CurrentWeatherCursorPosition.CITY_ID_POS.getValue());
+            String cityName = cursor.getString(CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
+            String description = cursor.getString(CurrentWeatherCursorPosition.DESCRIPTION_POS.getValue());
+            double temp = cursor.getDouble(CurrentWeatherCursorPosition.TEMP_POS.getValue());
+            double humidity = cursor.getDouble(CurrentWeatherCursorPosition.HUMIDITY_POS.getValue());
+            double windSpeed = cursor.getDouble(CurrentWeatherCursorPosition.WINDSPEED_POS.getValue());
+            String iconName = cursor.getString(CurrentWeatherCursorPosition.ICON_POS.getValue());
+            long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
 
-        //instantiate a new fragment
-        return CurrentWeatherAndDailyForecastFragment.newInstance(
-                cityId,
-                cityName,
-                description,
-                temp,
-                humidity,
-                windSpeed,
-                iconName,
-                lastUpdateMillis);
+            Log.d(TAG, String.format("getItem: Instantiating fragment with cityName:%s, position:%d", cityName, position));
+            //instantiate a new fragment
+            return CurrentWeatherAndDailyForecastFragment.newInstance(
+                    cityId,
+                    cityName,
+                    description,
+                    temp,
+                    humidity,
+                    windSpeed,
+                    iconName,
+                    lastUpdateMillis,
+                    position);
+        }
+        else {
+            Log.e(TAG, "getItem: Failed to move to cursor position:%d" + position);
+            return null;
+        }
     }
 
     /**
@@ -111,6 +119,7 @@ public class CurrentWeatherStatePagerAdapter
         if (cursor == null) {
             return 0;
         }
+        Log.d(TAG, "getCount: Cursor count:" + cursor.getCount());
         return cursor.getCount();
     }
 
@@ -133,6 +142,45 @@ public class CurrentWeatherStatePagerAdapter
      */
     @Override
     public int getItemPosition(Object object) {
+        //Log.d(TAG, "getItemPosition: Object: " + object.toString());
+        //return POSITION_NONE;
+        //return POSITION_UNCHANGED;
+
+        //cast object to fragment
+        CurrentWeatherAndDailyForecastFragment fragment = (CurrentWeatherAndDailyForecastFragment) object;
+
+        //get pager position of fragment when it was created
+        int fragmentPositionInPager = fragment.getPositionInPager();
+        String cityName = fragment.getCityName();
+        Log.d(TAG, String.format("getItemPosition: fragmentPositionInPager:%d, cityName:%s", fragmentPositionInPager, cityName));
+
+        //try to move the cursor to the same position and see if the cityIds match
+        if (cursor.moveToPosition(fragmentPositionInPager)) {
+            if (fragment.getCityId() == cursor.getLong(CurrentWeatherCursorPosition.CITY_ID_POS.getValue())) {
+                //the city Id of the fragment and the cursor at the same position match, so return POSITION_UNCHANGED
+                Log.d(TAG, String.format("getItemPosition: Position unchanged, cityName:%s", cityName));
+                return POSITION_UNCHANGED;
+            }
+        }
+
+        //no match which means the fragment moved, or got removed
+        //loop over the entire cursor to find the new position
+        //return new position or NONE if no match found
+//        if (cursor.moveToFirst()) {
+//            Log.d(TAG, String.format("getItemPosition: Cursor moved to first, cityName:%s", cityName));
+//            do {
+//                if (fragment.getCityId() == cursor.getLong(CurrentWeatherCursorPosition.CITY_ID_POS.getValue())) {
+//                    Log.d(TAG, String.format("getItemPosition: New Position found:%d, cityName:%s", cursor.getPosition(), cityName));
+//                    fragment.setPositionInPager(cursor.getPosition());
+//                    return cursor.getPosition();
+//                }
+//            }
+//            while (cursor.moveToNext());
+//        }
+
+        //cannot find the given fragment's position in the cursor.
+        //the fragment must have been removed, so return POSITION_NONE
+        Log.d(TAG, String.format("getItemPosition: Position none, cityName:%s", cityName));
         return POSITION_NONE;
     }
 

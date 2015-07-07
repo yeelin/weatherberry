@@ -50,6 +50,7 @@ public class CurrentWeatherAndDailyForecastFragment
     private static final String ARG_WIND_SPEED = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".windSpeed";
     private static final String ARG_ICON = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".icon";
     private static final String ARG_TIMESTAMP = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".timestamp";
+    private static final String ARG_POSITION = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".positionInPager";
 
     //member variables
     private long cityId = BaseWeatherContract.NO_ID;
@@ -60,6 +61,7 @@ public class CurrentWeatherAndDailyForecastFragment
     private double windSpeed;
     private String iconName;
     private long lastUpdateMillis;
+    private int positionInPager;
 
     //listener member variable
     private CurrentWeatherAndDailyForecastFragmentListener listener;
@@ -106,7 +108,8 @@ public class CurrentWeatherAndDailyForecastFragment
                                                                      double humidity,
                                                                      double windSpeed,
                                                                      String iconName,
-                                                                     long lastUpdateMillis) {
+                                                                     long lastUpdateMillis,
+                                                                     int positionInPager) {
         Bundle args = new Bundle();
         args.putLong(ARG_CITY_ID, cityId);
         args.putString(ARG_CITY_NAME, cityName);
@@ -116,6 +119,7 @@ public class CurrentWeatherAndDailyForecastFragment
         args.putDouble(ARG_WIND_SPEED, windSpeed);
         args.putString(ARG_ICON, iconName);
         args.putLong(ARG_TIMESTAMP, lastUpdateMillis);
+        args.putInt(ARG_POSITION, positionInPager);
 
         CurrentWeatherAndDailyForecastFragment fragment = new CurrentWeatherAndDailyForecastFragment();
         fragment.setArguments(args);
@@ -129,6 +133,32 @@ public class CurrentWeatherAndDailyForecastFragment
     public CurrentWeatherAndDailyForecastFragment() {
 
     }
+
+    /**
+     * Returns current position in the view pager.
+     * @return
+     */
+    public int getPositionInPager() { return positionInPager; }
+
+    /**
+     * Setter for current position in the view pager
+     * @param newPosition
+     */
+    public void setPositionInPager(int newPosition) {
+        positionInPager = newPosition;
+    }
+
+    /**
+     * Returns the cityId of this fragment
+     * @return
+     */
+    public long getCityId() { return cityId; }
+
+    /**
+     * Returns the city name of this fragment.
+     * @return
+     */
+    public String getCityName() { return cityName; }
 
     /**
      * Make sure the hosting activity implements the listener interface.
@@ -166,6 +196,7 @@ public class CurrentWeatherAndDailyForecastFragment
             windSpeed = args.getDouble(ARG_WIND_SPEED, 0.0);
             iconName = args.getString(ARG_ICON, "");
             lastUpdateMillis = args.getLong(ARG_TIMESTAMP, 0);
+            positionInPager = args.getInt(ARG_POSITION, 0);
         }
     }
 
@@ -214,17 +245,6 @@ public class CurrentWeatherAndDailyForecastFragment
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //tell the activity to set up the action bar
-        //listener.onCurrentWeatherLoadComplete(cityName);
-
-        //initialize the current weather loader
-//        Log.d(TAG, "onActivityCreated: Init current weather loader");
-//        CurrentWeatherLoaderCallbacks.initLoader(
-//                getActivity(),
-//                getLoaderManager(),
-//                this,
-//                PROJECTION_CURRENT_WEATHER);
-
         //initialize the daily forecast loader
         Log.d(TAG, "onActivityCreated: Init daily forecast loader");
         DailyForecastLoaderCallbacks.initLoader(
@@ -254,45 +274,23 @@ public class CurrentWeatherAndDailyForecastFragment
         ViewHolder viewHolder = getViewHolder();
         if (viewHolder == null) {
             //nothing to do since views are not ready yet
-            Log.d(TAG, "onLoadComplete: view holder is null");
+            Log.d(TAG, "onLoadComplete: View holder is null, so nothing to do.");
             return;
         }
 
-//        if (loaderId == LoaderIds.CURRENT_WEATHER_LOADER) {
-//            Log.d(TAG, "This should not happen");
-//                if (cursor == null) {
-//                    Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor is null. ", loaderId));
-//                    //loader is resetting
-//                    return;
-//                }
-//
-//                if (cursor.moveToFirst()) {
-//                    Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. View is not null, cursor is not empty", loaderId));
-//                    //update model
-//                    updateModel(cursor);
-//
-//                    //update current view
-//                    updateCurrentWeatherView(viewHolder, cursor);
-//
-//                    //notify the listener to set the title on the toolbar
-//                    listener.onCurrentWeatherLoadComplete(cityName);
-//                }
-//                else {
-//                    Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. View is not null but cursor is empty", loaderId));
-//                    //resetCurrentWeatherView(viewHolder);
-//                }
-//        }
-
         if (loaderId == LoaderIds.DAILY_FORECAST_LOADER) {
-            Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Cursor swapped", loaderId));
             DailyForecastAdapter dailyForecastAdapter = (DailyForecastAdapter) viewHolder.dailyForecastListView.getAdapter();
             dailyForecastAdapter.swapCursor(cursor);
 
             //show the list container and hide the progress bar
             if (viewHolder.dailyForecastListContainer.getVisibility() != View.VISIBLE) {
+                Log.d(TAG, String.format("onLoadComplete: Daily list container is not visible, so animating to make visible. City name:%s", cityName));
                 AnimationUtils.crossFadeViews(getActivity(),
                         viewHolder.dailyForecastListContainer,
                         viewHolder.dailyForecastProgressBar);
+            }
+            else {
+                Log.d(TAG, String.format("onLoadComplete: Daily list container is visible, so not doing any animation. City name:%s", cityName));
             }
         }
         else {
@@ -319,34 +317,17 @@ public class CurrentWeatherAndDailyForecastFragment
         //for logging purposes only
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE yyyy-MM-dd HH:mm Z", Locale.US); //EEEE is Day of week in long form, e.g. Monday, Tuesday, etc.
         String forecastFormatted = simpleDateFormat.format(new Date(forecastMillis));
-        Log.d(TAG, String.format("onDailyForecastItemClick: Position:%d Forecast date:%s", position, forecastFormatted));
+        Log.d(TAG, String.format("onItemClick: Position:%d Forecast date:%s", position, forecastFormatted));
 
         //pass city id, city name, and forecast time to listener
         listener.onDailyForecastItemClick(cityId, cityName, forecastMillis);
     }
 
     /**
-     * Helper method to update the member variables
-     * @param cursor
-     */
-//    private void updateModel(@NonNull Cursor cursor) {
-//        cityId = cursor.getLong(CurrentWeatherCursorPosition.CITY_ID_POS.getValue());
-//        cityName = cursor.getString(CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
-//    }
-
-    /**
      * Helper method to update the view
      * @param viewHolder
      */
     private void updateCurrentWeatherView(@NonNull ViewHolder viewHolder) {
-
-        //read values from the cursor
-//        String description = cursor.getString(CurrentWeatherCursorPosition.DESCRIPTION_POS.getValue());
-//        double temp = cursor.getDouble(CurrentWeatherCursorPosition.TEMP_POS.getValue());
-//        double humidity = cursor.getDouble(CurrentWeatherCursorPosition.HUMIDITY_POS.getValue());
-//        double windSpeed = cursor.getDouble(CurrentWeatherCursorPosition.WINDSPEED_POS.getValue());
-//        long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
-
         //format as necessary
         Date lastUpdateDate = new Date(lastUpdateMillis);
         String lastUpdateInUserFormat = DateFormat.getMediumDateFormat(getActivity()).format(lastUpdateDate) +
@@ -361,7 +342,7 @@ public class CurrentWeatherAndDailyForecastFragment
         //load the image using picasso
         ImageUtils.loadImage(getActivity(), iconName, viewHolder.currentIcon);
 
-        Log.d(TAG, String.format("onLoadComplete: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
+        Log.d(TAG, String.format("updateCurrentWeatherView: Updating views with cityName:%s, description:%s, temp:%f, humidity:%f, windspeed:%f lastUpdate:%s",
                 cityName, description, temp, humidity, windSpeed, lastUpdateInUserFormat));
     }
 
