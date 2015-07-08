@@ -50,7 +50,10 @@ public class CurrentWeatherAndDailyForecastFragment
     private static final String ARG_WIND_SPEED = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".windSpeed";
     private static final String ARG_ICON = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".icon";
     private static final String ARG_TIMESTAMP = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".timestamp";
-    private static final String ARG_POSITION = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".positionInPager";
+    private static final String ARG_PAGER_POSITION = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".positionInPager";
+
+    //saved instance state
+    private static final String STATE_PAGER_POSITION = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".positionInPager";
 
     //member variables
     private long cityId = BaseWeatherContract.NO_ID;
@@ -76,8 +79,8 @@ public class CurrentWeatherAndDailyForecastFragment
 
     /**
      * Creates a new instance of WeatherOverviewFragment.
-     * Hosting activity should use this instead of constructor.
      *
+     * @deprecated
      * @return
      */
     public static CurrentWeatherAndDailyForecastFragment newInstance() {
@@ -90,6 +93,8 @@ public class CurrentWeatherAndDailyForecastFragment
     }
 
     /**
+     * Creates a new instance of WeatherOverviewFragment.
+     * Hosting activity should use this instead of constructor.
      *
      * @param cityId
      * @param cityName
@@ -99,6 +104,7 @@ public class CurrentWeatherAndDailyForecastFragment
      * @param windSpeed
      * @param iconName
      * @param lastUpdateMillis
+     * @param positionInPager
      * @return
      */
     public static CurrentWeatherAndDailyForecastFragment newInstance(long cityId,
@@ -119,7 +125,7 @@ public class CurrentWeatherAndDailyForecastFragment
         args.putDouble(ARG_WIND_SPEED, windSpeed);
         args.putString(ARG_ICON, iconName);
         args.putLong(ARG_TIMESTAMP, lastUpdateMillis);
-        args.putInt(ARG_POSITION, positionInPager);
+        args.putInt(ARG_PAGER_POSITION, positionInPager);
 
         CurrentWeatherAndDailyForecastFragment fragment = new CurrentWeatherAndDailyForecastFragment();
         fragment.setArguments(args);
@@ -196,7 +202,15 @@ public class CurrentWeatherAndDailyForecastFragment
             windSpeed = args.getDouble(ARG_WIND_SPEED, 0.0);
             iconName = args.getString(ARG_ICON, "");
             lastUpdateMillis = args.getLong(ARG_TIMESTAMP, 0);
-            positionInPager = args.getInt(ARG_POSITION, 0);
+            positionInPager = args.getInt(ARG_PAGER_POSITION, 0);
+        }
+
+        //read saved instance state
+        if (savedInstanceState != null) {
+            if (positionInPager != savedInstanceState.getInt(STATE_PAGER_POSITION)) {
+                Log.d(TAG, String.format("onCreate: Bundle args positionInPager:%d != Saved positionInPager:%d", positionInPager, savedInstanceState.getInt(STATE_PAGER_POSITION)));
+            }
+            positionInPager = savedInstanceState.getInt(STATE_PAGER_POSITION);
         }
     }
 
@@ -238,7 +252,7 @@ public class CurrentWeatherAndDailyForecastFragment
     }
 
     /**
-     *
+     * Initialize the daily forecast loader
      * @param savedInstanceState
      */
     @Override
@@ -256,6 +270,30 @@ public class CurrentWeatherAndDailyForecastFragment
                 BaseWeatherLoaderCallbacks.IdType.CITY_ID);
     }
 
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+
+        //read saved instance state
+        if (savedInstanceState != null) {
+            positionInPager = savedInstanceState.getInt(STATE_PAGER_POSITION);
+        }
+    }
+
+    /**
+     * Save out the position in pager so that we can reconstruct later
+     * @param outState
+     */
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_PAGER_POSITION, positionInPager);
+        Log.d(TAG, String.format("onSaveInstanceState: Pager position:%d, CityName:%s", positionInPager, cityName));
+    }
+
+    /**
+     * Nullify the listener before detaching
+     */
     @Override
     public void onDetach() {
         listener = null;
@@ -295,7 +333,6 @@ public class CurrentWeatherAndDailyForecastFragment
         }
         else {
             Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
-
         }
     }
 
