@@ -148,7 +148,7 @@ public class CurrentWeatherLoaderCallbacks
                 projection,
                 null,
                 null,
-                CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc"); //TODO: may have to change sort order
+                CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc");
     }
 
     /**

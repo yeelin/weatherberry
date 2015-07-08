@@ -145,7 +145,7 @@ public class DailyForecastLoaderCallbacks
                 projection,
                 null,
                 null,
-                DailyForecastContract.Columns.FORECAST_DATETIME + " asc"); //TODO: may have to change sort order
+                DailyForecastContract.Columns.FORECAST_DATETIME + " asc");
     }
 
     /**
