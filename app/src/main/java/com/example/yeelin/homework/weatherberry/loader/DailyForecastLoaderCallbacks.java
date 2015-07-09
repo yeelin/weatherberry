@@ -10,6 +10,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 
+import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.DailyForecastContract;
 
 import java.lang.ref.WeakReference;
@@ -26,6 +27,8 @@ public class DailyForecastLoaderCallbacks
     //bundle args in init loader
     private static final String ARG_URI = DailyForecastLoaderCallbacks.class.getSimpleName() + ".uri";
     private static final String ARG_PROJECTION = DailyForecastLoaderCallbacks.class.getSimpleName() + ".projection";
+    private static final String ARG_SELECTION = DailyForecastLoaderCallbacks.class.getSimpleName() + ".selection";
+    private static final String ARG_SELECTION_ARGS = DailyForecastLoaderCallbacks.class.getSimpleName() + ".selectionArgs";
 
     //member variables
     private Context applicationContext;
@@ -78,17 +81,21 @@ public class DailyForecastLoaderCallbacks
      * @param projection
      * @param id
      * @param idType
+     * @param userFavorite
      */
     public static void initLoader(Context context,
                                   LoaderManager loaderManager,
                                   DailyForecastLoaderListener listener,
                                   String[] projection,
                                   long id,
-                                  IdType idType) {
+                                  IdType idType,
+                                  boolean userFavorite) {
         Bundle args = new Bundle();
         Uri uri = buildUri(DailyForecastContract.URI, id, idType);
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
+        args.putString(ARG_SELECTION, BaseWeatherContract.whereClauseEquals(DailyForecastContract.Columns.USER_FAVORITE));
+        args.putStringArray(ARG_SELECTION_ARGS, BaseWeatherContract.whereArgs(userFavorite ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO));
 
         loaderManager.initLoader(
                 LoaderIds.DAILY_FORECAST_LOADER.getValue(),
@@ -138,13 +145,15 @@ public class DailyForecastLoaderCallbacks
         //get bundle args
         Uri uri = args.getParcelable(ARG_URI);
         String[] projection = args.getStringArray(ARG_PROJECTION);
+        String selection = args.getString(ARG_SELECTION);
+        String[] selectionArgs = args.getStringArray(ARG_SELECTION_ARGS);
 
         //return a new cursor loader
         return new CursorLoader(applicationContext,
                 uri,
                 projection,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 DailyForecastContract.Columns.FORECAST_DATETIME + " asc");
     }
 

@@ -106,7 +106,7 @@ public class FavoritesLoaderCallbacks implements LoaderManager.LoaderCallbacks<C
                 uri,
                 projection,
                 BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
-                BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_YES),
+                BaseWeatherContract.whereArgs(BaseWeatherContract.USER_FAVORITE_YES),
                 CurrentWeatherContract.Columns.CITY_NAME + " asc");
     }
 

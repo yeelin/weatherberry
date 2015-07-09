@@ -50,6 +50,7 @@ public class CurrentWeatherAndDailyForecastFragment
     private static final String ARG_WIND_SPEED = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".windSpeed";
     private static final String ARG_ICON = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".icon";
     private static final String ARG_TIMESTAMP = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".timestamp";
+    private static final String ARG_USER_FAVORITE = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".userFavorite";
     private static final String ARG_PAGER_POSITION = CurrentWeatherAndDailyForecastFragment.class.getSimpleName() + ".positionInPager";
 
     //saved instance state
@@ -64,6 +65,7 @@ public class CurrentWeatherAndDailyForecastFragment
     private double windSpeed;
     private String iconName;
     private long lastUpdateMillis;
+    private boolean userFavorite;
     private int positionInPager;
 
     //listener member variable
@@ -74,7 +76,7 @@ public class CurrentWeatherAndDailyForecastFragment
      */
     public interface CurrentWeatherAndDailyForecastFragmentListener {
         //public void onCurrentWeatherLoadComplete(String cityName);
-        public void onDailyForecastItemClick(long cityId, String cityName, long forecastMillis);
+        public void onDailyForecastItemClick(long cityId, String cityName, boolean userFavorite, long forecastMillis);
     }
 
     /**
@@ -104,6 +106,7 @@ public class CurrentWeatherAndDailyForecastFragment
      * @param windSpeed
      * @param iconName
      * @param lastUpdateMillis
+     * @param userFavorite
      * @param positionInPager
      * @return
      */
@@ -115,6 +118,7 @@ public class CurrentWeatherAndDailyForecastFragment
                                                                      double windSpeed,
                                                                      String iconName,
                                                                      long lastUpdateMillis,
+                                                                     boolean userFavorite,
                                                                      int positionInPager) {
         Bundle args = new Bundle();
         args.putLong(ARG_CITY_ID, cityId);
@@ -125,6 +129,7 @@ public class CurrentWeatherAndDailyForecastFragment
         args.putDouble(ARG_WIND_SPEED, windSpeed);
         args.putString(ARG_ICON, iconName);
         args.putLong(ARG_TIMESTAMP, lastUpdateMillis);
+        args.putBoolean(ARG_USER_FAVORITE, userFavorite);
         args.putInt(ARG_PAGER_POSITION, positionInPager);
 
         CurrentWeatherAndDailyForecastFragment fragment = new CurrentWeatherAndDailyForecastFragment();
@@ -202,6 +207,7 @@ public class CurrentWeatherAndDailyForecastFragment
             windSpeed = args.getDouble(ARG_WIND_SPEED, 0.0);
             iconName = args.getString(ARG_ICON, "");
             lastUpdateMillis = args.getLong(ARG_TIMESTAMP, 0);
+            userFavorite = args.getBoolean(ARG_USER_FAVORITE, true);
             positionInPager = args.getInt(ARG_PAGER_POSITION, 0);
         }
 
@@ -267,7 +273,8 @@ public class CurrentWeatherAndDailyForecastFragment
                 this,
                 DailyForecastAdapter.PROJECTION_DAILY_FORECAST,
                 cityId,
-                BaseWeatherLoaderCallbacks.IdType.CITY_ID);
+                BaseWeatherLoaderCallbacks.IdType.CITY_ID,
+                userFavorite);
     }
 
     @Override
@@ -356,8 +363,8 @@ public class CurrentWeatherAndDailyForecastFragment
         String forecastFormatted = simpleDateFormat.format(new Date(forecastMillis));
         Log.d(TAG, String.format("onItemClick: Position:%d Forecast date:%s", position, forecastFormatted));
 
-        //pass city id, city name, and forecast time to listener
-        listener.onDailyForecastItemClick(cityId, cityName, forecastMillis);
+        //pass city id, city name, userFavorite, and forecast time to listener
+        listener.onDailyForecastItemClick(cityId, cityName, userFavorite, forecastMillis);
     }
 
     /**

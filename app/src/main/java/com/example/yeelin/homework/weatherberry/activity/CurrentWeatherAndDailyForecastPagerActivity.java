@@ -24,6 +24,7 @@ import com.example.yeelin.homework.weatherberry.loader.CurrentWeatherLoaderCallb
 import com.example.yeelin.homework.weatherberry.loader.LoaderIds;
 import com.example.yeelin.homework.weatherberry.networkUtils.AlarmUtils;
 import com.example.yeelin.homework.weatherberry.networkUtils.JobUtils;
+import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
 import com.example.yeelin.homework.weatherberry.service.NetworkIntentService;
 
@@ -215,37 +216,15 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     }
 
     /**
-     * Implementation for CurrentWeatherAndDailyForecastFragmentListener interface
-     * @param cityName
-     */
-    //@Override
-    //public void onCurrentWeatherLoadComplete(String cityName) {
-        //set title to city name
-//        if (cityName != null) {
-//            getSupportActionBar().setTitle(cityName);
-//        }
-//        else {
-//            getSupportActionBar().setTitle(getString(R.string.no_city_name));
-//        }
-//
-//        //set subtitle to current time and date
-//        Date currentDate = new Date(System.currentTimeMillis());
-//        String subtitle = getString(
-//                R.string.current_weather_toolbar_subtitle,
-//                DateFormat.getMediumDateFormat(this).format(currentDate),
-//                DateFormat.getTimeFormat(this).format(currentDate));
-//        getSupportActionBar().setSubtitle(subtitle);
-    //}
-
-    /**
      * Method implementation for CurrentWeatherAndDailyForecastFragmentListener interface
      * @param cityId
      * @param cityName
+     * @param userFavorite
      * @param forecastMillis this is the time of the daily forecast that was clicked on
      */
     @Override
-    public void onDailyForecastItemClick(long cityId, String cityName, long forecastMillis) {
-        Intent intent = TriHourForecastActivity.buildIntent(this, cityId, cityName, forecastMillis);
+    public void onDailyForecastItemClick(long cityId, String cityName, boolean userFavorite, long forecastMillis) {
+        Intent intent = TriHourForecastActivity.buildIntent(this, cityId, cityName, userFavorite, forecastMillis);
         startActivity(intent);
     }
 
@@ -299,7 +278,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
             String cityName = cursor.getString(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
             int userFavorite = cursor.getInt(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.USER_FAVORITE.getValue());
             if (cityName != null) {
-                if (userFavorite == CurrentWeatherContract.USER_FAVORITE_NO)
+                if (userFavorite == BaseWeatherContract.USER_FAVORITE_NO)
                     title = getString(R.string.current_weather_toolbar_title, cityName);
                 else
                     title = cityName;

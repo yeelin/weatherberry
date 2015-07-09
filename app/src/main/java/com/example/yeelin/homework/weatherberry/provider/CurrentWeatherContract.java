@@ -41,7 +41,7 @@ public final class CurrentWeatherContract {
         public String CITY_NAME = "city_name"; //friendly name
         public String CITY_LATITUDE = "city_latitude"; //latitude
         public String CITY_LONGITUDE = "city_longitude"; //longitude
-        public String USER_FAVORITE = "user_favorite"; //indicates if this city was favorited by the user
+        //public String USER_FAVORITE = "user_favorite"; //indicates if this city was favorited by the user
 
         //public String SUMMARY = BaseWeatherContract.Columns.SUMMARY; //weather summary string
         //public String DESCRIPTION = BaseWeatherContract.Columns.DESCRIPTION; //more descriptive string
@@ -61,10 +61,6 @@ public final class CurrentWeatherContract {
     //possible units for Columns.UNIT
     public static final int UNIT_IMPERIAL = 0;
     public static final int UNIT_METRIC = 1;
-
-    //possible units for Columns.USER_FAVORITE
-    public static final int USER_FAVORITE_YES = 1;
-    public static final int USER_FAVORITE_NO = 0;
 
     /**
      * Database statements

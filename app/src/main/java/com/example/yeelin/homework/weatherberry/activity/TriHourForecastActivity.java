@@ -32,6 +32,7 @@ public class TriHourForecastActivity
     //intent extras
     private static final String EXTRA_CITY_ID = TriHourForecastActivity.class.getSimpleName() + ".cityId";
     private static final String EXTRA_CITY_NAME = TriHourForecastActivity.class.getSimpleName() + ".cityName";
+    private static final String EXTRA_USER_FAVORITE = TriHourForecastActivity.class.getSimpleName() + ".userFavorite";
     private static final String EXTRA_FORECAST_MILLIS = TriHourForecastActivity.class.getSimpleName() + ".forecastMillis";
 
     /**
@@ -41,11 +42,12 @@ public class TriHourForecastActivity
      * @param cityName
      * @return
      */
-    public static Intent buildIntent(Context context, long cityId, String cityName, long forecastMillis) {
+    public static Intent buildIntent(Context context, long cityId, String cityName, boolean userFavorite, long forecastMillis) {
         Intent intent = new Intent(context, TriHourForecastActivity.class);
 
         intent.putExtra(EXTRA_CITY_ID, cityId);
         intent.putExtra(EXTRA_CITY_NAME, cityName);
+        intent.putExtra(EXTRA_USER_FAVORITE, userFavorite);
         intent.putExtra(EXTRA_FORECAST_MILLIS, forecastMillis);
 
         return intent;
@@ -60,6 +62,7 @@ public class TriHourForecastActivity
         Intent intent = getIntent();
         long cityId = intent.getLongExtra(EXTRA_CITY_ID, BaseWeatherContract.NO_ID);
         String cityName = intent.getStringExtra(EXTRA_CITY_NAME);
+        boolean userFavorite = intent.getBooleanExtra(EXTRA_USER_FAVORITE, true);
         long forecastMillis = intent.getLongExtra(EXTRA_FORECAST_MILLIS, 0);
 
         //setup toolbar
@@ -68,7 +71,7 @@ public class TriHourForecastActivity
         //check if triHour forecast fragment is there, if not instantiate it
         TriHourForecastFragment fragment = (TriHourForecastFragment) getSupportFragmentManager().findFragmentById(R.id.triHourForecast_fragmentContainer);
         if (fragment == null) {
-            fragment = TriHourForecastFragment.newInstance(cityId, forecastMillis);
+            fragment = TriHourForecastFragment.newInstance(cityId, userFavorite, forecastMillis);
 
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction()

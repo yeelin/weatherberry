@@ -35,10 +35,12 @@ public class TriHourForecastFragment
 
     //bundle args
     private static final String ARG_CITY_ID = TriHourForecastFragment.class.getSimpleName() + ".cityId";
+    private static final String ARG_USER_FAVORITE = TriHourForecastFragment.class.getSimpleName() + ".userFavorite";
     private static final String ARG_FORECAST_MILLIS = TriHourForecastFragment.class.getSimpleName() + ".forecastMillis";
 
     //member variables
     private long cityId = BaseWeatherContract.NO_ID;
+    private boolean userFavorite = true;
     private long startMillis = 0;
     private long endMillis = 0;
 
@@ -48,9 +50,10 @@ public class TriHourForecastFragment
      * @param forecastMillis
      * @return
      */
-    public static TriHourForecastFragment newInstance(long cityId, long forecastMillis) {
+    public static TriHourForecastFragment newInstance(long cityId, boolean userFavorite, long forecastMillis) {
         Bundle args = new Bundle();
         args.putLong(ARG_CITY_ID, cityId);
+        args.putBoolean(ARG_USER_FAVORITE, userFavorite);
         args.putLong(ARG_FORECAST_MILLIS, forecastMillis);
 
         TriHourForecastFragment fragment = new TriHourForecastFragment();
@@ -76,6 +79,7 @@ public class TriHourForecastFragment
         long forecastMills = 0;
         if (args != null) {
             cityId = args.getLong(ARG_CITY_ID, BaseWeatherContract.NO_ID);
+            userFavorite = args.getBoolean(ARG_USER_FAVORITE, true);
             forecastMills = args.getLong(ARG_FORECAST_MILLIS, 0);
         }
 
@@ -127,6 +131,7 @@ public class TriHourForecastFragment
                 TriHourForecastAdapter.PROJECTION_TRI_HOUR_FORECAST,
                 cityId,
                 BaseWeatherLoaderCallbacks.IdType.CITY_ID,
+                userFavorite,
                 startMillis,
                 endMillis);
     }

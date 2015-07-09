@@ -49,6 +49,7 @@ public final class TriHourForecastContract {
             " ( " +
             BaseColumns._ID + " INTEGER PRIMARY KEY, " +
             Columns.CITY_ID + " INTEGER NOT NULL, " +
+            Columns.USER_FAVORITE + " INTEGER NOT NULL, " +
             Columns.FORECAST_DATETIME + " INTEGER NOT NULL, " +
             Columns.TEMPERATURE + " REAL NOT NULL, " +
             Columns.DESCRIPTION + " TEXT NOT NULL, " +
@@ -61,7 +62,7 @@ public final class TriHourForecastContract {
     static final String CREATE_INDEX =
             "CREATE UNIQUE INDEX IF NOT EXISTS " + INDEX_NAME +
             " ON " + TABLE +
-            " ( " + Columns.CITY_ID + ", " + Columns.FORECAST_DATETIME + " )";
+            " ( " + Columns.CITY_ID + ", " + Columns.USER_FAVORITE + ", " + Columns.FORECAST_DATETIME + " )";
 
     /**
      * Content Provider related

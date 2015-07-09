@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.example.yeelin.homework.weatherberry.json.GroupCurrentWeatherJsonReader;
 import com.example.yeelin.homework.weatherberry.networkUtils.FetchDataUtils;
+import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
 
 import java.io.IOException;
@@ -236,7 +237,7 @@ public class GroupCurrentWeatherDataHelper {
             ArrayList<Integer> userFavoritesArrayList = cityIdsToFavoritesMap.get(cityId);
             int userFavorite = userFavoritesArrayList.remove(0);
             values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
-                    (userFavorite == 1) ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+                    (userFavorite == 1) ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO);
 
             //add unit as imperial
             values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
@@ -251,7 +252,7 @@ public class GroupCurrentWeatherDataHelper {
                 duplicateValues = new ContentValues(values);
                 userFavorite = userFavoritesArrayList.remove(0);
                 duplicateValues.put(CurrentWeatherContract.Columns.USER_FAVORITE,
-                        (userFavorite == 1) ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+                        (userFavorite == 1) ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO);
             }
         }
 

@@ -52,7 +52,7 @@ public class PurgeDataHelper {
                     CurrentWeatherContract.Columns.USER_FAVORITE);
             String[] selectionArgs = BaseWeatherContract.whereArgs(
                     cityId,
-                    CurrentWeatherContract.USER_FAVORITE_YES);
+                    BaseWeatherContract.USER_FAVORITE_YES);
 
             ContentProviderOperation op = ContentProviderOperation.newDelete(CurrentWeatherContract.URI)
                     .withSelection(selection, selectionArgs)

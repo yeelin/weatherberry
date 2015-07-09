@@ -108,6 +108,7 @@ public class TriHourForecastLoaderCallbacks
      * @param projection
      * @param id
      * @param idType
+     * @param userFavorite
      * @param startMillis
      * @param endMillis
      */
@@ -117,6 +118,7 @@ public class TriHourForecastLoaderCallbacks
                                   String[] projection,
                                   long id,
                                   IdType idType,
+                                  boolean userFavorite,
                                   long startMillis,
                                   long endMillis) {
         Bundle args = new Bundle();
@@ -124,8 +126,13 @@ public class TriHourForecastLoaderCallbacks
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
 
-        args.putString(ARG_SELECTION, BaseWeatherContract.whereClauseBetween(TriHourForecastContract.Columns.FORECAST_DATETIME));
-        args.putStringArray(ARG_SELECTION_ARGS, BaseWeatherContract.whereArgs(startMillis, endMillis));
+        String whereClause1 = BaseWeatherContract.whereClauseEquals(TriHourForecastContract.Columns.USER_FAVORITE);
+        String whereClause2 = BaseWeatherContract.whereClauseBetween(TriHourForecastContract.Columns.FORECAST_DATETIME);
+        args.putString(ARG_SELECTION, BaseWeatherContract.whereClauseAnd(whereClause1, whereClause2));
+        args.putStringArray(ARG_SELECTION_ARGS, BaseWeatherContract.whereArgs(
+                userFavorite ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO,
+                startMillis,
+                endMillis));
 
         //call LoaderManager's initLoader
         loaderManager.initLoader(
@@ -176,7 +183,6 @@ public class TriHourForecastLoaderCallbacks
         //get bundle args
         Uri uri = args.getParcelable(ARG_URI);
         String[] projection = args.getStringArray(ARG_PROJECTION);
-
         String selection = args.getString(ARG_SELECTION);
         String[] selectionArgs = args.getStringArray(ARG_SELECTION_ARGS);
 

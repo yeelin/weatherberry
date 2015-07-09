@@ -46,6 +46,7 @@ public final class DailyForecastContract {
             " ( " +
             BaseColumns._ID + " INTEGER PRIMARY KEY, " +
             Columns.CITY_ID + " INTEGER NOT NULL, " +
+            Columns.USER_FAVORITE + " INTEGER NOT NULL, " +
             Columns.FORECAST_DATETIME + " INTEGER NOT NULL, " +
             Columns.TEMPERATURE_LOW + " REAL NOT NULL, " +
             Columns.TEMPERATURE_HIGH + " REAL NOT NULL, " +
@@ -57,7 +58,7 @@ public final class DailyForecastContract {
     static final String CREATE_INDEX =
             "CREATE UNIQUE INDEX IF NOT EXISTS " + INDEX_NAME +
             " ON " + TABLE +
-            " ( " + Columns.CITY_ID + ", " + Columns.FORECAST_DATETIME + " )";
+            " ( " + Columns.CITY_ID + ", " + Columns.USER_FAVORITE + ", " + Columns.FORECAST_DATETIME + " )";
 
     /**
      * Content Provider related

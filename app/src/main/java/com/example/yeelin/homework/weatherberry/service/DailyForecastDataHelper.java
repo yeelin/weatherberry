@@ -58,6 +58,7 @@ public class DailyForecastDataHelper {
 
             valuesArrayList = buildContentValues(urlConnection);
             if (valuesArrayList != null && valuesArrayList.size() > 0) {
+                augmentData(valuesArrayList, userFavorite);
                 persistData(context, valuesArrayList);
             }
         }
@@ -128,6 +129,21 @@ public class DailyForecastDataHelper {
         }
         finally {
             urlConnection.disconnect();
+        }
+    }
+
+    /**
+     * Augments data before inserting into the daily_forecast table.
+     * @param valuesArrayList
+     * @param userFavorite
+     */
+    public static void augmentData(@NonNull ArrayList<ContentValues> valuesArrayList,
+                                   boolean userFavorite) {
+        Log.d(TAG, "augmentData: userFavorite:" + userFavorite);
+        for (ContentValues values : valuesArrayList) {
+            //add user_favorite value
+            values.put(DailyForecastContract.Columns.USER_FAVORITE,
+                        userFavorite ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO);
         }
     }
 

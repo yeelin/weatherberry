@@ -31,6 +31,7 @@ public final class BaseWeatherContract {
     public interface Columns extends BaseColumns {
         //_ID provided by base columns
         public String CITY_ID = "city_id";
+        public String USER_FAVORITE = "user_favorite"; //indicates if this city was favorited by the user
 
         public String TEMPERATURE = "temperature";
         public String HUMIDITY = "humidity";
@@ -39,6 +40,10 @@ public final class BaseWeatherContract {
         public String DESCRIPTION = "description"; //more descriptive string
         public String ICON = "icon"; //name of the icon
     }
+
+    //possible units for Columns.USER_FAVORITE
+    public static final int USER_FAVORITE_YES = 1;
+    public static final int USER_FAVORITE_NO = 0;
 
     //helper strings for drop table
     static String dropTable (String tableName) {
@@ -59,6 +64,14 @@ public final class BaseWeatherContract {
 
     public static String whereClauseBetween(String columnName) {
         return columnName + " BETWEEN ? AND ?";
+    }
+
+    public static String whereClauseAnd(String clause1, String clause2) {
+        return clause1 + " AND " + clause2;
+    }
+
+    public static String[] whereArgs(long i, long j, long k) {
+        return new String[] { String.valueOf(i), String.valueOf(j), String.valueOf(k)};
     }
 
     public static String[] whereArgs(long i, long j) {

@@ -185,7 +185,7 @@ public class CurrentWeatherDataHelper {
         for (ContentValues values : valuesArrayList) {
             //add user_favorite value
             values.put(CurrentWeatherContract.Columns.USER_FAVORITE,
-                    userFavorite ? CurrentWeatherContract.USER_FAVORITE_YES : CurrentWeatherContract.USER_FAVORITE_NO);
+                        userFavorite ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO);
 
             //add unit as imperial
             values.put(CurrentWeatherContract.Columns.UNIT, CurrentWeatherContract.UNIT_IMPERIAL);
@@ -233,7 +233,7 @@ public class CurrentWeatherDataHelper {
                 CurrentWeatherContract.URI,
                 valuesArrayList.get(0),
                 BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
-                BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
+                BaseWeatherContract.whereArgs(BaseWeatherContract.USER_FAVORITE_NO));
 
         if (rowsUpdated == 0) {
             Log.d(TAG, "updateData: No rows updated, so trying to insert instead");
@@ -260,6 +260,6 @@ public class CurrentWeatherDataHelper {
         context.getContentResolver().delete(
                 CurrentWeatherContract.URI,
                 BaseWeatherContract.whereClauseEquals(CurrentWeatherContract.Columns.USER_FAVORITE),
-                BaseWeatherContract.whereArgs(CurrentWeatherContract.USER_FAVORITE_NO));
+                BaseWeatherContract.whereArgs(BaseWeatherContract.USER_FAVORITE_NO));
     }
 }

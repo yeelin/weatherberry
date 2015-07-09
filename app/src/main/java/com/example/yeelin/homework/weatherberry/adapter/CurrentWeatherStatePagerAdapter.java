@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
 import com.example.yeelin.homework.weatherberry.fragment.CurrentWeatherAndDailyForecastFragment;
+import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
 
 /**
@@ -90,6 +91,7 @@ public class CurrentWeatherStatePagerAdapter
             double windSpeed = cursor.getDouble(CurrentWeatherCursorPosition.WINDSPEED_POS.getValue());
             String iconName = cursor.getString(CurrentWeatherCursorPosition.ICON_POS.getValue());
             long lastUpdateMillis = cursor.getLong(CurrentWeatherCursorPosition.TIMESTAMP_POS.getValue());
+            int userFavorite = cursor.getInt(CurrentWeatherCursorPosition.USER_FAVORITE.getValue());
 
             Log.d(TAG, String.format("getItem: Instantiating fragment with cityName:%s, position:%d", cityName, position));
             //instantiate a new fragment
@@ -102,6 +104,7 @@ public class CurrentWeatherStatePagerAdapter
                     windSpeed,
                     iconName,
                     lastUpdateMillis,
+                    userFavorite == BaseWeatherContract.USER_FAVORITE_YES ? true : false,
                     position);
         }
         else {
