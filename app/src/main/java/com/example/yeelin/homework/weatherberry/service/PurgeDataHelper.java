@@ -9,6 +9,8 @@ import android.util.Log;
 
 import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
+import com.example.yeelin.homework.weatherberry.provider.DailyForecastContract;
+import com.example.yeelin.homework.weatherberry.provider.TriHourForecastContract;
 
 import java.util.ArrayList;
 
@@ -32,32 +34,31 @@ public class PurgeDataHelper {
 
         if (cityIdsArrayList == null || cityIdsArrayList.size() == 0) return;
 
-        //purge data from current weather table
-//        for (long cityId : cityIds) {
-//            context.getContentResolver().delete(
-//                    CurrentWeatherContract.URI,
-//                    BaseWeatherContract.whereClauseEquals(
-//                            CurrentWeatherContract.Columns.CITY_ID,
-//                            CurrentWeatherContract.Columns.USER_FAVORITE),
-//                    BaseWeatherContract.whereArgs(
-//                            cityId,
-//                            CurrentWeatherContract.USER_FAVORITE_YES));
-//        }
-
         ArrayList<ContentProviderOperation> operations = new ArrayList<>(cityIdsArrayList.size());
         for (long cityId : cityIdsArrayList) {
 
+            //delete rows that match on cityId and userFavorite == YES
             String selection = BaseWeatherContract.whereClauseEquals(
-                    CurrentWeatherContract.Columns.CITY_ID,
-                    CurrentWeatherContract.Columns.USER_FAVORITE);
+                    BaseWeatherContract.Columns.CITY_ID,
+                    BaseWeatherContract.Columns.USER_FAVORITE);
             String[] selectionArgs = BaseWeatherContract.whereArgs(
                     cityId,
                     BaseWeatherContract.USER_FAVORITE_YES);
 
-            ContentProviderOperation op = ContentProviderOperation.newDelete(CurrentWeatherContract.URI)
+            //delete from 3 tables: current_weather, daily_forecast, tri_hour_forecast
+            ContentProviderOperation currentWeatherPurgeOp = ContentProviderOperation.newDelete(CurrentWeatherContract.URI)
                     .withSelection(selection, selectionArgs)
                     .build();
-            operations.add(op);
+            ContentProviderOperation dailyForecastPurgeOp = ContentProviderOperation.newDelete(DailyForecastContract.URI)
+                    .withSelection(selection, selectionArgs)
+                    .build();
+            ContentProviderOperation triHourForecastPurgeOp = ContentProviderOperation.newDelete(TriHourForecastContract.URI)
+                    .withSelection(selection, selectionArgs)
+                    .build();
+
+            operations.add(currentWeatherPurgeOp);
+            operations.add(dailyForecastPurgeOp);
+            operations.add(triHourForecastPurgeOp);
         }
 
         try {
