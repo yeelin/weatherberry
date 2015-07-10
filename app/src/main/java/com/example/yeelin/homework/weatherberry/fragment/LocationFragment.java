@@ -47,13 +47,16 @@ public class LocationFragment
     //logcat
     private static final String TAG = LocationFragment.class.getCanonicalName();
 
+    //saved instance state
+    private static final String STATE_LAST_FORECAST_FETCH = LocationFragment.class.getSimpleName() + ".lastForecastFetch";
+
     //location service constants
     private static final float ONE_KILOMETER = 1000f; //1000 meters
-    private static final long ONE_MINUTE = 60 * 1000; //milliseconds
-    private static final long THREE_MINUTES = 3 * ONE_MINUTE;
-    private static final long FIVE_MINUTES = 5 * ONE_MINUTE;
-    private static final long TEN_MINUTES = 10 * ONE_MINUTE;
-    private static final long THIRTY_SECONDS = 30 * 1000; //milliseconds
+    private static final long ONE_MINUTE_MILLIS = 60 * 1000; //milliseconds
+    private static final long THREE_MINUTES_MILLIS = 3 * ONE_MINUTE_MILLIS;
+    private static final long FIVE_MINUTES_MILLIS = 5 * ONE_MINUTE_MILLIS;
+    private static final long TEN_MINUTES_MILLIS = 10 * ONE_MINUTE_MILLIS;
+    private static final long THIRTY_SECONDS_MILLIS = 30 * 1000; //milliseconds
 
     //handler message
     private static final int MESSAGE_GET_SAVED_LOCATION = 100;
@@ -61,21 +64,11 @@ public class LocationFragment
     //member variables
     private Location currentBestLocation;
     private String currentBestLocationName;
+    private long lastForecastDataFetch;
     private LocationRequest locationRequest;
-    //private boolean hasRequestedLocationUpdates = false;
-
-    //listener member variable
-    //private LocationFragmentListener locationListener;
 
     //handler member variable for reading shared preferences
     private Handler handler;
-
-    /**
-     * Listener interface. To be implemented by whoever is interested in events from this fragment.
-     */
-//    public interface LocationFragmentListener extends BasePlayServicesFragmentListener {
-//        public void onNewLocation(@Nullable Location location, @Nullable String locationName);
-//    }
 
     /**
      * Returns a new instance of the Location fragment. Use this instead of calling the constructor
@@ -124,25 +117,6 @@ public class LocationFragment
                 .addApi(LocationServices.API);
     }
 
-//    /**
-//     * Make sure the hosting activity or fragment implements the listener interface.
-//     * @param activity
-//     */
-//    @Override
-//    public void onAttach(Activity activity) {
-//        super.onAttach(activity);
-//
-//        Fragment parent = getParentFragment();
-//        Object objectToCast = parent != null ? parent : activity;
-//        try {
-//            locationListener = (LocationFragmentListener) objectToCast;
-//        }
-//        catch (ClassCastException e) {
-//            throw new ClassCastException(objectToCast.getClass().getSimpleName()
-//                    + " must implement LocationFragmentListener");
-//        }
-//    }
-
     /**
      * Configure the fragment
      * @param savedInstanceState
@@ -160,6 +134,13 @@ public class LocationFragment
 
         //create a location request, will be used in onConnected
         locationRequest = createLocationRequest();
+        lastForecastDataFetch = savedInstanceState != null ? savedInstanceState.getLong(STATE_LAST_FORECAST_FETCH, 0) : 0;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(STATE_LAST_FORECAST_FETCH, lastForecastDataFetch);
     }
 
     /**
@@ -169,7 +150,6 @@ public class LocationFragment
     @Override
     public void onStop() {
         //check if we have asked for location updates, and then unsubscribe
-        //if (hasRequestedLocationUpdates) {
         if (googleApiClient.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
         }
@@ -186,15 +166,6 @@ public class LocationFragment
         handler = null;
 
         super.onDestroy();
-    }
-
-    /**
-     * Nullify the listener before detaching
-     */
-    @Override
-    public void onDetach() {
-//        locationListener = null;
-        super.onDetach();
     }
 
     /**
@@ -303,9 +274,9 @@ public class LocationFragment
         return LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .setSmallestDisplacement(ONE_KILOMETER)
-            .setInterval(FIVE_MINUTES)
-            .setFastestInterval(THREE_MINUTES)
-            .setMaxWaitTime(TEN_MINUTES);
+            .setInterval(FIVE_MINUTES_MILLIS)
+            .setFastestInterval(THREE_MINUTES_MILLIS)
+            .setMaxWaitTime(TEN_MINUTES_MILLIS);
     }
 
     /**
@@ -322,8 +293,6 @@ public class LocationFragment
                 googleApiClient,
                 locationRequest,
                 this);
-
-        //hasRequestedLocationUpdates = true;
     }
 
     /**
@@ -342,16 +311,29 @@ public class LocationFragment
         else {
             //candidate is not better, so use current best
             Log.d(TAG, "requestLastKnownLocation: Using current best location:" + currentBestLocation);
-            updateLocation(currentBestLocation);
+
+            //since we are using current best, there is no need to geocode it again
+            //updateLocation(currentBestLocation);
+
+            //check the forecast data was fetched using current best as the location
+            //if it was within 10 minutes, don't bother refetching. otherwise, refetch
+            if (System.currentTimeMillis() - lastForecastDataFetch > TEN_MINUTES_MILLIS) {
+                Log.d(TAG, "requestLastKnownLocation: More than 10 minutes since last fetch using the current best location, so refetching");
+                if (currentBestLocation != null) {
+                    fetchDataForCurrentLocation(currentBestLocationName);
+                }
+            }
+            else {
+                Log.d(TAG, "requestLastKnownLocation: Less than 10 minutes since last fetch using the current best location, so doing nothing");
+            }
         }
     }
 
     /**
      * Call this method after you have verified that the new location is better than the current best location.
-     * This method does 3 things:
+     * This method does 2 things:
      * 1. Updates the current best location to the new location
-     * 2. Notifies the listener of the new location
-     * 3. Saves the new location to shared preferences
+     * 2. Geocodes the new location
      *
      * @param location
      */
@@ -363,12 +345,6 @@ public class LocationFragment
         if (currentBestLocation != null) {
             //attempt to geocode the new location
             geocodeCurrentLocation();
-
-            //notify listener later when geocoder task returns
-            //locationListener.onNewLocation(currentBestLocation);
-
-            //save location in shared preferences
-            //LocationUtils.saveCurrentLocation(getActivity(), currentBestLocation);
         }
     }
 
@@ -385,19 +361,20 @@ public class LocationFragment
         }
         else {
             //no geocoder present, so just call open weather api
-            fetchDataForCurrentLocation(false, null);
+            fetchDataForCurrentLocation(null);
         }
     }
 
     /**
-     * Starts an intent service to load the current location's weather data. This is called by the Geocode
-     * async task when it's done geocoding the current best location.
+     * Starts an intent service to load the current location's weather data. This is called by:
+     * 1. the Geocode async task when it's done geocoding the current best location.
+     * 2. geocodeCurrentLocation() when a geocoder is not present
+     * 3. requestLastKnownLocation()
      *
      * Note: currentBestLocation should not be null when this method is called.
-     * @param isLocationGeocoded
      * @param cityName
      */
-    private void fetchDataForCurrentLocation(boolean isLocationGeocoded, @Nullable String cityName) {
+    private void fetchDataForCurrentLocation(@Nullable String cityName) {
         //update the current best location's name
         currentBestLocationName = cityName;
 
@@ -412,8 +389,8 @@ public class LocationFragment
                 currentBestLocation.getLongitude());
         getActivity().startService(currentLocationLoadIntent);
 
-        //notify listener about the new location with city name
-        //locationListener.onNewLocation(currentBestLocation, currentBestLocationName);
+        //save the last forecast fetch time
+        lastForecastDataFetch = System.currentTimeMillis();
     }
 
     /**
@@ -487,7 +464,7 @@ public class LocationFragment
             }
 
             Log.d(TAG, "onPostExecute: City name: " + s);
-            locationFragment.fetchDataForCurrentLocation(s != null, s);
+            locationFragment.fetchDataForCurrentLocation(s);
         }
     }
 }

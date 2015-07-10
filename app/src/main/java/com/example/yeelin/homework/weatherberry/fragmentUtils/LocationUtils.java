@@ -24,6 +24,7 @@ public class LocationUtils {
 
     //constants for checking if candidate location is better
     private static final long ONE_MINUTE_MILLIS = 60 * 1000;
+    private static final long TEN_MINUTE_MILLIS = 10 * ONE_MINUTE_MILLIS;
     private static final long THIRTY_MINUTES_MILLIS = 30 * ONE_MINUTE_MILLIS;
     private static final float ONE_KILOMETER_METERS = 1000;
     private static final float HALF_KILOMETER_METERS = 500;
@@ -51,7 +52,7 @@ public class LocationUtils {
         long timeDelta = candidateLocation.getTime() - currentBestLocation.getTime();
         boolean isSignificantlyNewer = timeDelta > THIRTY_MINUTES_MILLIS;
         boolean isSignificantlyOlder = timeDelta < -THIRTY_MINUTES_MILLIS;
-        boolean isNewer = timeDelta > 0;
+        boolean isNewer = timeDelta > TEN_MINUTE_MILLIS;
 
         //If it's been more than thirty minutes, use the candidate location because the user has likely moved
         if (isSignificantlyNewer) {
@@ -81,7 +82,7 @@ public class LocationUtils {
         boolean isFromSameProvider = isSameLocationProvider(candidateLocation.getProvider(), currentBestLocation.getProvider());
 
         //now for the final verdict...
-        if (isMoreAccurate) {
+        if (isNewer && isMoreAccurate) {
             Log.d(TAG, String.format("isBetterLocation: Candidate %s is newer and more accurate than %s", candidateLocation.toString(), currentBestLocation.toString()));
             return true;
         }
