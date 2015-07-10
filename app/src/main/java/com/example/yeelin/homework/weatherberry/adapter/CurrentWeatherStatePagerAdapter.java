@@ -122,7 +122,7 @@ public class CurrentWeatherStatePagerAdapter
         if (cursor == null) {
             return 0;
         }
-        Log.d(TAG, "getCount: Cursor count:" + cursor.getCount());
+        //Log.d(TAG, "getCount: Cursor count:" + cursor.getCount());
         return cursor.getCount();
     }
 
