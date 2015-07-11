@@ -19,7 +19,6 @@ import java.lang.ref.WeakReference;
  * Created by ninjakiki on 4/20/15.
  */
 public class DailyForecastLoaderCallbacks
-        extends BaseWeatherLoaderCallbacks
         implements LoaderManager.LoaderCallbacks<Cursor> {
     //logcat
     private static final String TAG = DailyForecastLoaderCallbacks.class.getCanonicalName();
@@ -88,10 +87,10 @@ public class DailyForecastLoaderCallbacks
                                   DailyForecastLoaderListener listener,
                                   String[] projection,
                                   long id,
-                                  IdType idType,
+                                  BaseWeatherContract.IdType idType,
                                   boolean userFavorite) {
         Bundle args = new Bundle();
-        Uri uri = buildUri(DailyForecastContract.URI, id, idType);
+        Uri uri = BaseWeatherContract.buildUri(DailyForecastContract.URI, id, idType);
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
         args.putString(ARG_SELECTION, BaseWeatherContract.whereClauseEquals(DailyForecastContract.Columns.USER_FAVORITE));

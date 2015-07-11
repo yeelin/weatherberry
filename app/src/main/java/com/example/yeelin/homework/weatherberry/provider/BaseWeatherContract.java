@@ -1,6 +1,7 @@
 package com.example.yeelin.homework.weatherberry.provider;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -115,4 +116,35 @@ public final class BaseWeatherContract {
      * Definition of no_id. Used by WeatherOverviewFragment
      */
     public static final int NO_ID = -1;
+
+    /**
+     *
+     */
+    public enum IdType {
+        ROW_ID,
+        CITY_ID
+    }
+
+    /**
+     *
+     * @param uri
+     * @param id
+     * @param idType
+     * @return
+     */
+    public static Uri buildUri(Uri uri, long id, IdType idType) {
+        switch (idType) {
+            case ROW_ID:
+                return ContentUris.withAppendedId(uri, id);
+
+            case CITY_ID:
+                Uri uriWithCityIdPath = uri.buildUpon()
+                        .appendPath(BaseWeatherContract.PATH_CITYID)
+                        .build();
+                return ContentUris.withAppendedId(uriWithCityIdPath, id);
+
+            default:
+                return uri;
+        }
+    }
 }

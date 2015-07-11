@@ -40,7 +40,7 @@ public class TriHourForecastDataHelper {
      * @return
      */
     @Nullable
-    public static ArrayList<ContentValues> getDataForCityId(Context context,
+    public static boolean getDataForCityId(Context context,
                                                             long cityId,
                                                             boolean userFavorite) {
         Log.d(TAG, "getDataForCityId:" + cityId);
@@ -49,7 +49,7 @@ public class TriHourForecastDataHelper {
             final URL url = buildUrl(cityId);
             final HttpURLConnection urlConnection = FetchDataUtils.performGet(url);
             if (urlConnection == null) {
-                return null;
+                return false;
             }
 
             valuesArrayList = buildContentValues(urlConnection);
@@ -60,11 +60,14 @@ public class TriHourForecastDataHelper {
         }
         catch (MalformedURLException e) {
             Log.e(TAG, "getDataForCityId: Unexpected MalformedURLException:", e);
+            return false;
         }
         catch (IOException e) {
             Log.e(TAG, "getDataForCityId: Unexpected IOException:", e);
+            return false;
         }
-        return valuesArrayList;
+
+        return true;
     }
 
     /**

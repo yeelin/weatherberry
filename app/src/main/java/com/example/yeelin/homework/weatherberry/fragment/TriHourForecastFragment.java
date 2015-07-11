@@ -14,7 +14,6 @@ import android.widget.ListView;
 import com.example.yeelin.homework.weatherberry.R;
 import com.example.yeelin.homework.weatherberry.adapter.TriHourForecastAdapter;
 import com.example.yeelin.homework.weatherberry.fragmentUtils.AnimationUtils;
-import com.example.yeelin.homework.weatherberry.loader.BaseWeatherLoaderCallbacks;
 import com.example.yeelin.homework.weatherberry.loader.LoaderIds;
 import com.example.yeelin.homework.weatherberry.loader.TriHourForecastLoaderCallbacks;
 import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
@@ -130,7 +129,7 @@ public class TriHourForecastFragment
                 this,
                 TriHourForecastAdapter.PROJECTION_TRI_HOUR_FORECAST,
                 cityId,
-                BaseWeatherLoaderCallbacks.IdType.CITY_ID,
+                BaseWeatherContract.IdType.CITY_ID,
                 userFavorite,
                 startMillis,
                 endMillis);

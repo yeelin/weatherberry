@@ -20,7 +20,6 @@ import com.example.yeelin.homework.weatherberry.R;
 import com.example.yeelin.homework.weatherberry.adapter.DailyForecastAdapter;
 import com.example.yeelin.homework.weatherberry.fragmentUtils.AnimationUtils;
 import com.example.yeelin.homework.weatherberry.fragmentUtils.FormatUtils;
-import com.example.yeelin.homework.weatherberry.loader.BaseWeatherLoaderCallbacks;
 import com.example.yeelin.homework.weatherberry.loader.CurrentWeatherLoaderCallbacks;
 import com.example.yeelin.homework.weatherberry.loader.DailyForecastLoaderCallbacks;
 import com.example.yeelin.homework.weatherberry.loader.LoaderIds;
@@ -273,7 +272,7 @@ public class CurrentWeatherAndDailyForecastFragment
                 this,
                 DailyForecastAdapter.PROJECTION_DAILY_FORECAST,
                 cityId,
-                BaseWeatherLoaderCallbacks.IdType.CITY_ID,
+                BaseWeatherContract.IdType.CITY_ID,
                 userFavorite);
     }
 

@@ -11,6 +11,7 @@ import com.example.yeelin.homework.weatherberry.networkUtils.FetchDataUtils;
 import com.example.yeelin.homework.weatherberry.networkUtils.ImageUtils;
 import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
+import com.example.yeelin.homework.weatherberry.receiver.FavoritesBroadcastReceiver;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class FetchDataHelper {
 
     //projections
     private static final String[] PROJECTION_MIN_TIMESTAMP = new String[] {"min(" + CurrentWeatherContract.Columns.TIMESTAMP + ")"};
+    private static final String[] PROJECTION_CITY_ID = new String[] { CurrentWeatherContract.Columns.CITY_ID };
 
     public interface FetchDataHelperCallback {
         public boolean shouldCancelFetch();
@@ -60,15 +62,26 @@ public class FetchDataHelper {
         try {
             //fetch city id corresponding to city name and coordinates
             final long cityId = FindCityDataHelper.findCityId(cityName, latitude, longitude);
-            if (cityId == BaseWeatherContract.NO_ID) return;
+            if (cityId == BaseWeatherContract.NO_ID) {
+                FavoritesBroadcastReceiver.broadcastFavoriteAddFailure(context, cityName);
+                return;
+            }
 
             //fetch current weather, daily forecast, and tri hour for city id
-            final ArrayList<ContentValues> currentWeatherValues = CurrentWeatherDataHelper.getDataForCityId(context, cityId, true);
-            final ArrayList<ContentValues> dailyForecastValues = DailyForecastDataHelper.getDataForCityId(context, cityId, true);
-            final ArrayList<ContentValues> triHourForecastValues = TriHourForecastDataHelper.getDataForCityId(context, cityId, true);
+            final boolean currentWeatherSuccess = CurrentWeatherDataHelper.getDataForCityId(context, cityId, true);
+            final boolean dailyForecastSuccess = DailyForecastDataHelper.getDataForCityId(context, cityId, true);
+            final boolean triHourForecastSuccess = TriHourForecastDataHelper.getDataForCityId(context, cityId, true);
 
             //fetch images
-            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
+            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(context, cityId, true));
+
+            //broadcast fetch success or failure
+            if (currentWeatherSuccess) {
+                FavoritesBroadcastReceiver.broadcastFavoriteAddSuccess(context, cityName, cityId, getPositionForFavoriteCity(context, cityId));
+            }
+            else {
+                FavoritesBroadcastReceiver.broadcastFavoriteAddFailure(context, cityName);
+            }
         }
         catch (Exception e) {
             Log.e(TAG, "handleActionFavoriteCityLoad: Unexpected error", e);
@@ -102,17 +115,14 @@ public class FetchDataHelper {
             final long cityId = FindCityDataHelper.findCityId(cityName, latitude, longitude);
             if (cityId == BaseWeatherContract.NO_ID) return;
 
-            //delete previous entry for current location
-            //CurrentWeatherDataHelper.purgeOldData(context);
-            //TODO: purge from daily forecast and tri hour forecast tables as well
-
             //fetch current weather, daily forecast, and tri hour for city id
-            final ArrayList<ContentValues> currentWeatherValues = CurrentWeatherDataHelper.getDataForCityId(context, cityId, false);
-            final ArrayList<ContentValues> dailyForecastValues = DailyForecastDataHelper.getDataForCityId(context, cityId, false);
-            final ArrayList<ContentValues> triHourForecastValues = TriHourForecastDataHelper.getDataForCityId(context, cityId, false);
+            CurrentWeatherDataHelper.getDataForCityId(context, cityId, false);
+            DailyForecastDataHelper.getDataForCityId(context, cityId, false);
+            TriHourForecastDataHelper.getDataForCityId(context, cityId, false);
+            //TODO: purge current location data from daily forecast and tri hour forecast tables
 
             //fetch images
-            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(currentWeatherValues, dailyForecastValues, triHourForecastValues));
+            ImageUtils.getImages(context, FetchImageHelper.getUniqueIconNames(context, cityId, false));
         }
         catch (Exception e) {
             Log.e(TAG, "handleActionCurrentLocationLoad: Unexpected error", e);
@@ -224,5 +234,45 @@ public class FetchDataHelper {
 
         //return the timestamp
         return lastFetchMillis;
+    }
+
+    /**
+     * Helper method that returns the position of cityId in the cursor. The cursor is the result
+     * of querying the current_weather table for all cityIds sorted by userFavorite ASC and cityName ASC.
+     * @param context
+     * @param cityId
+     * @return
+     */
+    private static int getPositionForFavoriteCity(Context context, long cityId) {
+        Cursor cursor = context.getContentResolver().query(
+                CurrentWeatherContract.URI,
+                PROJECTION_CITY_ID,
+                null,
+                null,
+                CurrentWeatherContract.Columns.USER_FAVORITE + " asc, " + CurrentWeatherContract.Columns.CITY_NAME + " asc");
+
+        if (cursor == null) {
+            //something is not right, return -1
+            Log.d(TAG, "getPositionForFavoriteCity: Cursor is null, returning position -1");
+            return -1;
+        }
+
+        int position = 0;
+        try {
+            while (cursor.moveToNext()) {
+                long candidateCityId = cursor.getLong(0);
+                if (cityId == candidateCityId) {
+                    //found it, so return the position
+                    return position;
+                }
+                ++position;
+            }
+        } finally {
+            cursor.close();
+        }
+
+        //we didn't find it, so return -1
+        Log.d(TAG, "getPositionForFavoriteCity: Cursor is null, returning position -1");
+        return -1;
     }
 }

@@ -3,6 +3,7 @@ package com.example.yeelin.homework.weatherberry.service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -46,10 +47,13 @@ public class FetchImageHelper {
         return iconNameMap.values();
     }
 
+    /**
+     * Given a cursor, it puts all the icon names into the hashmap
+     * @param cursor
+     * @param iconNameMap
+     */
     private static void getUniqueIconNamesHelper(@Nullable Cursor cursor, @NonNull HashMap<String, String> iconNameMap) {
-        //if (cursor == null || cursor.getCount() == 0) return;
         if (cursor == null) return;
-
         try {
             while (cursor.moveToNext()) {
                 String iconName = cursor.getString(0);
@@ -61,9 +65,40 @@ public class FetchImageHelper {
     }
 
     /**
+     * Get unique icon names from all the tables for a particular cityId.
+     * @param context
+     * @param cityId
+     * @return
+     */
+    public static Collection<String> getUniqueIconNames(Context context, long cityId, boolean userFavorite) {
+        HashMap<String, String> iconNameMap = new HashMap<>();
+
+        //create uri
+        Uri currentWeatherUri = BaseWeatherContract.buildUri(CurrentWeatherContract.URI, cityId, BaseWeatherContract.IdType.CITY_ID);
+        Uri dailyForecastUri = BaseWeatherContract.buildUri(DailyForecastContract.URI, cityId, BaseWeatherContract.IdType.CITY_ID);
+        Uri triHourForecastUri = BaseWeatherContract.buildUri(TriHourForecastContract.URI, cityId, BaseWeatherContract.IdType.CITY_ID);
+
+        //create selection and selection args
+        String selection = BaseWeatherContract.whereClauseEquals(BaseWeatherContract.Columns.USER_FAVORITE);
+        String[] selectionArgs = BaseWeatherContract.whereArgs(userFavorite ? BaseWeatherContract.USER_FAVORITE_YES : BaseWeatherContract.USER_FAVORITE_NO);
+
+        //retrieve all icons from all the tables
+        Cursor currentWeatherIconCursor = context.getContentResolver().query(currentWeatherUri, PROJECTION_ICON, selection, selectionArgs, null);
+        Cursor dailyForecastIconCursor = context.getContentResolver().query(dailyForecastUri, PROJECTION_ICON, selection, selectionArgs, null);
+        Cursor triHourForecastIconCursor = context.getContentResolver().query(triHourForecastUri, PROJECTION_ICON, selection, selectionArgs, null);
+
+        getUniqueIconNamesHelper(currentWeatherIconCursor, iconNameMap);
+        getUniqueIconNamesHelper(dailyForecastIconCursor, iconNameMap);
+        getUniqueIconNamesHelper(triHourForecastIconCursor, iconNameMap);
+
+        return iconNameMap.values();
+    }
+
+
+    /**
      * Loops over all the values inserted into the database and retrieves the unique icons
      * that need to be fetched.
-     *
+     * @deprecated
      * @param currentWeatherValues
      * @param dailyForecastValues
      * @param triHourForecastValues

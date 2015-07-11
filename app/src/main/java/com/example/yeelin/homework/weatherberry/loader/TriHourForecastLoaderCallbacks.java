@@ -18,7 +18,6 @@ import java.lang.ref.WeakReference;
  * Created by ninjakiki on 4/20/15.
  */
 public class TriHourForecastLoaderCallbacks
-        extends BaseWeatherLoaderCallbacks
         implements LoaderManager.LoaderCallbacks<Cursor> {
     //logcat
     private static final String TAG = TriHourForecastLoaderCallbacks.class.getCanonicalName();
@@ -87,9 +86,9 @@ public class TriHourForecastLoaderCallbacks
                                   TriHourForecastLoaderListener listener,
                                   String[] projection,
                                   long id,
-                                  IdType idType) {
+                                  BaseWeatherContract.IdType idType) {
         Bundle args = new Bundle();
-        Uri uri = buildUri(TriHourForecastContract.URI, id, idType);
+        Uri uri = BaseWeatherContract.buildUri(TriHourForecastContract.URI, id, idType);
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
 
@@ -117,12 +116,12 @@ public class TriHourForecastLoaderCallbacks
                                   TriHourForecastLoaderListener listener,
                                   String[] projection,
                                   long id,
-                                  IdType idType,
+                                  BaseWeatherContract.IdType idType,
                                   boolean userFavorite,
                                   long startMillis,
                                   long endMillis) {
         Bundle args = new Bundle();
-        Uri uri = buildUri(TriHourForecastContract.URI, id, idType);
+        Uri uri = BaseWeatherContract.buildUri(TriHourForecastContract.URI, id, idType);
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
 

@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
@@ -13,6 +14,7 @@ import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.yeelin.homework.weatherberry.BuildConfig;
@@ -26,6 +28,7 @@ import com.example.yeelin.homework.weatherberry.networkUtils.AlarmUtils;
 import com.example.yeelin.homework.weatherberry.networkUtils.JobUtils;
 import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
+import com.example.yeelin.homework.weatherberry.receiver.FavoritesBroadcastReceiver;
 import com.example.yeelin.homework.weatherberry.service.NetworkIntentService;
 
 import java.util.Date;
@@ -37,8 +40,9 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         extends BasePlayServicesActivity
         implements CurrentWeatherAndDailyForecastFragment.CurrentWeatherAndDailyForecastFragmentListener,
         CurrentWeatherLoaderCallbacks.CurrentWeatherLoaderListener,
-        ViewPager.OnPageChangeListener {
-//        LocationFragment.LocationFragmentListener {
+        ViewPager.OnPageChangeListener,
+        FavoritesBroadcastReceiver.FavoritesListener {
+
     //logcat
     private static final String TAG = CurrentWeatherAndDailyForecastPagerActivity.class.getCanonicalName();
 
@@ -49,11 +53,16 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     private static final String EXTRA_PAGER_POSITION = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".pagerPosition";
     private static final String EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH = CurrentWeatherAndDailyForecastPagerActivity.class.getSimpleName() + ".scheduledPeriodicBgFetch";
 
+    //UI
     private ViewPager viewPager;
+    private Snackbar snackbar;
 
     //these member variables need to be saved into savedInstanceState
     private int viewPagerPosition = 0;
     private boolean hasScheduledPeriodicBgFetch = false;
+
+    //broadcast receiver for favorite adds
+    private FavoritesBroadcastReceiver favoritesBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +107,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         viewPager = (ViewPager) findViewById(R.id.currentWeatherAndDailyForecast_viewPager);
         viewPager.setAdapter(new CurrentWeatherStatePagerAdapter(getSupportFragmentManager(), null));
         viewPager.addOnPageChangeListener(this);
+        Log.d(TAG, "onCreate: Setting current pager position:" + viewPagerPosition);
         viewPager.setCurrentItem(viewPagerPosition);
 
         //fetch fresh data from the network
@@ -129,6 +139,7 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         final int id = item.getItemId();
         switch (id) {
             case R.id.action_add:
+                //startActivityForResult(SearchActivity.buildIntent(this), SearchActivity.REQUEST_CODE_SEARCH);
                 startActivity(SearchActivity.buildIntent(this));
                 return true;
             case R.id.action_remove:
@@ -140,7 +151,17 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     }
 
     /**
-     * Save the view pager position in case of rotation or backgrounding.
+     * Register for favorite add (success and failure) broadcasts
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        favoritesBroadcastReceiver = new FavoritesBroadcastReceiver(this, this);
+    }
+
+    /**
+     * Save the view pager position and boolean indicating whether we scheduled bg fetching
+     * in case of rotation or backgrounding.
      * @param outState
      */
     @Override
@@ -155,7 +176,8 @@ public class CurrentWeatherAndDailyForecastPagerActivity
     }
 
     /**
-     * Restore the view pager position in case of rotation or coming back from backgrounding.
+     * Restore the view pager position and boolean indicating whether we scheduled bg fetching
+     * in case of rotation or coming back from backgrounding.
      * @param savedInstanceState
      */
     @Override
@@ -165,11 +187,20 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         if (savedInstanceState != null) {
             viewPagerPosition = savedInstanceState.getInt(EXTRA_PAGER_POSITION, 0);
             hasScheduledPeriodicBgFetch = savedInstanceState.getBoolean(EXTRA_HAS_SCHEDULED_PERIODIC_BG_FETCH, false);
+
             Log.d(TAG, String.format("onRestoreInstanceState: Restoring Pager position:%d, Periodic background fetch:%s",
                     viewPagerPosition, hasScheduledPeriodicBgFetch));
-
             viewPager.setCurrentItem(viewPagerPosition);
         }
+    }
+
+    /**
+     * Unregister for favorite add (success and failure) broadcasts
+     */
+    @Override
+    protected void onPause() {
+        favoritesBroadcastReceiver.unregister();
+        super.onPause();
     }
 
     /**
@@ -240,7 +271,31 @@ public class CurrentWeatherAndDailyForecastPagerActivity
             CurrentWeatherStatePagerAdapter currentWeatherStatePagerAdapter = (CurrentWeatherStatePagerAdapter) viewPager.getAdapter();
             currentWeatherStatePagerAdapter.swapCursor(cursor);
 
+//            if (justReturnedFromSearch) {
+//                Log.d(TAG, "onLoadComplete: Just returned from search is true");
+//                int pos = 0;
+//                if(cursor.moveToFirst()) {
+//                    do {
+//                        String cityName = cursor.getString(CurrentWeatherStatePagerAdapter.CurrentWeatherCursorPosition.CITY_NAME_POS.getValue());
+//                        Log.d(TAG, "onLoadComplete: JustSelected:" + justSelectedCityName + ", CityName:" + cityName);
+//
+//                        if (justSelectedCityName.equalsIgnoreCase(cityName)) {
+//                            viewPagerPosition = pos;
+//                            Log.d(TAG, "onLoadComplete: Found the new pager position:" + pos);
+//
+//                            //reseting the member variables since they are no longer needed for this search
+//                            justSelectedCityName = null;
+//                            justReturnedFromSearch = false;
+//                            break;
+//                        }
+//                        ++pos;
+//                    } while (cursor.moveToNext());
+//                }
+//            }
+
+            //viewPager.setCurrentItem(viewPagerPosition, false);
             onPageSelected(viewPagerPosition);
+
         }
         else {
             Log.d(TAG, String.format("onLoadComplete: LoaderId:%s. Unknown loader id:", loaderId));
@@ -348,6 +403,14 @@ public class CurrentWeatherAndDailyForecastPagerActivity
                 }
                 break;
 
+//            case SearchActivity.REQUEST_CODE_SEARCH:
+//                if (resultCode == RESULT_OK) {
+//                    String cityName = data.getStringExtra(SearchActivity.EXTRA_CITY_NAME);
+//                    justReturnedFromSearch = true;
+//                    justSelectedCityName = cityName;
+//                }
+//                break;
+
         default:
             //ask BasePlayServicesActivity to handle the rest
             super.onActivityResult(requestCode, resultCode, data);
@@ -378,5 +441,44 @@ public class CurrentWeatherAndDailyForecastPagerActivity
         if (locationFragment != null) {
             locationFragment.onPlayServicesAvailable();
         }
+    }
+
+    /**
+     * FavoritesBroadcastReceiver.FavoritesListener implementation
+     * @param cityName
+     * @param cityId
+     * @param position
+     */
+    @Override
+    public void onFavoriteAddSuccess(final String cityName, final long cityId, final int position) {
+        Log.d(TAG, String.format("onFavoriteAddSuccess: cityName:%s, cityId:%d, position:%d", cityName, cityId, position));
+
+        //create a snackbar to inform the user
+        String message = String.format("%s has been added", cityName);
+        snackbar = Snackbar.make(findViewById(R.id.pager_root_layout), message, Snackbar.LENGTH_LONG);
+        if (position != -1) { //-1 means something isn't quite right
+            snackbar.setAction("View", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, String.format("onClick: User has requested to view cityName:%s, cityId:%d, position:%d", cityName, cityId, position));
+                    viewPagerPosition = position;
+                    viewPager.setCurrentItem(viewPagerPosition);
+                }
+            });
+        }
+        snackbar.show();
+    }
+
+    /**
+     * FavoritesBroadcastReceiver.FavoritesListener implementation
+     * @param cityName
+     */
+    @Override
+    public void onFavoriteAddFailure(String cityName) {
+        Log.d(TAG, String.format("onFavoriteAddFailure: cityName:%s", cityName));
+
+        //create a snackbar to inform the user
+        String message = String.format("Failed to add %s", cityName);
+        snackbar = Snackbar.make(findViewById(R.id.pager_root_layout), message, Snackbar.LENGTH_LONG);
     }
 }

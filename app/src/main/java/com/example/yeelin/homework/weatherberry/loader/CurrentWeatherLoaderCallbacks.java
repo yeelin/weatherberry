@@ -9,6 +9,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
+import com.example.yeelin.homework.weatherberry.provider.BaseWeatherContract;
 import com.example.yeelin.homework.weatherberry.provider.CurrentWeatherContract;
 
 import java.lang.ref.WeakReference;
@@ -17,7 +18,6 @@ import java.lang.ref.WeakReference;
  * Created by ninjakiki on 4/10/15.
  */
 public class CurrentWeatherLoaderCallbacks
-        extends BaseWeatherLoaderCallbacks
         implements LoaderManager.LoaderCallbacks<Cursor> {
     //logcat
     private static final String TAG = CurrentWeatherLoaderCallbacks.class.getCanonicalName();
@@ -85,10 +85,10 @@ public class CurrentWeatherLoaderCallbacks
                                   CurrentWeatherLoaderListener listener,
                                   String[] projection,
                                   long id,
-                                  IdType idType) {
+                                  BaseWeatherContract.IdType idType) {
 
         Bundle args = new Bundle();
-        Uri uri = buildUri(CurrentWeatherContract.URI, id, idType);
+        Uri uri = BaseWeatherContract.buildUri(CurrentWeatherContract.URI, id, idType);
         args.putParcelable(ARG_URI, uri);
         args.putStringArray(ARG_PROJECTION, projection);
 
